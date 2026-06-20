@@ -1,0 +1,31 @@
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# Model files (large)
+*.pt
+*.pt.bak
+*.npz
+
+# Logs
+*.log
+train_log*.txt
+train_output.log
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Runs and checkpoints
+runs/
+checkpoints/
+__pycache__/
