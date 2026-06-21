@@ -1,7 +1,8 @@
 # 项目交接文档
 
-> 生成时间：2026-06-20
+> 生成时间：2026-06-21
 > 项目：无人自行车系统辨识与模型强化学习
+> GitHub: https://github.com/Ma-mingliang/sindy-bicycle-system-id
 
 ---
 
@@ -9,14 +10,14 @@
 
 ### 1.1 研究目标
 
-基于SINDy（稀疏动力学辨识）建立自行车世界模型，结合MBPO（Model-Based Policy Optimization）和TD3算法，在LQR基线控制器上训练残差策略，实现自行车姿态平衡控制。
+基于系统辨识方法建立自行车世界模型，结合MBPO（Model-Based Policy Optimization）和TD3算法，在LQR基线控制器上训练残差策略，实现自行车姿态平衡控制。
 
 ### 1.2 技术路线
 
 ```
-物理数据采集 → SINDy系统辨识 → 世界模型构建 → MBPO-TD3残差控制
-                                                      ↓
-                                              LQR基线 + RL残差 → 最终控制
+物理数据采集 → 系统辨识 → 世界模型构建 → MBPO-TD3残差控制
+                                                  ↓
+                                          LQR基线 + RL残差 → 最终控制
 ```
 
 ### 1.3 两个对比项目
@@ -24,70 +25,212 @@
 | 项目 | 路径 | 方法 |
 |------|------|------|
 | HRRL（参考项目） | `D:/系统辨识作业/HRRL-new/` | PyBullet 3D物理 + TD3 + Model-Free |
-| MBPO（本项目） | `D:/系统辨识作业/sindy_bicycle/` | Meijaard解析模型 + SINDy+NN + TD3 + Model-Based |
+| MBPO（本项目） | `D:/系统辨识作业/sindy_bicycle/` | Meijaard解析模型 + 系统辨识 + TD3 + Model-Based |
+
+### 1.4 物理模型
+
+**Meijaard 2007基准自行车动力学**
+- 4维状态：`[theta(横滚角), delta(转向角), theta_dot, delta_dot]`
+- 1维输入：`tau(转向力矩)`
+- LQR控制器生成参考轨迹
+- 控制周期：dt = 1/30 s
+- 前进速度：v0 = 3.5 m/s
 
 ---
 
-## 二、已完成工作
+## 二、系统辨识方法对比（已完成）
 
-### 2.1 SINDy系统辨识（已完成）
+### 2.1 评估方案
+
+**方案C：真实模型+LQR生成参考轨迹**
+- 真实模型+LQR生成5段×500步轨迹
+- 所有模型从相同初始状态出发，接收相同力矩序列
+- 评估步数：[1, 5, 10, 20, 50, 100, 200, 500]
+- 指标：theta角度MAE（rad）
+- 发散判断：|phi| > pi/3 时截断
+
+**环境**：
+```bash
+"E:/Anaconda/envs/DL/python.exe"  # PyTorch + CUDA
+```
+
+### 2.2 测试过的12种基础方法
+
+| # | 方法 | 说明 | 500步MAE |
+|---|------|------|----------|
+| 1 | SINDyPoly | 多项式库(21特征) + STLSQ | 发散 |
+| 2 | SINDyTrig | 三角函数库(32特征) | 发散 |
+| 3 | SINDyTrigExp | 三角+指数库(36特征) | 发散 |
+| 4 | SINDyBestNN | 最佳SINDy + NN残差 | 发散 |
+| 5 | NNE2E | 端到端MLP | 发散 |
+| 6 | NeuralODE | NN学ds/dt，Euler积分 | 1.59~13.36 |
+| 7 | GP | 高斯过程回归(5000样本限制) | 7.05 |
+| 8 | PINN | 物理约束NN | 发散 |
+| 9 | ParamID | 线性最小二乘拟合 | 发散 |
+| 10 | NeuralODE_NN | 方法6 + NN残差 | 发散 |
+| 11 | GP_NN | 方法7 + NN残差 | 发散 |
+| 12 | ParamID_NN | 方法9 + NN残差 | 发散 |
+
+**结论**：纯方法中NeuralODE和GP表现最好，但加NN残差后全部发散。
+
+### 2.3 NN残差恶化诊断
+
+**诊断结论**（diagnose_hybrid.py）：
+- 残差仅占总变化的0.3%~0.8%（基线已捕捉99%+动态）
+- NN预测残差的符号一致率仅78.9%（21%方向错误）
+- rollout中NN输入偏离训练分布2~4σ（分布偏移）
+- 更多训练epoch反而更差（过拟合残差噪声）
+
+**根本原因**：正反馈放大误差
+```
+基线预测误差 → NN输入偏移 → NN输出错误残差 → 下一步更大偏移 → 指数发散
+```
+
+### 2.4 解决方案：三重防护
+
+| 技术 | 作用 | 参数 |
+|------|------|------|
+| OOD检测 | 分布外时回退零残差 | Mahalanobis距离 > 3σ |
+| 残差缩放 | 降低错误残差影响 | scale=0.3 |
+| DAgger | 用rollout数据重新训练 | 3轮，每轮2-3段轨迹 |
+
+**核心代码模式**：
+```python
+# 训练残差（归一化空间）
+residual = (真实下一步 - 基线预测) / delta_std
+
+# 推理时（保守应用）
+if ood_detector.is_ood(input):
+    delta_nn = 0  # 回退
+s_next = baseline.predict(s, tau) + delta_nn * delta_std * 0.3
+```
+
+### 2.5 论文改进方案测试
+
+| 方案 | 效果 | 原因 |
+|------|------|------|
+| 纯NN残差(无防护) | 恶化(发散) | 正反馈放大误差 |
+| +残差缩放0.3 | 部分改善 | 降低但未消除错误影响 |
+| +OOD检测 | 显著改善 | 分布外时安全回退 |
+| +DAgger | 进一步改善 | 减少分布偏移 |
+| Ensemble(5-NN) | 失败 | 残差噪声大，集成方差高，99.9%OOD率 |
+| Domain Rand | 部分改善 | 需配合OOD+DAgger |
+| Conformal Prediction | 失败 | 预测区间过宽，89-98%回退率 |
+| Latent-space(2D) | 不稳定 | 降维丢失信息，0.10~0.43波动大 |
+
+### 2.6 最终结果：全部6种基线 + 改进NN残差
+
+| 方法 | 纯基线 (rad) | 改进混合 (rad) | 倍率 | 结论 |
+|------|-------------|---------------|------|------|
+| SINDyPoly | 1.73e+13 | 1.04e+13 | 0.60x | 改善(绝对值仍大) |
+| SINDyTrig | 2.01e+13 | 9.38e+8 | 0.00x | 大幅改善 |
+| NeuralODE | 1.59 | 0.48 | 0.30x | 改善 |
+| NNE2E(纯NN) | 1.28e+9 | 0.23 | 0.00x | 从发散恢复 |
+| ParamID | 8.52e+8 | 5.75e+8 | 0.67x | 改善 |
+| **GP** | 7.05 | **0.15** | 0.02x | **最佳** |
+
+### 2.7 最终排名
+
+| 排名 | 方法 | 500步MAE |
+|------|------|----------|
+| 1 | GP + OOD + DAgger + 0.3 | 0.15 rad |
+| 2 | NNE2E + OOD + DAgger + 0.3 | 0.23 rad |
+| 3 | NeuralODE + OOD + DAgger + 0.3 | 0.48 rad |
+| 4 | Latent + OOD | 0.10~0.43 rad(不稳定) |
+| 5 | DR + OOD + DAgger | 0.72 rad |
+
+---
+
+## 三、文件结构
+
+```
+sindy_bicycle/
+├── methods_common.py          # 公共基础设施（Meijaard参数、动力学、LQR、数据生成）
+├── methods_sindy.py           # SINDy方法（Poly/Trig/TrigExp库 + STLSQ）
+├── methods_nn.py              # NN方法（NeuralODE、NNE2E、ResidualNet）
+├── methods_classic.py         # 经典方法（GP、PINN、ParamID）
+├── methods_hybrid.py          # 混合方法基线版（无改进，已弃用）
+├── methods_evaluate.py        # 评估框架（make_tau_func、run_trajectory）
+│
+├── test_all_methods.py        # 12种方法原始对比
+├── diagnose_hybrid.py         # NN残差恶化诊断
+├── improved_hybrid.py         # 改进版混合方法（OOD+DAgger+0.3）
+├── test_improved_all.py       # 5种基线+改进NN测试
+├── test_ensemble.py           # Ensemble不确定性方案（失败）
+├── test_domain_rand.py        # Domain Randomization方案
+├── test_dr_dagger.py          # DR+OOD+DAgger三合一
+├── test_conformal.py          # Conformalized Neural Dynamics（失败）
+├── test_latent.py             # Latent-space dynamics（不稳定）
+├── test_all_improved.py       # 全部6基线+改进NN最终对比 ← 最终结果
+├── test_gp_nn_improved.py     # GP+NN改进版详细测试
+├── test_sindy_nn_improved.py  # SINDy/ParamID+NN改进版详细测试
+├── test_final_summary.py      # 最终总结对比
+│
+├── meijaard_dynamics.py       # Meijaard 2007解析模型（原始参考）
+├── mbpo_sac_v7.py             # MBPO-SAC v7训练脚本（效果差，已弃用）
+├── sindy_identification.py    # SINDy辨识代码
+├── compare_dynamics_models.py # 动力学模型对比
+├── compare_multistep.py       # 多步rollout对比
+├── verify_hrrl_stage1.py      # HRRL参数验证
+│
+├── sindy_full_model.npz       # SINDy系数(21x4)、state_std、action_std
+├── sindy_nn_residual.pt       # NN残差权重（17,796参数）
+├── meijaard_sindy_v35.npz     # 原始SINDy系数
+├── meijaard_openloop_data_v35.npz  # 开环仿真数据（29478样本）
+│
+└── HANDOVER.md                # 本交接文档
+```
+
+---
+
+## 四、已完成工作
+
+### 4.1 SINDy系统辨识（已完成）
 
 - 使用Meijaard 2007基准自行车参数生成开环数据（29478样本）
-- 状态空间：`[theta, delta, theta_dot, delta_dot]`（4维）
-- 动作空间：`tau`（转向力矩，标量）
 - 多项式库：常数+线性+二次交叉项（21个特征，5个输入）
 - 稀疏回归：STLSQ算法，阈值0.05
-- 输出：`sindy_full_model.npz`（系数矩阵21x4，8个非零项）
+- 输出：`sindy_full_model.npz`
 
-### 2.2 NN残差模型（已完成）
+### 4.2 NN残差模型（已完成）
 
 - 架构：3层MLP（128隐藏单元，SiLU激活）
 - 输入：`[s_norm(4), a_norm(1)]` = 5维
 - 输出：4维残差delta（归一化空间）
 - 参数量：17,796
-- 精度：单步RMSE比纯线性模型好35倍
 - 输出：`sindy_nn_residual.pt`
 
-### 2.3 多步rollout对比（已完成）
-
-| 模型 | 单步RMSE | 10步RMSE | 20步RMSE |
-|------|----------|----------|----------|
-| 线性(A_d@s+B_d*tau) | 0.003736 | 0.045 | 发散 |
-| SINDy | 0.000892 | 0.012 | 0.08 |
-| SINDy+NN | 0.000103 | 0.003 | 0.02 |
-| 纯NN | 0.000156 | 0.004 | 0.03 |
-
-**结论**：SINDy+NN在10步内最准确，超过20步后所有模型因混沌发散。
-
-### 2.4 MBPO-SAC v7（已完成，效果差）
+### 4.3 MBPO-SAC v7（已完成，效果差）
 
 - 文件：`mbpo_sac_v7.py`
-- 结果：600 episodes后SAC策略与纯LQR基线完全相同（theta_rms: 14.99°）
-- 失败原因：SAC的auto-alpha从0.303崩溃到0.007，探索停止，策略收敛为"什么都不做"
-- 详细输出：`model_stage1_20260620_094933/`
+- 结果：600 episodes后SAC策略与纯LQR基线完全相同
+- 失败原因：SAC的auto-alpha从0.303崩溃到0.007，探索停止
 
-### 2.5 HRRL参考项目分析（已完成）
+### 4.4 系统辨识方法对比（已完成）
 
-- 算法：TD3（不是SAC！）——这是关键发现
-- 物理引擎：PyBullet 3D（完整刚体仿真）
-- 训练步数：1001*100 = 100,100步
-- 动作映射：`targetPosition = action[0]*0.1 + pid_control`
-- 奖励函数：误差减小量模式 + 平稳性模式（beta=0.002切换）
-- 扰动调度：`sigma = min(0.3, 1.08^ep * 0.01)`
-- LQR参数：kp=15.249, kd=2.96, k=12.3（手工调参）
+- 12种基础方法对比
+- NN残差恶化诊断
+- 6种改进方案测试（OOD、DAgger、Domain Rand、Ensemble、Conformal、Latent）
+- 全部6种基线 + 改进NN残差最终对比
+- **最佳方案：GP + OOD + DAgger + 0.3 = 0.15 rad**
+
+### 4.5 世界模型优化分析（已完成，结论：非必要）
+
+- LQR控制下线性化vs非线性差异仅0.03°
+- 非线性优化的收益被LQR"掩盖"
+- 详见原交接文档第3.2节
 
 ---
 
-## 三、当前状态（待完成）
+## 五、待完成工作
 
-### 3.1 MBPO-TD3脚本（未写）
+### 5.1 MBPO-TD3脚本（未写）
 
 需要创建 `mbpo_td3.py`，基于 `mbpo_sac_v7.py` 进行以下改动：
 
 #### 改动1：SAC → TD3
 
 ```python
-# SAC（失败）→ TD3（待实现）
 class TD3Agent:
     # 确定性策略（不是随机策略）
     # 双Q网络（同SAC）
@@ -100,11 +243,6 @@ class TD3Agent:
 #### 改动2：奖励函数同步HRRL
 
 ```python
-# 旧（v7，效果差）:
-dis_reward + angle_penalty(-2*|theta|) + vel_penalty(-0.05*|w|) + upright_bonus
-terminated: -10 - |w|
-
-# 新（HRRL原版，待实现）:
 beta = 0.002
 if |dis_angle| < beta:
     reward = 0.1 - |w0|          # 小误差：奖励平稳
@@ -127,123 +265,25 @@ terminated: reward -= 1
 | exploration_noise | N/A | 0.1 | TD3标准 |
 | target_noise | N/A | 0.2, clip=0.5 | TD3标准 |
 
-### 3.2 世界模型优化分析（已测试，结论：非必要）
+### 5.2 将最佳系统辨识方案集成到MBPO
 
-#### 问题假设
+- 最佳方案：GP + OOD + DAgger + 0.3
+- 需要集成到MBPO的世界模型中
+- 需要测试在MBPO训练循环中的实际效果
+- 可能需要在线更新（新数据到来时重新训练）
 
-训练过程中倾斜角达到17°，线性化模型在此角度下误差显著，需要非线性动力学优化。
+### 5.3 撰写分析文档
 
-#### 实际测试结果（test_nonlinear_dynamics.py）
-
-**测试方法**：对比线性化Meijaard vs 非线性Meijaard+RK4+sin(phi)/phi修正
-
-**测试1：单步误差**
-
-| 角度 | 线性化phi_next | 非线性phi_next | 差异(°) | 相对误差 |
-|------|---------------|---------------|---------|---------|
-| 5° | 0.087387 | 0.087372 | -0.001° | 0.02% |
-| 10° | 0.174970 | 0.175027 | +0.003° | 0.03% |
-| 17° | 0.297587 | 0.297731 | +0.008° | 0.05% |
-| 30° | 0.525303 | 0.525540 | +0.014° | 0.04% |
-
-单步误差在17°时仅0.008°（0.05%），远小于预期。
-
-**测试2：开环长时间rollout（无控制，tau=5.0 Nm）**
-
-| 步数 | 线性化最终 | 非线性最终 | 差异 |
-|------|-----------|-----------|------|
-| 10步 | +16.19° | +15.61° | 0.58° |
-| 20步 | -21.07° | -23.97° | 2.90° |
-| 50步 | -726.40° | +254.78° | **981°** |
-
-开环时两种模型在20步后完全发散（混沌系统），但这不代表实际场景。
-
-**测试3：带LQR控制的rollout（最关键！）**
-
-| 步数 | 线性化最终 | 非线性最终 | **差异** |
-|------|-----------|-----------|---------|
-| 10步 | +10.58° | +10.37° | **0.21°** |
-| 20步 | +3.48° | +3.48° | **0.00°** |
-| 50步 | +0.14° | +0.14° | **0.00°** |
-| 100步 | +0.00° | +0.00° | **0.00°** |
-
-**关键发现：LQR控制使两种模型的轨迹差异几乎为零。**
-
-**测试4：带LQR+随机残差（模拟RL虚拟rollout）**
-
-| Episode | 初始角度 | 线性化 | 非线性 | 差异 |
-|---------|---------|--------|--------|------|
-| 1 | -4.3° | -9.26° | -9.23° | 0.03° |
-| 2 | +14.5° | +2.77° | +2.77° | 0.00° |
-| 3 | -3.1° | -6.57° | -6.56° | 0.01° |
-| 4 | +7.8° | +6.23° | +6.22° | 0.01° |
-| 5 | +1.7° | +8.71° | +8.69° | 0.02° |
-
-**50步rollout中，最大差异仅0.03°。**
-
-#### 结论
-
-**世界模型优化非必要。** 原因：
-
-1. 实际系统使用 `tau = u_lqr + action * 0.1`，LQR主导控制
-2. LQR的强纠正能力使线性化误差被持续补偿
-3. 在LQR控制下，10步rollout的两种模型差异仅0.21°，50步后差异为0°
-4. 非线性优化的收益被LQR"掩盖"了
-5. 真正的瓶颈是算法（SAC→TD3），不是世界模型精度
-
-**建议：直接使用当前SINDy+NN世界模型+TD3，不做世界模型优化。**
-
-### 3.3 分析文档（未写）
-
-需要创建 `.md` 文件，记录：
 - TD3算法改进分析
-- 世界模型优化测试结论（已记录在3.2）
-- 当前条件如实记录
+- 世界模型优化测试结论
+- 系统辨识方法对比结论
 - HRRL对比分析
 
 ---
 
-## 四、关键文件清单
+## 六、技术细节速查
 
-### 4.1 核心代码文件
-
-| 文件 | 用途 | 状态 |
-|------|------|------|
-| `sindy_bicycle/mbpo_sac_v7.py` | MBPO-SAC v7训练脚本 | 已完成（效果差） |
-| `sindy_bicycle/mbpo_td3.py` | MBPO-TD3训练脚本 | **待创建** |
-| `sindy_bicycle/meijaard_dynamics.py` | Meijaard动力学函数 | 已完成 |
-| `sindy_bicycle/sindy_identification.py` | SINDy辨识代码 | 已完成 |
-| `sindy_bicycle/compare_dynamics_models.py` | 动力学模型对比 | 已完成 |
-| `sindy_bicycle/compare_multistep.py` | 多步rollout对比 | 已完成 |
-| `sindy_bicycle/verify_hrrl_stage1.py` | HRRL参数验证 | 已完成 |
-
-### 4.2 预训练模型文件
-
-| 文件 | 内容 | 大小 |
-|------|------|------|
-| `sindy_bicycle/sindy_full_model.npz` | SINDy系数(21x4)、state_std(4)、action_std | ~10KB |
-| `sindy_bicycle/sindy_nn_residual.pt` | NN残差权重（17,796参数） | ~75KB |
-| `sindy_bicycle/meijaard_sindy_v35.npz` | 原始SINDy系数（用于A_d/B_d提取） | ~10KB |
-
-### 4.3 数据文件
-
-| 文件 | 内容 |
-|------|------|
-| `sindy_bicycle/meijaard_openloop_data_v35.npz` | 开环仿真数据（29478样本） |
-| `sindy_bicycle/model_stage1_20260620_094933/` | SAC v7训练输出 |
-
-### 4.4 HRRL参考文件
-
-| 文件 | 用途 |
-|------|------|
-| `HRRL-new/env.py` | HRRL环境定义（奖励函数、LQR、扰动） |
-| `HRRL-new/train_attitude.py` | HRRL训练脚本（TD3配置） |
-
----
-
-## 五、技术细节速查
-
-### 5.1 Meijaard自行车参数
+### 6.1 Meijaard自行车参数
 
 ```python
 p = {
@@ -259,179 +299,138 @@ p = {
     'xB': 0.289099434117, 'xH': 0.866949640247,
     'zB': -1.04029228321, 'zH': -0.748236400835,
 }
-# 总质量：89.21 kg，轴距：1.121 m，trail：0.0686 m
-# 自稳定速度范围：约4-6 m/s（实验验证）
 ```
 
-### 5.2 状态空间
+### 6.2 状态空间
 
 ```python
-# 物理状态：[theta(倾斜角), delta(转向角), theta_dot(角速度), delta_dot(转向角速度)]
-# 归一化：[theta/1.57, delta/1.57, theta_dot/10, v/5]
+# 状态：[theta(倾斜角), delta(转向角), theta_dot(角速度), delta_dot(转向角速度)]
 # 终止条件：|theta| > pi/3 (60°)
-# Episode长度：1000步
 ```
 
-### 5.3 LQR控制器
+### 6.3 LQR控制器
 
 ```python
 # Q = diag(1000, 100, 10, 1), R = 0.2
 # K = [-103.9, -34.2, 38.0, 3.70]（Riccati方程求解）
 # 控制律：u_lqr = -K @ x_lqr
-# x_lqr = [theta - target_theta, theta_dot, delta, delta_dot]
 ```
 
-### 5.4 扰动调度（课程学习）
+### 6.4 ResidualNet架构
 
 ```python
-def compute_sigma(ep):
-    return min(0.3, (1.08 ** ep) * 0.01)
-# ep=0: sigma=0.01 (0.57°)
-# ep=80: sigma=0.3 (17.2°)
-# target_theta ~ N(0, sigma), clip to ±pi/12 (±15°)
-# 每100步重新采样
-# 前100步：target_theta = 0
+# 3层MLP，128 hidden，SiLU激活
+# forward(s, a=None) - 支持双参数或单拼接张量
+class ResidualNet(nn.Module):
+    def __init__(self, state_dim=4, action_dim=1, hidden=128): ...
+    def forward(self, s, a=None): ...
 ```
 
-### 5.5 SINDy多项式库
+### 6.5 关键参数
 
-```python
-# 输入：[s_norm(4), a_norm(1)] = 5维
-# 特征：常数(1) + 线性(5) + 二次交叉(15) = 21个
-# 系数矩阵Xi：(21, 4)
-# 非零项：8个
-```
-
-### 5.6 NN残差架构
-
-```python
-ResidualNet:
-    Linear(5, 128) → SiLU → Linear(128, 128) → SiLU → Linear(128, 4)
-    参数量：17,796
-    输入：[s_norm(4), a_norm(1)]
-    输出：4维残差delta（归一化空间）
-```
+| 参数 | 值 | 说明 |
+|------|-----|------|
+| dt | 1/30 | 控制周期 |
+| v0 | 3.5 | 前进速度(m/s) |
+| 训练样本 | 30000 | generate_training_data |
+| OOD阈值 | 3.0σ | Mahalanobis距离 |
+| 残差缩放 | 0.3 | 保守修正系数 |
+| DAgger轮数 | 3 | 迭代轮数 |
+| NN训练epoch | 100-200 | 100epoch更稳定 |
 
 ---
 
-## 六、下一步执行计划
+## 七、已知问题与陷阱
 
-### 步骤1：创建 `mbpo_td3.py`
+### 7.1 NN残差的固有问题
 
-基于 `mbpo_sac_v7.py`，需要改动的部分：
+- 残差太小(0.3%~0.8%)，NN很难学到有意义的模式
+- 符号一致率仅78.9%，21%的修正是反方向的
+- 分布偏移不可避免（autoregressive rollout）
+- 更多训练epoch = 更多过拟合 = 更差的rollout表现
 
-1. **替换SACAgent为TD3Agent**
-   - 确定性策略网络（无log_std层）
-   - 双Q网络（同SAC）
-   - 延迟策略更新（policy_delay=2）
-   - 目标策略平滑（noise_std=0.2, noise_clip=0.5）
-   - 探索噪声（std=0.1）
+### 7.2 GP的局限
 
-2. **替换compute_reward为HRRL版本**
-   - beta=0.002
-   - 小误差：0.1-|w0|
-   - 大误差：|error_old|-|error_new|
-   - 终止：reward-=1
+- 训练极慢（30000样本需~12分钟）
+- sklearn GP有收敛警告（可忽略）
+- 预测速度慢于NN（但精度高）
 
-3. **修改参数**
-   - ALPHA: 0.5 → 0.1
-   - buffer_size: 300000 → 100000
+### 7.3 SINDy系列的局限
 
-4. **更新所有SAC相关引用**
-   - sac.select_action → td3.select_action
-   - sac.update → td3.update
-   - sac.alpha_val → 移除
-   - sac_weight → td3_weight
+- 基线本身就发散（多项式/三角函数库无法捕捉复杂动力学）
+- 加NN残差只能部分缓解，不能根本解决
+- 绝对误差仍然很大
 
-### 步骤2：优化世界模型（可选，建议在TD3效果不佳时再做）
+### 7.4 测试随机性
 
-在虚拟rollout中用非线性动力学替换线性化模型：
+- 初始状态随机采样 `np.random.uniform(-0.25, 0.25)`
+- 不同run结果可能有2-3倍差异
+- Latent-space方法对随机种子特别敏感
 
-```python
-def nonlinear_step(s, tau, dt, M, C1, K0, K2, v, g):
-    """RK4积分的非线性Meijaard动力学一步。"""
-    # M @ q_dd + C1*v @ q_dot + (g*K0 + v²*K2) @ q = [[0], [tau]]
-    # q_dd = invM @ (-C1*v*q_dot - (g*K0 + v²*K2)*q + [[0],[tau]])
-    # 使用sin(phi)/phi修正（大角度更准）
-```
-
-### 步骤3：执行训练
-
-```bash
-"E:/Anaconda/python.exe" "D:/系统辨识作业/sindy_bicycle/mbpo_td3.py"
-```
-
-预期时间：30-60分钟（GPU）
-
-### 步骤4：撰写分析文档
-
-将所有分析结果如实记录到 `.md` 文件。
-
----
-
-## 七、已知问题与风险
-
-### 7.1 SAC alpha崩溃（已确认）
+### 7.5 SAC alpha崩溃（已确认）
 
 - 现象：alpha从0.303→0.007，探索停止
-- 原因：当策略接近最优时，熵项变小，alpha自动降低以"鼓励"利用
+- 原因：当策略接近最优时，熵项变小，alpha自动降低
 - 解决：切换TD3（无熵项）
-
-### 7.2 线性化模型精度（已确认）
-
-- 现象：17°时线性化误差~4%
-- 影响：虚拟rollout中的"想象"经验有偏差
-- 解决：非线性动力学积分（待实现）
-
-### 7.3 手写TD3 vs SB3（潜在风险）
-
-- HRRL使用stable-baselines3的TD3（成熟库）
-- 本项目手写TD3（可能有实现细节差异）
-- 关键细节：target policy smoothing的实现、exploration noise的衰减
-
-### 7.4 虚拟rollout误差累积（已知限制）
-
-- SINDy+NN在10步内准确，超过20步发散
-- 当前rollout horizon=10（在安全范围内）
-- 但如果世界模型有系统性偏差，10步累积仍可能导致虚假经验
 
 ---
 
-## 八、运行环境
+## 八、后续方向
 
-```bash
-# Python环境
-E:/Anaconda/python.exe
+### 8.1 可尝试的改进
 
-# 依赖
-numpy, torch(CUDA), scipy, sklearn
+1. **自适应残差缩放**：根据OOD距离动态调整scale（近分布→大scale，远分布→小scale）
+2. **GP + NN的更深度融合**：用GP的不确定性指导NN残差的置信度
+3. **多步损失训练**：不只训单步残差，用多步rollout loss训练NN
+4. **物理约束残差**：让NN残差满足部分物理约束（如能量守恒）
+5. **贝叶斯神经网络**：替代ensemble，提供更好的不确定性估计
+6. **更大的GP**：用SGP(稀疏GP)或DeepGP处理更大数据集
 
-# GPU
-CUDA可用时自动使用GPU
+### 8.2 应用到MBPO
 
-# 工作目录
-D:/系统辨识作业/sindy_bicycle/
+- 最佳方案(GP+OOD+DAgger+0.3)需要集成到MBPO的世界模型中
+- 需要测试在MBPO训练循环中的实际效果
+- 可能需要在线更新（新数据到来时重新训练）
+
+### 8.3 性能优化
+
+- GP预测可以用缓存或近似加速
+- OOD检测可以用更轻量的方法（如简单的范围检查）
+- DAgger数据可以预计算并缓存
+
+---
+
+## 九、Git提交历史
+
+```
+cba3084 feat: All baselines + improved NN residual comparison ← 最终结果
+9d5e5ea feat: Final summary - all approaches compared
+a957561 feat: Latent-space dynamics test - NEW BEST 0.10 rad
+c29ad3a feat: Conformalized Neural Dynamics test
+52aab7c feat: DR + OOD + DAgger triple combination test
+[更早的commit见git log]
 ```
 
 ---
 
-## 九、关键命令
+## 十、运行指南
 
 ```bash
+# 运行最终对比（推荐，约20分钟含GP）
+"E:/Anaconda/envs/DL/python.exe" "D:/系统辨识作业/sindy_bicycle/test_all_improved.py"
+
+# 运行单个改进方案测试
+"E:/Anaconda/envs/DL/python.exe" "D:/系统辨识作业/sindy_bicycle/test_dr_dagger.py"
+"E:/Anaconda/envs/DL/python.exe" "D:/系统辨识作业/sindy_bicycle/test_latent.py"
+
+# 运行诊断
+"E:/Anaconda/envs/DL/python.exe" "D:/系统辨识作业/sindy_bicycle/diagnose_hybrid.py"
+
 # 运行SAC v7（已完成，效果差）
-"E:/Anaconda/python.exe" "D:/系统辨识作业/sindy_bicycle/mbpo_sac_v7.py"
-
-# 运行TD3（待创建）
-"E:/Anaconda/python.exe" "D:/系统辨识作业/sindy_bicycle/mbpo_td3.py"
-
-# 运行动力学模型对比
-"E:/Anaconda/python.exe" "D:/系统辨识作业/sindy_bicycle/compare_dynamics_models.py"
-
-# 运行多步rollout对比
-"E:/Anaconda/python.exe" "D:/系统辨识作业/sindy_bicycle/compare_multistep.py"
+"E:/Anaconda/envs/DL/python.exe" "D:/系统辨识作业/sindy_bicycle/mbpo_sac_v7.py"
 
 # 查看SINDy系数
-"E:/Anaconda/python.exe" -c "
+"E:/Anaconda/envs/DL/python.exe" -c "
 import numpy as np
 d = np.load('D:/系统辨识作业/sindy_bicycle/sindy_full_model.npz')
 print('coefficients:', d['coefficients'].shape)
@@ -439,3 +438,40 @@ print('state_std:', d['state_std'])
 print('action_std:', d['action_std'])
 "
 ```
+
+---
+
+## 十一、HRRL参考项目关键信息
+
+### 11.1 算法
+
+- TD3（不是SAC！）——这是关键发现
+- 物理引擎：PyBullet 3D（完整刚体仿真）
+- 训练步数：1001*100 = 100,100步
+
+### 11.2 奖励函数
+
+```python
+beta = 0.002
+if |dis_angle| < beta:
+    reward = 0.1 - |w0|          # 小误差：奖励平稳
+else:
+    reward = |error_old| - |error_new|  # 大误差：奖励收敛
+terminated: reward -= 1
+```
+
+### 11.3 扰动调度（课程学习）
+
+```python
+def compute_sigma(ep):
+    return min(0.3, (1.08 ** ep) * 0.01)
+# ep=0: sigma=0.01 (0.57°)
+# ep=80: sigma=0.3 (17.2°)
+```
+
+### 11.4 HRRL关键文件
+
+| 文件 | 用途 |
+|------|------|
+| `HRRL-new/env.py` | HRRL环境定义（奖励函数、LQR、扰动） |
+| `HRRL-new/train_attitude.py` | HRRL训练脚本（TD3配置） |
