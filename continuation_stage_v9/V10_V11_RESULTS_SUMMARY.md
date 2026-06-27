@@ -71,15 +71,15 @@ Uses EMA-smoothed validation NMAE to decide when to advance rollout length.
 
 ### 2C: Frequency-Domain Curriculum
 
-Per-state loss weighting based on physical time constants.
+Per-state loss weighting based on physical time constants (slow: v,theta; fast: theta_dot, delta_dot).
 
 | Config | H=10 | H=50 | H=100 | H=200 | H=500 | Time(s) |
 |--------|------|------|-------|-------|-------|---------|
 | freq_strong | 0.0621 | 0.5196 | 0.6488 | 0.7883 | 1.1898 | 1891 |
-| freq_moderate | - | - | - | - | - | Running |
-| freq_pure | - | - | - | - | - | Running |
+| freq_moderate | 0.0624 | 0.5299 | 0.6558 | 0.7096 | 0.9153 | 1887 |
+| freq_pure | 0.0693 | 0.6206 | 0.8047 | 1.0043 | 2.1583 | 1307 |
 
-**Conclusion:** Frequency-domain curriculum (strong) performed worse than baseline. Per-state reweighting disrupts the balance the optimizer naturally finds.
+**Conclusion:** All frequency-domain curriculum variants performed worse than baseline. Per-state reweighting disrupts the balance the optimizer naturally finds. The stronger the reweighting, the worse the long-horizon performance (freq_pure H=500: 2.16 vs baseline 0.55).
 
 ---
 
