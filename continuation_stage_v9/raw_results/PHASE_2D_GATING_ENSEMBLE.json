@@ -1,0 +1,226 @@
+{
+  "decay_gamma0.9": {
+    "type": "DecayResidual",
+    "gamma": 0.9,
+    "training_time": 103.9,
+    "evaluation": {
+      "1": {
+        "nmae_mean": 0.0048478392036605,
+        "survival_rate": 1.0
+      },
+      "5": {
+        "nmae_mean": 0.016844019159493007,
+        "survival_rate": 1.0
+      },
+      "10": {
+        "nmae_mean": 0.0627627756930258,
+        "survival_rate": 1.0
+      },
+      "20": {
+        "nmae_mean": 0.18171697511868784,
+        "survival_rate": 1.0
+      },
+      "50": {
+        "nmae_mean": 0.4556809470271917,
+        "survival_rate": 1.0
+      },
+      "100": {
+        "nmae_mean": 0.5064255774102104,
+        "survival_rate": 1.0
+      },
+      "200": {
+        "nmae_mean": 0.4736762416733509,
+        "survival_rate": 1.0
+      },
+      "500": {
+        "nmae_mean": 0.5528769200111702,
+        "survival_rate": 1.0
+      },
+      "1000": {
+        "nmae_mean": 0.6443377251194031,
+        "survival_rate": 0.8
+      }
+    }
+  },
+  "decay_gamma0.95": {
+    "type": "DecayResidual",
+    "gamma": 0.95,
+    "training_time": 102.2,
+    "evaluation": {
+      "1": {
+        "nmae_mean": 0.004828363733912247,
+        "survival_rate": 1.0
+      },
+      "5": {
+        "nmae_mean": 0.016695010727954415,
+        "survival_rate": 1.0
+      },
+      "10": {
+        "nmae_mean": 0.06270950606868743,
+        "survival_rate": 1.0
+      },
+      "20": {
+        "nmae_mean": 0.18171697511868784,
+        "survival_rate": 1.0
+      },
+      "50": {
+        "nmae_mean": 0.4556809470271917,
+        "survival_rate": 1.0
+      },
+      "100": {
+        "nmae_mean": 0.5064255774102104,
+        "survival_rate": 1.0
+      },
+      "200": {
+        "nmae_mean": 0.4736762416733509,
+        "survival_rate": 1.0
+      },
+      "500": {
+        "nmae_mean": 0.5528769200111702,
+        "survival_rate": 1.0
+      },
+      "1000": {
+        "nmae_mean": 0.6443377251194031,
+        "survival_rate": 0.8
+      }
+    }
+  },
+  "decay_gamma0.98": {
+    "type": "DecayResidual",
+    "gamma": 0.98,
+    "training_time": 101.6,
+    "evaluation": {
+      "1": {
+        "nmae_mean": 0.004805491801908706,
+        "survival_rate": 1.0
+      },
+      "5": {
+        "nmae_mean": 0.01640579820235264,
+        "survival_rate": 1.0
+      },
+      "10": {
+        "nmae_mean": 0.06255522106722297,
+        "survival_rate": 1.0
+      },
+      "20": {
+        "nmae_mean": 0.1817006551438889,
+        "survival_rate": 1.0
+      },
+      "50": {
+        "nmae_mean": 0.4556809470271917,
+        "survival_rate": 1.0
+      },
+      "100": {
+        "nmae_mean": 0.5064255774102104,
+        "survival_rate": 1.0
+      },
+      "200": {
+        "nmae_mean": 0.4736762416733509,
+        "survival_rate": 1.0
+      },
+      "500": {
+        "nmae_mean": 0.5528769200111702,
+        "survival_rate": 1.0
+      },
+      "1000": {
+        "nmae_mean": 0.6443377251194031,
+        "survival_rate": 0.8
+      }
+    }
+  },
+  "state_gated_seed42": {
+    "type": "StateGatedResidual",
+    "seed": 42,
+    "training_time": 116.4,
+    "evaluation": {
+      "1": {
+        "nmae_mean": 0.005086782149764329,
+        "survival_rate": 1.0
+      },
+      "5": {
+        "nmae_mean": 0.01703357011745726,
+        "survival_rate": 1.0
+      },
+      "10": {
+        "nmae_mean": 0.06276269735622023,
+        "survival_rate": 1.0
+      },
+      "20": {
+        "nmae_mean": 0.1817369224872517,
+        "survival_rate": 1.0
+      },
+      "50": {
+        "nmae_mean": 0.4557366635450409,
+        "survival_rate": 1.0
+      },
+      "100": {
+        "nmae_mean": 0.5065028815093212,
+        "survival_rate": 1.0
+      },
+      "200": {
+        "nmae_mean": 0.47371092186592634,
+        "survival_rate": 1.0
+      },
+      "500": {
+        "nmae_mean": 0.5528563331754172,
+        "survival_rate": 1.0
+      },
+      "1000": {
+        "nmae_mean": 0.6442400605026503,
+        "survival_rate": 0.8
+      }
+    }
+  },
+  "state_gated_seed43": {
+    "type": "StateGatedResidual",
+    "seed": 43,
+    "training_time": 117.9,
+    "evaluation": {
+      "1": {
+        "nmae_mean": 0.004793625467703526,
+        "survival_rate": 1.0
+      },
+      "5": {
+        "nmae_mean": 0.016505436405802675,
+        "survival_rate": 1.0
+      },
+      "10": {
+        "nmae_mean": 0.062434518419102934,
+        "survival_rate": 1.0
+      },
+      "20": {
+        "nmae_mean": 0.18146920783033268,
+        "survival_rate": 1.0
+      },
+      "50": {
+        "nmae_mean": 0.4624706795582069,
+        "survival_rate": 1.0
+      },
+      "100": {
+        "nmae_mean": 0.5115778168560119,
+        "survival_rate": 1.0
+      },
+      "200": {
+        "nmae_mean": 0.47185741810056764,
+        "survival_rate": 1.0
+      },
+      "500": {
+        "nmae_mean": 0.5501611036057489,
+        "survival_rate": 1.0
+      },
+      "1000": {
+        "nmae_mean": 0.6424957323578265,
+        "survival_rate": 0.8
+      }
+    }
+  },
+  "ensemble_mean": {
+    "error": "name 'hidden' is not defined"
+  },
+  "ensemble_median": {
+    "error": "name 'hidden' is not defined"
+  },
+  "ensemble_trimmed": {
+    "error": "name 'hidden' is not defined"
+  }
+}

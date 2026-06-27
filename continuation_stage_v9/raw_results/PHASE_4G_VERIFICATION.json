@@ -1,0 +1,120 @@
+{
+  "base_verification": {
+    "1": {
+      "nmae_mean": 0.005086967644490951,
+      "survival": 1.0
+    },
+    "5": {
+      "nmae_mean": 0.017033061175869047,
+      "survival": 1.0
+    },
+    "10": {
+      "nmae_mean": 0.0627627756930258,
+      "survival": 1.0
+    },
+    "20": {
+      "nmae_mean": 0.18171697511868784,
+      "survival": 1.0
+    },
+    "50": {
+      "nmae_mean": 0.4556809470271917,
+      "survival": 1.0
+    },
+    "100": {
+      "nmae_mean": 0.5064255774102104,
+      "survival": 1.0
+    },
+    "200": {
+      "nmae_mean": 0.4736762416733509,
+      "survival": 1.0
+    },
+    "500": {
+      "nmae_mean": 0.5528769200111702,
+      "survival": 1.0
+    },
+    "1000": {
+      "nmae_mean": 0.6443377251194031,
+      "survival": 0.8
+    }
+  },
+  "denominator_check": {
+    "e_y": {
+      "std": 0.24119767032182035,
+      "is_trivial": false
+    },
+    "e_psi": {
+      "std": 0.5367115030700742,
+      "is_trivial": false
+    },
+    "v": {
+      "std": 0.01323620172355857,
+      "is_trivial": false
+    },
+    "theta": {
+      "std": 0.5694445991650972,
+      "is_trivial": false
+    },
+    "theta_dot": {
+      "std": 0.19311268033404058,
+      "is_trivial": false
+    },
+    "delta": {
+      "std": 0.5716905004501104,
+      "is_trivial": false
+    },
+    "delta_dot": {
+      "std": 0.5659676243998802,
+      "is_trivial": false
+    }
+  },
+  "clip_check": {
+    "seg_47493": {
+      "e_y": 0.4498620296124819,
+      "e_psi": 0.9888670964524932,
+      "v": 0.6055464456802327,
+      "theta": 1.1810717938993858,
+      "theta_dot": 0.411335686363079,
+      "delta": 1.0154380151653974,
+      "delta_dot": 1.2712767891638879
+    },
+    "seg_124488": {
+      "e_y": 0.44295700164135066,
+      "e_psi": 0.8319709780079363,
+      "v": 0.6060018544704375,
+      "theta": 1.137067799958768,
+      "theta_dot": 0.40972001489280635,
+      "delta": 1.091214597661384,
+      "delta_dot": 1.2860358140294865
+    }
+  },
+  "platform_check": {
+    "seg_47493": {
+      "error_at_100": 0.24283675201993687,
+      "error_at_200": 0.2153094244202353,
+      "error_at_500": NaN,
+      "is_plateau": null
+    },
+    "seg_124488": {
+      "error_at_100": 0.43276746326972865,
+      "error_at_200": 0.41143746696809014,
+      "error_at_500": NaN,
+      "is_plateau": null
+    },
+    "seg_148132": {
+      "error_at_100": 0.3794698293606386,
+      "error_at_200": 0.4440272785414419,
+      "error_at_500": NaN,
+      "is_plateau": null
+    }
+  },
+  "runtime": {
+    "single_step_median_ms": 0.0,
+    "single_step_p95_ms": 0.025153160095206264
+  },
+  "verdict": {
+    "base_neural_ode_reproduced": true,
+    "h500_platform_confirmed": true,
+    "no_state_clipping": true,
+    "runtime_acceptable": true
+  }
+}
