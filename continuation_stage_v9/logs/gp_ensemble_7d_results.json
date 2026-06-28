@@ -1,0 +1,75 @@
+{
+  "method": "GP+Ensemble(5)+OOD+DAgger+0.3",
+  "state_dim": 7,
+  "n_models": 5,
+  "dagger_rounds": 3,
+  "residual_scale": 0.3,
+  "gp_max_samples": 2000,
+  "n_eval_segments": 5,
+  "segment_length": 1100,
+  "results": {
+    "1": {
+      "gp_nmae": 0.017339202640302448,
+      "gp_survival": 1.0,
+      "gp_ensemble_nmae": 0.016172583055364852,
+      "gp_ensemble_survival": 1.0,
+      "v9_neural_ode_nmae": 0.0051
+    },
+    "5": {
+      "gp_nmae": 0.05127914884965612,
+      "gp_survival": 1.0,
+      "gp_ensemble_nmae": 0.04517551862699297,
+      "gp_ensemble_survival": 1.0,
+      "v9_neural_ode_nmae": 0.017
+    },
+    "10": {
+      "gp_nmae": 0.10373756655536533,
+      "gp_survival": 1.0,
+      "gp_ensemble_nmae": 0.09438470609007862,
+      "gp_ensemble_survival": 1.0,
+      "v9_neural_ode_nmae": 0.0628
+    },
+    "20": {
+      "gp_nmae": 0.2230718747403697,
+      "gp_survival": 1.0,
+      "gp_ensemble_nmae": 0.21067419305363969,
+      "gp_ensemble_survival": 1.0,
+      "v9_neural_ode_nmae": 0.1817
+    },
+    "50": {
+      "gp_nmae": 0.43344667728475644,
+      "gp_survival": 1.0,
+      "gp_ensemble_nmae": 0.4446042411183961,
+      "gp_ensemble_survival": 1.0,
+      "v9_neural_ode_nmae": 0.4557
+    },
+    "100": {
+      "gp_nmae": 0.4643060580959794,
+      "gp_survival": 1.0,
+      "gp_ensemble_nmae": 0.48989225706587414,
+      "gp_ensemble_survival": 1.0,
+      "v9_neural_ode_nmae": 0.5064
+    },
+    "200": {
+      "gp_nmae": 0.4147461903421334,
+      "gp_survival": 1.0,
+      "gp_ensemble_nmae": 0.4719308863615379,
+      "gp_ensemble_survival": 1.0,
+      "v9_neural_ode_nmae": 0.4737
+    },
+    "500": {
+      "gp_nmae": 0.43248260332144695,
+      "gp_survival": 1.0,
+      "gp_ensemble_nmae": 0.553242383679447,
+      "gp_ensemble_survival": 1.0,
+      "v9_neural_ode_nmae": 0.5529
+    },
+    "1000": {
+      "gp_nmae": 0.43977612573439184,
+      "gp_survival": 1.0,
+      "gp_ensemble_nmae": 0.6179078210097018,
+      "gp_ensemble_survival": 1.0,
+      "v9_neural_ode_nmae": 0.6443
+    }
+  }
+}

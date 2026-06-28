@@ -37,7 +37,7 @@ SEED = 42
 class GP7D:
     """7 个独立高斯过程，每个预测一个状态维度的归一化 delta。"""
 
-    def __init__(self, max_samples: int = 5000):
+    def __init__(self, max_samples: int = 2000):
         self.max_samples = max_samples
         self._gps = None
         self._state_std = None
@@ -45,8 +45,11 @@ class GP7D:
         self._delta_std = None
 
     def train(self, states, actions, deltas, state_std, action_std, delta_std):
+        import warnings
+        from sklearn.exceptions import ConvergenceWarning
+        warnings.filterwarnings('ignore', category=ConvergenceWarning)
         from sklearn.gaussian_process import GaussianProcessRegressor
-        from sklearn.gaussian_process.kernels import RBF, ConstantKernel
+        from sklearn.gaussian_process.kernels import Matern
 
         self._state_std = state_std
         self._action_std = action_std
@@ -65,29 +68,37 @@ class GP7D:
         ])  # (n, 8)
         Y = deltas[idx] / delta_std  # (n, 7)
 
-        self._gps = []
-        kernel = ConstantKernel(1.0) * RBF(length_scale=1.0)
-        for col in range(STATE_DIM):
-            gp = GaussianProcessRegressor(
-                kernel=kernel, n_restarts_optimizer=2, alpha=1e-6,
-            )
-            gp.fit(X, Y[:, col])
-            self._gps.append(gp)
-            print(f"    GP dim {col} ({STATE_NAMES_7D[col]}) done")
+        # 标准化 X 以加速 GP 收敛
+        self._x_mean = X.mean(axis=0)
+        self._x_std = X.std(axis=0) + 1e-8
+        X_scaled = (X - self._x_mean) / self._x_std
 
-    def predict(self, s, tau):
+        self._gps = []
+        kernel = Matern(nu=2.5, length_scale=1.0)
+        for col in range(STATE_DIM):
+            t0 = time.time()
+            gp = GaussianProcessRegressor(
+                kernel=kernel, n_restarts_optimizer=1, alpha=1e-3,
+            )
+            gp.fit(X_scaled, Y[:, col])
+            self._gps.append(gp)
+            print(f"    GP dim {col} ({STATE_NAMES_7D[col]}) done ({time.time()-t0:.1f}s)")
+
+    def _prepare_input(self, s, tau):
         s_norm = s / self._state_std
         a_norm = tau / self._action_std
         x = np.concatenate([s_norm, [a_norm]]).reshape(1, -1)
-        delta_norm = np.array([gp.predict(x)[0] for gp in self._gps])
+        return (x - self._x_mean) / self._x_std
+
+    def predict(self, s, tau):
+        x_scaled = self._prepare_input(s, tau)
+        delta_norm = np.array([gp.predict(x_scaled)[0] for gp in self._gps])
         return s + delta_norm * self._delta_std
 
     def predict_delta_norm(self, s, tau):
         """返回归一化 delta（供残差计算用）。"""
-        s_norm = s / self._state_std
-        a_norm = tau / self._action_std
-        x = np.concatenate([s_norm, [a_norm]]).reshape(1, -1)
-        return np.array([gp.predict(x)[0] for gp in self._gps])
+        x_scaled = self._prepare_input(s, tau)
+        return np.array([gp.predict(x_scaled)[0] for gp in self._gps])
 
 
 # ============================================================
@@ -184,7 +195,7 @@ class OODDetector:
 # 训练管道
 # ============================================================
 def train_gp_ensemble_7d(data, n_models=5, n_epochs=100, dagger_rounds=3,
-                         residual_scale=0.3, gp_max_samples=5000):
+                         residual_scale=0.3, gp_max_samples=2000):
     """完整训练: GP 基线 + Ensemble NN 残差 + DAgger。"""
     train_s = data['train_states']
     train_a = data['train_actions']
@@ -369,7 +380,7 @@ def main():
     t0 = time.time()
     gp, ensemble, ood, (state_std, action_std, delta_std) = train_gp_ensemble_7d(
         data, n_models=5, n_epochs=100, dagger_rounds=3, residual_scale=0.3,
-        gp_max_samples=5000,
+        gp_max_samples=2000,
     )
     print(f"Training done in {time.time()-t0:.1f}s")
     print()
@@ -449,7 +460,7 @@ def main():
             'n_models': 5,
             'dagger_rounds': 3,
             'residual_scale': 0.3,
-            'gp_max_samples': 5000,
+            'gp_max_samples': 2000,
             'n_eval_segments': N_EVAL_SEGMENTS,
             'segment_length': SEGMENT_LENGTH,
             'results': {str(k): v for k, v in all_results.items()},
