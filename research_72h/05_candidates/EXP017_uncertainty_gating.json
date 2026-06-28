@@ -1,0 +1,22 @@
+{
+  "timestamp": "2026-06-28T22:32:26.748586",
+  "run_id": "20260628_175824_neural_ode_144h",
+  "experiment": "uncertainty_gating",
+  "thresholds": [
+    0.05,
+    0.1,
+    0.2
+  ],
+  "results": {
+    "0.05": {
+      "primary": 0.5281442503134409
+    },
+    "0.1": {
+      "primary": 0.5281126995881399
+    },
+    "0.2": {
+      "primary": 0.5281126995881399
+    }
+  },
+  "best_threshold": 0.1
+}
