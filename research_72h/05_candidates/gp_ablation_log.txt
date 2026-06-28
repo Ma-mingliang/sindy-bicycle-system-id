@@ -1,0 +1,11 @@
+============================================================
+GP Ablation Study
+============================================================
+
+1. Loading data...
+
+============================================================
+Ablation: full - Full GP (baseline)
+============================================================
+C:\Users\1\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\sklearn\gaussian_process\kernels.py:445: ConvergenceWarning: The optimal value found for dimension 0 of parameter k2__length_scale is close to the specified lower bound 1e-05. Decreasing the bound and calling fit again may find a better value.
+  warnings.warn(

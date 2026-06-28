@@ -36,3 +36,265 @@ C:\Users\1\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\sklearn\gaus
   warnings.warn(
   Training GP for delta...
   Training GP for delta_dot...
+C:\Users\1\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\sklearn\gaussian_process\_gpr.py:667: ConvergenceWarning: lbfgs failed to converge after 15 iteration(s) (status=2):
+ABNORMAL: 
+
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+  _check_optimize_result("lbfgs", opt_res)
+C:\Users\1\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\sklearn\gaussian_process\kernels.py:455: ConvergenceWarning: The optimal value found for dimension 0 of parameter k1__constant_value is close to the specified upper bound 100000.0. Increasing the bound and calling fit again may find a better value.
+  warnings.warn(
+
+Evaluating seed=42...
+
+Results for seed=42:
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0213       100.00%     
+H=10      0.0498       100.00%     
+H=50      0.1147       100.00%     
+H=100     0.3802       100.00%     
+H=200     0.8207       100.00%     
+H=500     1.3244       100.00%     
+
+PrimaryLongHorizonScore: 0.8418
+
+============================================================
+Training GP with seed=43
+============================================================
+  Training GP for e_y...
+C:\Users\1\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\sklearn\gaussian_process\kernels.py:445: ConvergenceWarning: The optimal value found for dimension 0 of parameter k2__length_scale is close to the specified lower bound 1e-05. Decreasing the bound and calling fit again may find a better value.
+  warnings.warn(
+  Training GP for e_psi...
+C:\Users\1\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\sklearn\gaussian_process\kernels.py:445: ConvergenceWarning: The optimal value found for dimension 0 of parameter k2__length_scale is close to the specified lower bound 1e-05. Decreasing the bound and calling fit again may find a better value.
+  warnings.warn(
+  Training GP for v...
+C:\Users\1\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\sklearn\gaussian_process\_gpr.py:667: ConvergenceWarning: lbfgs failed to converge after 13 iteration(s) (status=2):
+ABNORMAL: 
+
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+  _check_optimize_result("lbfgs", opt_res)
+C:\Users\1\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\sklearn\gaussian_process\kernels.py:455: ConvergenceWarning: The optimal value found for dimension 0 of parameter k1__constant_value is close to the specified upper bound 100000.0. Increasing the bound and calling fit again may find a better value.
+  warnings.warn(
+  Training GP for theta...
+C:\Users\1\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\sklearn\gaussian_process\_gpr.py:667: ConvergenceWarning: lbfgs failed to converge after 14 iteration(s) (status=2):
+ABNORMAL: 
+
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+  _check_optimize_result("lbfgs", opt_res)
+C:\Users\1\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\sklearn\gaussian_process\kernels.py:455: ConvergenceWarning: The optimal value found for dimension 0 of parameter k1__constant_value is close to the specified upper bound 100000.0. Increasing the bound and calling fit again may find a better value.
+  warnings.warn(
+  Training GP for theta_dot...
+C:\Users\1\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\sklearn\gaussian_process\kernels.py:445: ConvergenceWarning: The optimal value found for dimension 0 of parameter k2__length_scale is close to the specified lower bound 1e-05. Decreasing the bound and calling fit again may find a better value.
+  warnings.warn(
+  Training GP for delta...
+  Training GP for delta_dot...
+C:\Users\1\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\sklearn\gaussian_process\_gpr.py:667: ConvergenceWarning: lbfgs failed to converge after 13 iteration(s) (status=2):
+ABNORMAL: 
+
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+  _check_optimize_result("lbfgs", opt_res)
+C:\Users\1\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\sklearn\gaussian_process\kernels.py:455: ConvergenceWarning: The optimal value found for dimension 0 of parameter k1__constant_value is close to the specified upper bound 100000.0. Increasing the bound and calling fit again may find a better value.
+  warnings.warn(
+
+Evaluating seed=43...
+
+Results for seed=43:
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0214       100.00%     
+H=10      0.0498       100.00%     
+H=50      0.1145       100.00%     
+H=100     0.3794       100.00%     
+H=200     0.8180       100.00%     
+H=500     1.3191       100.00%     
+
+PrimaryLongHorizonScore: 0.8388
+
+============================================================
+Training GP with seed=44
+============================================================
+  Training GP for e_y...
+C:\Users\1\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\sklearn\gaussian_process\kernels.py:445: ConvergenceWarning: The optimal value found for dimension 0 of parameter k2__length_scale is close to the specified lower bound 1e-05. Decreasing the bound and calling fit again may find a better value.
+  warnings.warn(
+  Training GP for e_psi...
+C:\Users\1\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\sklearn\gaussian_process\kernels.py:445: ConvergenceWarning: The optimal value found for dimension 0 of parameter k2__length_scale is close to the specified lower bound 1e-05. Decreasing the bound and calling fit again may find a better value.
+  warnings.warn(
+  Training GP for v...
+C:\Users\1\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\sklearn\gaussian_process\_gpr.py:667: ConvergenceWarning: lbfgs failed to converge after 17 iteration(s) (status=2):
+ABNORMAL: 
+
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+  _check_optimize_result("lbfgs", opt_res)
+C:\Users\1\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\sklearn\gaussian_process\kernels.py:455: ConvergenceWarning: The optimal value found for dimension 0 of parameter k1__constant_value is close to the specified upper bound 100000.0. Increasing the bound and calling fit again may find a better value.
+  warnings.warn(
+  Training GP for theta...
+C:\Users\1\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\sklearn\gaussian_process\_gpr.py:667: ConvergenceWarning: lbfgs failed to converge after 15 iteration(s) (status=2):
+ABNORMAL: 
+
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+  _check_optimize_result("lbfgs", opt_res)
+  Training GP for theta_dot...
+C:\Users\1\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\sklearn\gaussian_process\kernels.py:445: ConvergenceWarning: The optimal value found for dimension 0 of parameter k2__length_scale is close to the specified lower bound 1e-05. Decreasing the bound and calling fit again may find a better value.
+  warnings.warn(
+  Training GP for delta...
+C:\Users\1\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\sklearn\gaussian_process\_gpr.py:667: ConvergenceWarning: lbfgs failed to converge after 16 iteration(s) (status=2):
+ABNORMAL: 
+
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+  _check_optimize_result("lbfgs", opt_res)
+  Training GP for delta_dot...
+C:\Users\1\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\sklearn\gaussian_process\kernels.py:455: ConvergenceWarning: The optimal value found for dimension 0 of parameter k1__constant_value is close to the specified upper bound 100000.0. Increasing the bound and calling fit again may find a better value.
+  warnings.warn(
+
+Evaluating seed=44...
+
+Results for seed=44:
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0214       100.00%     
+H=10      0.0498       100.00%     
+H=50      0.1147       100.00%     
+H=100     0.3804       100.00%     
+H=200     0.8212       100.00%     
+H=500     1.3243       100.00%     
+
+PrimaryLongHorizonScore: 0.8420
+
+============================================================
+Training GP with seed=45
+============================================================
+  Training GP for e_y...
+C:\Users\1\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\sklearn\gaussian_process\kernels.py:445: ConvergenceWarning: The optimal value found for dimension 0 of parameter k2__length_scale is close to the specified lower bound 1e-05. Decreasing the bound and calling fit again may find a better value.
+  warnings.warn(
+  Training GP for e_psi...
+C:\Users\1\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\sklearn\gaussian_process\kernels.py:445: ConvergenceWarning: The optimal value found for dimension 0 of parameter k2__length_scale is close to the specified lower bound 1e-05. Decreasing the bound and calling fit again may find a better value.
+  warnings.warn(
+  Training GP for v...
+C:\Users\1\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\sklearn\gaussian_process\_gpr.py:667: ConvergenceWarning: lbfgs failed to converge after 15 iteration(s) (status=2):
+ABNORMAL: 
+
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+  _check_optimize_result("lbfgs", opt_res)
+C:\Users\1\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\sklearn\gaussian_process\kernels.py:455: ConvergenceWarning: The optimal value found for dimension 0 of parameter k1__constant_value is close to the specified upper bound 100000.0. Increasing the bound and calling fit again may find a better value.
+  warnings.warn(
+  Training GP for theta...
+C:\Users\1\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\sklearn\gaussian_process\_gpr.py:667: ConvergenceWarning: lbfgs failed to converge after 16 iteration(s) (status=2):
+ABNORMAL: 
+
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+  _check_optimize_result("lbfgs", opt_res)
+C:\Users\1\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\sklearn\gaussian_process\kernels.py:455: ConvergenceWarning: The optimal value found for dimension 0 of parameter k1__constant_value is close to the specified upper bound 100000.0. Increasing the bound and calling fit again may find a better value.
+  warnings.warn(
+  Training GP for theta_dot...
+C:\Users\1\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\sklearn\gaussian_process\kernels.py:445: ConvergenceWarning: The optimal value found for dimension 0 of parameter k2__length_scale is close to the specified lower bound 1e-05. Decreasing the bound and calling fit again may find a better value.
+  warnings.warn(
+  Training GP for delta...
+C:\Users\1\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\sklearn\gaussian_process\_gpr.py:667: ConvergenceWarning: lbfgs failed to converge after 14 iteration(s) (status=2):
+ABNORMAL: 
+
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+  _check_optimize_result("lbfgs", opt_res)
+  Training GP for delta_dot...
+C:\Users\1\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\sklearn\gaussian_process\_gpr.py:667: ConvergenceWarning: lbfgs failed to converge after 13 iteration(s) (status=2):
+ABNORMAL: 
+
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+  _check_optimize_result("lbfgs", opt_res)
+C:\Users\1\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\sklearn\gaussian_process\kernels.py:455: ConvergenceWarning: The optimal value found for dimension 0 of parameter k1__constant_value is close to the specified upper bound 100000.0. Increasing the bound and calling fit again may find a better value.
+  warnings.warn(
+
+Evaluating seed=45...
+
+Results for seed=45:
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0214       100.00%     
+H=10      0.0498       100.00%     
+H=50      0.1139       100.00%     
+H=100     0.3788       100.00%     
+H=200     0.8189       100.00%     
+H=500     1.3204       100.00%     
+
+PrimaryLongHorizonScore: 0.8394
+
+============================================================
+Training GP with seed=46
+============================================================
+  Training GP for e_y...
+C:\Users\1\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\sklearn\gaussian_process\kernels.py:445: ConvergenceWarning: The optimal value found for dimension 0 of parameter k2__length_scale is close to the specified lower bound 1e-05. Decreasing the bound and calling fit again may find a better value.
+  warnings.warn(
+  Training GP for e_psi...
+C:\Users\1\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\sklearn\gaussian_process\kernels.py:445: ConvergenceWarning: The optimal value found for dimension 0 of parameter k2__length_scale is close to the specified lower bound 1e-05. Decreasing the bound and calling fit again may find a better value.
+  warnings.warn(
+  Training GP for v...
+C:\Users\1\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\sklearn\gaussian_process\_gpr.py:667: ConvergenceWarning: lbfgs failed to converge after 8 iteration(s) (status=2):
+ABNORMAL: 
+
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+  _check_optimize_result("lbfgs", opt_res)
+C:\Users\1\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\sklearn\gaussian_process\kernels.py:455: ConvergenceWarning: The optimal value found for dimension 0 of parameter k1__constant_value is close to the specified upper bound 100000.0. Increasing the bound and calling fit again may find a better value.
+  warnings.warn(
+  Training GP for theta...
+  Training GP for theta_dot...
+C:\Users\1\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\sklearn\gaussian_process\kernels.py:445: ConvergenceWarning: The optimal value found for dimension 0 of parameter k2__length_scale is close to the specified lower bound 1e-05. Decreasing the bound and calling fit again may find a better value.
+  warnings.warn(
+  Training GP for delta...
+  Training GP for delta_dot...
+C:\Users\1\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\sklearn\gaussian_process\kernels.py:455: ConvergenceWarning: The optimal value found for dimension 0 of parameter k1__constant_value is close to the specified upper bound 100000.0. Increasing the bound and calling fit again may find a better value.
+  warnings.warn(
+
+Evaluating seed=46...
+
+Results for seed=46:
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0213       100.00%     
+H=10      0.0498       100.00%     
+H=50      0.1150       100.00%     
+H=100     0.3808       100.00%     
+H=200     0.8217       100.00%     
+H=500     1.3291       100.00%     
+
+PrimaryLongHorizonScore: 0.8439
+
+============================================================
+SUMMARY: GP Multi-Seed Results
+============================================================
+
+Seed     H=1        H=10       H=50       H=100      H=200      H=500      Primary   
+------------------------------------------------------------------------------
+42       0.0213     0.0498     0.1147     0.3802     0.8207     1.3244     0.8418    
+43       0.0214     0.0498     0.1145     0.3794     0.8180     1.3191     0.8388    
+44       0.0214     0.0498     0.1147     0.3804     0.8212     1.3243     0.8420    
+45       0.0214     0.0498     0.1139     0.3788     0.8189     1.3204     0.8394    
+46       0.0213     0.0498     0.1150     0.3808     0.8217     1.3291     0.8439    
+
+Primary Statistics:
+  Mean: 0.8412
+  Std: 0.0019
+  Min: 0.8388
+  Max: 0.8439
+
+Comparison with v9 baseline:
+Horizon    v9 NMAE      GP Mean      GP Std       Improvement 
+----------------------------------------------------------
+H=1       0.0051       0.0214       0.0000       -318.9      %
+H=10      0.0628       0.0498       0.0000       20.7        %
+H=50      0.4557       0.1146       0.0003       74.9        %
+H=100     0.5064       0.3799       0.0007       25.0        %
+H=200     0.4737       0.8201       0.0014       -73.1       %
+H=500     0.5529       1.3235       0.0035       -139.4      %
+
+Results saved to: D:/系统辨识作业/sindy_bicycle/research_72h/05_candidates/EXP011_gp_multi_seed.json
