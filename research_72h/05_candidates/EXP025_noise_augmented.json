@@ -1,0 +1,28 @@
+{
+  "timestamp": "2026-06-29T00:45:24.715101",
+  "run_id": "20260628_175824_neural_ode_144h",
+  "experiment": "noise_augmented_training",
+  "configs": [
+    "no_noise",
+    "small_noise",
+    "medium_noise",
+    "large_noise"
+  ],
+  "results": {
+    "no_noise": {
+      "primary": 0.5034041752417883
+    },
+    "small_noise": {
+      "primary": 1.0128875772158306
+    },
+    "medium_noise": {
+      "primary": 0.8313004771868387
+    },
+    "large_noise": {
+      "primary": 0.7570560971895853
+    }
+  },
+  "best_config": "no_noise",
+  "root_cause": "training-test distribution mismatch",
+  "solution": "noise augmentation to simulate prediction errors"
+}

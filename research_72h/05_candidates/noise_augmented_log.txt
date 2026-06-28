@@ -1,0 +1,130 @@
+============================================================
+Noise-Augmented Training - Address Root Cause
+============================================================
+
+1. Loading data...
+
+============================================================
+Testing: no_noise (noise_scale=0.0)
+============================================================
+Training Noise-Augmented Neural ODE (seed=43)...
+  noise_scale: 0.0
+  Epoch 50/200: loss=291.150760, time=152.1s
+  Epoch 100/200: loss=232.315771, time=373.9s
+  Epoch 150/200: loss=212.642689, time=610.8s
+  Epoch 200/200: loss=206.577462, time=860.8s
+Training completed in 860.8s
+
+Evaluating no_noise...
+
+Results for no_noise:
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0154       100.00%     
+H=10      0.0414       100.00%     
+H=50      0.0565       100.00%     
+H=100     0.1624       100.00%     
+H=200     0.4825       100.00%     
+H=500     0.8653       60.00%      
+
+PrimaryLongHorizonScore: 0.5034
+
+============================================================
+Testing: small_noise (noise_scale=0.01)
+============================================================
+Training Noise-Augmented Neural ODE (seed=43)...
+  noise_scale: 0.01
+  Epoch 50/200: loss=301.644401, time=234.5s
+  Epoch 100/200: loss=253.055389, time=437.1s
+  Epoch 150/200: loss=233.291511, time=664.1s
+  Epoch 200/200: loss=228.021984, time=864.6s
+Training completed in 864.6s
+
+Evaluating small_noise...
+
+Results for small_noise:
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0239       100.00%     
+H=10      0.0459       100.00%     
+H=50      0.1776       100.00%     
+H=100     0.5282       100.00%     
+H=200     1.0056       60.00%      
+H=500     1.5049       40.00%      
+
+PrimaryLongHorizonScore: 1.0129
+
+============================================================
+Testing: medium_noise (noise_scale=0.05)
+============================================================
+Training Noise-Augmented Neural ODE (seed=43)...
+  noise_scale: 0.05
+  Epoch 50/200: loss=339.532012, time=216.4s
+  Epoch 100/200: loss=301.249249, time=446.1s
+  Epoch 150/200: loss=290.931846, time=586.9s
+  Epoch 200/200: loss=287.913795, time=701.3s
+Training completed in 701.3s
+
+Evaluating medium_noise...
+
+Results for medium_noise:
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0248       100.00%     
+H=10      0.0539       100.00%     
+H=50      0.1736       100.00%     
+H=100     0.4469       100.00%     
+H=200     0.7756       100.00%     
+H=500     1.2714       100.00%     
+
+PrimaryLongHorizonScore: 0.8313
+
+============================================================
+Testing: large_noise (noise_scale=0.1)
+============================================================
+Training Noise-Augmented Neural ODE (seed=43)...
+  noise_scale: 0.1
+  Epoch 50/200: loss=379.679036, time=114.5s
+  Epoch 100/200: loss=347.423017, time=237.9s
+  Epoch 150/200: loss=339.406483, time=361.8s
+  Epoch 200/200: loss=335.693659, time=486.1s
+Training completed in 486.1s
+
+Evaluating large_noise...
+
+Results for large_noise:
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0264       100.00%     
+H=10      0.0688       100.00%     
+H=50      0.2326       100.00%     
+H=100     0.4609       100.00%     
+H=200     0.7265       100.00%     
+H=500     1.0837       100.00%     
+
+PrimaryLongHorizonScore: 0.7571
+
+============================================================
+SUMMARY: Noise-Augmented Training Results
+============================================================
+
+Config          H=50       H=100      H=200      H=500      Primary   
+-----------------------------------------------------------------
+no_noise        0.0565     0.1624     0.4825     0.8653     0.5034    
+small_noise     0.1776     0.5282     1.0056     1.5049     1.0129    
+medium_noise    0.1736     0.4469     0.7756     1.2714     0.8313    
+large_noise     0.2326     0.4609     0.7265     1.0837     0.7571    
+
+Best configuration: no_noise (Primary = 0.5034)
+
+Comparison with v9 baseline:
+Horizon    v9 NMAE      Best Noise   Improvement 
+----------------------------------------------
+H=1       0.0051       0.0154       -201.7      %
+H=10      0.0628       0.0414       34.1        %
+H=50      0.4557       0.0565       87.6        %
+H=100     0.5064       0.1624       67.9        %
+H=200     0.4737       0.4825       -1.9        %
+H=500     0.5529       0.8653       -56.5       %
+
+Results saved to: D:/系统辨识作业/sindy_bicycle/research_72h/05_candidates/EXP025_noise_augmented.json
