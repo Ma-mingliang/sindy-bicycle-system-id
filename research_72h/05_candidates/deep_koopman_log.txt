@@ -1,0 +1,42 @@
+============================================================
+Deep Koopman for Bicycle Dynamics
+============================================================
+
+1. Loading data...
+
+2. Training Deep Koopman...
+Training Deep Koopman (seed=43)...
+  Lifted dim: 20
+  Epoch 50/200: loss=0.437802, val_loss=0.278166, time=43.2s
+  Epoch 100/200: loss=0.058768, val_loss=0.059789, time=86.2s
+  Epoch 150/200: loss=0.034489, val_loss=0.038019, time=128.9s
+  Epoch 200/200: loss=0.032596, val_loss=0.035432, time=172.0s
+Training completed in 172.0s
+
+3. Evaluating...
+
+============================================================
+RESULTS: Deep Koopman
+============================================================
+
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0934       100.00%     
+H=10      0.1622       100.00%     
+H=50      0.3264       100.00%     
+H=100     0.6305       100.00%     
+H=200     1.0664       100.00%     
+H=500     1.5262       100.00%     
+
+Comparison with v9 baseline:
+Horizon    v9 NMAE      Koopman      Improvement 
+----------------------------------------------
+H=1       0.0051       0.0934       -1731.5     %
+H=10      0.0628       0.1622       -158.2      %
+H=50      0.4557       0.3264       28.4        %
+H=100     0.5064       0.6305       -24.5       %
+H=200     0.4737       1.0664       -125.1      %
+H=500     0.5529       1.5262       -176.0      %
+
+Results saved to: D:/系统辨识作业/sindy_bicycle/research_72h/05_candidates/EXP008_deep_koopman.json
+Model saved to: D:/系统辨识作业/sindy_bicycle/research_72h/07_models/deep_koopman_seed43.pt
