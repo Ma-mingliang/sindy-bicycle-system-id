@@ -1,0 +1,28 @@
+{
+  "timestamp": "2026-06-29T01:29:55.967003",
+  "run_id": "20260628_175824_neural_ode_144h",
+  "experiment": "dagger_training",
+  "configs": [
+    "no_dagger",
+    "conservative_dagger",
+    "moderate_dagger",
+    "aggressive_dagger"
+  ],
+  "results": {
+    "no_dagger": {
+      "primary": 0.6035221914450327
+    },
+    "conservative_dagger": {
+      "primary": 1.2785460948944092
+    },
+    "moderate_dagger": {
+      "primary": 1.2873458067576091
+    },
+    "aggressive_dagger": {
+      "primary": 1.1247278054555256
+    }
+  },
+  "best_config": "no_dagger",
+  "root_cause": "training-test distribution mismatch",
+  "solution": "DAgger-like training with predicted states"
+}

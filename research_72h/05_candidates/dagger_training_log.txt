@@ -1,0 +1,134 @@
+============================================================
+DAgger Training - Address Root Cause
+============================================================
+
+1. Loading data...
+
+============================================================
+Testing: no_dagger (dagger_prob=0.0)
+============================================================
+Training DAgger Neural ODE (seed=43)...
+  dagger_prob: 0.0
+  dagger_warmup: 50
+  Epoch 50/200: loss=293.219913, time=108.6s
+  Epoch 100/200: loss=233.456428, time=217.6s
+  Epoch 150/200: loss=215.263491, time=326.1s
+  Epoch 200/200: loss=208.477498, time=434.9s
+Training completed in 434.9s
+
+Evaluating no_dagger...
+
+Results for no_dagger:
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0180       100.00%     
+H=10      0.0406       100.00%     
+H=50      0.1236       100.00%     
+H=100     0.3395       100.00%     
+H=200     0.6665       100.00%     
+H=500     0.8045       80.00%      
+
+PrimaryLongHorizonScore: 0.6035
+
+============================================================
+Testing: conservative_dagger (dagger_prob=0.3)
+============================================================
+Training DAgger Neural ODE (seed=43)...
+  dagger_prob: 0.3
+  dagger_warmup: 50
+  Epoch 50/200: loss=293.219913, time=107.8s
+  Epoch 100/200: loss=289.106565, time=220.0s
+  Epoch 150/200: loss=261.836478, time=332.9s
+  Epoch 200/200: loss=257.851019, time=445.4s
+Training completed in 445.4s
+
+Evaluating conservative_dagger...
+
+Results for conservative_dagger:
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0237       100.00%     
+H=10      0.0718       100.00%     
+H=50      0.3259       100.00%     
+H=100     0.7368       80.00%      
+H=200     1.2867       80.00%      
+H=500     1.8122       20.00%      
+
+PrimaryLongHorizonScore: 1.2785
+
+============================================================
+Testing: moderate_dagger (dagger_prob=0.5)
+============================================================
+Training DAgger Neural ODE (seed=43)...
+  dagger_prob: 0.5
+  dagger_warmup: 50
+  Epoch 50/200: loss=293.219913, time=108.8s
+  Epoch 100/200: loss=306.488363, time=224.5s
+  Epoch 150/200: loss=278.869137, time=340.0s
+  Epoch 200/200: loss=270.981104, time=455.4s
+Training completed in 455.4s
+
+Evaluating moderate_dagger...
+
+Results for moderate_dagger:
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0294       100.00%     
+H=10      0.0702       100.00%     
+H=50      0.2580       100.00%     
+H=100     0.8948       60.00%      
+H=200     1.3515       40.00%      
+H=500     1.6157       0.00%       
+
+PrimaryLongHorizonScore: 1.2873
+
+============================================================
+Testing: aggressive_dagger (dagger_prob=0.7)
+============================================================
+Training DAgger Neural ODE (seed=43)...
+  dagger_prob: 0.7
+  dagger_warmup: 50
+  Epoch 50/200: loss=293.219913, time=108.3s
+  Epoch 100/200: loss=324.912159, time=226.1s
+  Epoch 150/200: loss=292.694581, time=344.5s
+  Epoch 200/200: loss=285.382120, time=462.9s
+Training completed in 462.9s
+
+Evaluating aggressive_dagger...
+
+Results for aggressive_dagger:
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0242       100.00%     
+H=10      0.1024       100.00%     
+H=50      0.3283       100.00%     
+H=100     0.7816       100.00%     
+H=200     1.2508       20.00%      
+H=500     1.3417       0.00%       
+
+PrimaryLongHorizonScore: 1.1247
+
+============================================================
+SUMMARY: DAgger Training Results
+============================================================
+
+Config               H=50       H=100      H=200      H=500      Primary   
+----------------------------------------------------------------------
+no_dagger            0.1236     0.3395     0.6665     0.8045     0.6035    
+conservative_dagger  0.3259     0.7368     1.2867     1.8122     1.2785    
+moderate_dagger      0.2580     0.8948     1.3515     1.6157     1.2873    
+aggressive_dagger    0.3283     0.7816     1.2508     1.3417     1.1247    
+
+Best configuration: no_dagger (Primary = 0.6035)
+
+Comparison with v9 baseline:
+Horizon    v9 NMAE      Best DAgger  Improvement 
+----------------------------------------------
+H=1       0.0051       0.0180       -253.3      %
+H=10      0.0628       0.0406       35.4        %
+H=50      0.4557       0.1236       72.9        %
+H=100     0.5064       0.3395       33.0        %
+H=200     0.4737       0.6665       -40.7       %
+H=500     0.5529       0.8045       -45.5       %
+
+Results saved to: D:/系统辨识作业/sindy_bicycle/research_72h/05_candidates/EXP027_dagger_training.json
