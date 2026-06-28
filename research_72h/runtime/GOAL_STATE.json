@@ -1,0 +1,32 @@
+{
+  "run_id": "20260628_175824_neural_ode_72h",
+  "task_start_time": "2026-06-28T17:58:24",
+  "last_update_time": "2026-06-28T17:58:24",
+  "effective_research_hours": 0,
+  "current_loop": 1,
+  "current_phase": "context_recovery",
+  "v9_reproduced": false,
+  "v9_primary_score": null,
+  "active_hypotheses": [],
+  "active_candidates": [],
+  "best_validated_candidate": null,
+  "best_validated_score": null,
+  "relative_improvement_pct": null,
+  "multi_seed_complete": false,
+  "ablation_complete": false,
+  "ood_complete": false,
+  "regression_complete": false,
+  "github_branch_pushed": false,
+  "github_pr_created": false,
+  "local_backup_complete": false,
+  "codex_handoff_complete": false,
+  "confidence_score": 0,
+  "goal_reached": false,
+  "remaining_blockers": [
+    "v9_reproduction_not_started",
+    "context_recovery_not_complete",
+    "literature_search_not_started",
+    "no_candidate_implemented",
+    "no_experiment_completed"
+  ]
+}

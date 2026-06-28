@@ -1,0 +1,54 @@
+# 环境清单
+
+**创建时间**: 2026-06-28 18:00
+**RUN_ID**: 20260628_175824_neural_ode_72h
+
+---
+
+## Python 环境
+
+- **Python**: 3.9.23 (conda-forge)
+- **Conda 环境**: DL
+- **路径**: D:\anaconda\envs\DL\python.exe
+
+---
+
+## 依赖版本
+
+- **PyTorch**: 2.8.0+cu128
+- **NumPy**: 1.23.5
+- **CUDA**: 12.8
+
+---
+
+## 硬件
+
+- **GPU**: NVIDIA GeForce RTX 4060 Ti
+- **显存**: 8 GB (推测)
+
+---
+
+## 检查点兼容性
+
+- V9 检查点使用 numpy._core 模块保存
+- 当前 numpy 1.23.5 可能需要兼容处理
+- 建议: 重新训练或使用 pickle 兼容模式加载
+
+---
+
+## 数据文件
+
+- `data/stage2_dataset_150k.npz`: 150k 样本
+- `continuation_stage_v9/checkpoints/BEST_NEURAL_ODE_V9.pt`: 48,717 bytes
+
+---
+
+## 关键路径
+
+```
+项目根目录: D:/系统辨识作业/sindy_bicycle/
+数据目录: D:/系统辨识作业/sindy_bicycle/data/
+V9目录: D:/系统辨识作业/sindy_bicycle/continuation_stage_v9/
+检查点: D:/系统辨识作业/sindy_bicycle/continuation_stage_v9/checkpoints/
+本地备份: D:/系统辨识作业/sindy_bicycle_local_backups/20260628_175824_neural_ode_72h/
+```
