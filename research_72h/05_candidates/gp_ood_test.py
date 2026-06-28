@@ -1038,7 +1038,7 @@ def main():
     if 'gp_id_vs_ood' in all_results and all_results['gp_id_vs_ood'].get('ood'):
         id_h100 = all_results['gp_id_vs_ood']['id'].get('100', {})
         ood_h100 = all_results['gp_id_vs_ood']['ood'].get('100', {})
-        deg = all_results['gp_id_vs_ood'].get('degradation', {}).get(100, float('nan'))
+        deg = all_results['gp_id_vs_ood'].get('degradation', {}).get('100', float('nan'))
 
         print(f"\n  GP ID vs OOD (H=100):")
         print(f"    ID NMAE:  {id_h100.get('nmae_mean', 'N/A')}")
@@ -1495,6 +1495,14 @@ def generate_markdown_report(results, gp_train_time, detection_metrics):
         corr = results['uncertainty_calibration']['correlation']
         if corr < 0.3:
             weaknesses.append("Weak uncertainty-error correlation -- GP variance is not a reliable error proxy")
+        elif corr < 0.6:
+            weaknesses.append(f"Moderate uncertainty correlation ({corr:.2f}) -- GP uncertainty is useful but imperfect for OOD detection")
+
+    # Check OOD degradation
+    if has_ood_comparison:
+        deg_val = results['gp_id_vs_ood'].get('degradation', {}).get('100', None)
+        if deg_val is not None and not np.isnan(deg_val) and deg_val > 0.5:
+            weaknesses.append(f"Significant OOD degradation: {deg_val:.0%} NMAE increase on OOD data at H=100")
 
     if 'perturbation_analysis' in results:
         perts = results['perturbation_analysis']
@@ -1506,6 +1514,8 @@ def generate_markdown_report(results, gp_train_time, detection_metrics):
                     ratio = worst / base
                     if ratio > 10.0:
                         weaknesses.append(f"Catastrophic degradation on {ptype} perturbation ({ratio:.0f}x at 2x magnitude)")
+                    elif ratio > 3.0:
+                        weaknesses.append(f"Moderate degradation on {ptype} perturbation ({ratio:.1f}x at 2x magnitude)")
 
     if not weaknesses:
         weaknesses.append("No major weaknesses identified in this evaluation")

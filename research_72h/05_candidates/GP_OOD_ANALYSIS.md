@@ -1,6 +1,6 @@
 # GP OOD Analysis Report
 
-**Generated**: 2026-06-28 20:36:25
+**Generated**: 2026-06-28 20:44:45
 **Experiment**: GP Out-of-Distribution Generalization Test
 **Dataset**: stage2_dataset_150k.npz (150k samples, 58 episodes)
 
@@ -12,8 +12,9 @@ Key findings:
 
 - **GP ID NMAE (H=100)**: 0.2598
 - **GP OOD NMAE (H=100)**: 0.6090
+- **OOD Degradation**: 134.4%
 - **OOD Detection F1**: 0.9656
-- **GP Training Time**: 33.6s
+- **GP Training Time**: 51.6s
 
 ---
 
@@ -134,7 +135,11 @@ To enable this comparison, ensure PyTorch is installed and the v9 model exists a
 
 ### Weaknesses
 
-- No major weaknesses identified in this evaluation
+- Moderate uncertainty correlation (0.41) -- GP uncertainty is useful but imperfect for OOD detection
+- Significant OOD degradation: 134% NMAE increase on OOD data at H=100
+- Moderate degradation on lateral perturbation (5.9x at 2x magnitude)
+- Moderate degradation on lean perturbation (3.1x at 2x magnitude)
+- Moderate degradation on combined perturbation (3.7x at 2x magnitude)
 
 ### Recommendations
 
@@ -152,7 +157,7 @@ To enable this comparison, ensure PyTorch is installed and the v9 model exists a
 - **Training samples**: 1000 (random subset from 101k training samples)
 - **GP dimensions**: 7D state (e_y, e_psi, v, theta, theta_dot, delta, delta_dot)
 - **Action dimension**: 1D steering torque
-- **GP training time**: 33.6s
+- **GP training time**: 51.6s
 - **Dataset**: stage2_dataset_150k.npz (150k samples, 58 episodes)
 - **Train/test split**: 75%/25% by episodes
 - **OOD detector**: Z-score based, threshold=3.0

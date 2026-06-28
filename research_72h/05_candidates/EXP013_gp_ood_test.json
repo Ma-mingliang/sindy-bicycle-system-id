@@ -1,10 +1,10 @@
 {
-  "timestamp": "2026-06-28T20:36:25.332193",
+  "timestamp": "2026-06-28T20:44:45.537755",
   "experiment": "gp_ood_test",
   "gp_config": {
     "n_samples": 1000,
     "kernel": "RBF",
-    "train_time": 33.57959961891174
+    "train_time": 51.59922742843628
   },
   "results": {
     "ood_detection": {
