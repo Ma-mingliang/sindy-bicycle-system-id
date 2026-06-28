@@ -1,0 +1,231 @@
+{
+  "timestamp": "2026-06-28T23:00:31.104139",
+  "experiment": "trajectory_optimization",
+  "description": "Trajectory Optimization Neural ODE with scheduled sampling and pushforward training",
+  "v9_baseline": {
+    "nmae": {
+      "1": 0.0051,
+      "10": 0.0628,
+      "50": 0.4557,
+      "100": 0.5064,
+      "200": 0.4737,
+      "500": 0.5529
+    },
+    "primary": 0.511
+  },
+  "best_config": "v9_traj_step_tf_H100",
+  "best_primary": 0.795017679532369,
+  "improvement_vs_v9": -55.580759203986105,
+  "all_configs": {
+    "v9_arch_baseline": {
+      "primary": 0.8265880147616068,
+      "results": {
+        "1": {
+          "nmae_mean": 0.022279610857367516,
+          "nmae_std": 0.014182141982018948,
+          "survival_rate": 1.0
+        },
+        "10": {
+          "nmae_mean": 0.05106820538640022,
+          "nmae_std": 0.01930011622607708,
+          "survival_rate": 1.0
+        },
+        "50": {
+          "nmae_mean": 0.10757531970739365,
+          "nmae_std": 0.03626789525151253,
+          "survival_rate": 1.0
+        },
+        "100": {
+          "nmae_mean": 0.3631054759025574,
+          "nmae_std": 0.22449970245361328,
+          "survival_rate": 1.0
+        },
+        "200": {
+          "nmae_mean": 0.7991740703582764,
+          "nmae_std": 0.32941174507141113,
+          "survival_rate": 1.0
+        },
+        "500": {
+          "nmae_mean": 1.3174844980239868,
+          "nmae_std": 0.14736871421337128,
+          "survival_rate": 1.0
+        }
+      }
+    },
+    "v9_traj_H50": {
+      "primary": 0.8241507311662039,
+      "results": {
+        "1": {
+          "nmae_mean": 0.022175561636686325,
+          "nmae_std": 0.014189298264682293,
+          "survival_rate": 1.0
+        },
+        "10": {
+          "nmae_mean": 0.05067410320043564,
+          "nmae_std": 0.019506849348545074,
+          "survival_rate": 1.0
+        },
+        "50": {
+          "nmae_mean": 0.10789065062999725,
+          "nmae_std": 0.037205770611763,
+          "survival_rate": 1.0
+        },
+        "100": {
+          "nmae_mean": 0.3642480671405792,
+          "nmae_std": 0.22662657499313354,
+          "survival_rate": 1.0
+        },
+        "200": {
+          "nmae_mean": 0.8001457452774048,
+          "nmae_std": 0.3302556276321411,
+          "survival_rate": 1.0
+        },
+        "500": {
+          "nmae_mean": 1.3080583810806274,
+          "nmae_std": 0.14599654078483582,
+          "survival_rate": 1.0
+        }
+      }
+    },
+    "v9_traj_H100_cosine": {
+      "primary": 0.7972562809785207,
+      "results": {
+        "1": {
+          "nmae_mean": 0.022566527128219604,
+          "nmae_std": 0.014192502945661545,
+          "survival_rate": 1.0
+        },
+        "10": {
+          "nmae_mean": 0.05242562294006348,
+          "nmae_std": 0.01888297311961651,
+          "survival_rate": 1.0
+        },
+        "50": {
+          "nmae_mean": 0.1122923344373703,
+          "nmae_std": 0.034319378435611725,
+          "survival_rate": 1.0
+        },
+        "100": {
+          "nmae_mean": 0.362527996301651,
+          "nmae_std": 0.21465136110782623,
+          "survival_rate": 1.0
+        },
+        "200": {
+          "nmae_mean": 0.7774943113327026,
+          "nmae_std": 0.308141827583313,
+          "survival_rate": 1.0
+        },
+        "500": {
+          "nmae_mean": 1.2517465353012085,
+          "nmae_std": 0.14132770895957947,
+          "survival_rate": 1.0
+        }
+      }
+    },
+    "v9_pushforward_H100": {
+      "primary": 0.8097948630650839,
+      "results": {
+        "1": {
+          "nmae_mean": 0.02274349331855774,
+          "nmae_std": 0.014163303188979626,
+          "survival_rate": 1.0
+        },
+        "10": {
+          "nmae_mean": 0.05378928780555725,
+          "nmae_std": 0.018691005185246468,
+          "survival_rate": 1.0
+        },
+        "50": {
+          "nmae_mean": 0.11695075035095215,
+          "nmae_std": 0.03290223330259323,
+          "survival_rate": 1.0
+        },
+        "100": {
+          "nmae_mean": 0.3688619136810303,
+          "nmae_std": 0.21080529689788818,
+          "survival_rate": 1.0
+        },
+        "200": {
+          "nmae_mean": 0.7885494232177734,
+          "nmae_std": 0.3058314323425293,
+          "survival_rate": 1.0
+        },
+        "500": {
+          "nmae_mean": 1.2719732522964478,
+          "nmae_std": 0.1382603645324707,
+          "survival_rate": 1.0
+        }
+      }
+    },
+    "v9_traj_H200": {
+      "primary": 0.8157583574453989,
+      "results": {
+        "1": {
+          "nmae_mean": 0.02230449765920639,
+          "nmae_std": 0.014186740852892399,
+          "survival_rate": 1.0
+        },
+        "10": {
+          "nmae_mean": 0.05114852264523506,
+          "nmae_std": 0.019257809966802597,
+          "survival_rate": 1.0
+        },
+        "50": {
+          "nmae_mean": 0.10716891288757324,
+          "nmae_std": 0.03633856400847435,
+          "survival_rate": 1.0
+        },
+        "100": {
+          "nmae_mean": 0.3610869348049164,
+          "nmae_std": 0.22418518364429474,
+          "survival_rate": 1.0
+        },
+        "200": {
+          "nmae_mean": 0.7922565340995789,
+          "nmae_std": 0.3263286352157593,
+          "survival_rate": 1.0
+        },
+        "500": {
+          "nmae_mean": 1.2939316034317017,
+          "nmae_std": 0.14617536962032318,
+          "survival_rate": 1.0
+        }
+      }
+    },
+    "v9_traj_step_tf_H100": {
+      "primary": 0.795017679532369,
+      "results": {
+        "1": {
+          "nmae_mean": 0.02266460657119751,
+          "nmae_std": 0.014195348136126995,
+          "survival_rate": 1.0
+        },
+        "10": {
+          "nmae_mean": 0.05294675752520561,
+          "nmae_std": 0.018955526873469353,
+          "survival_rate": 1.0
+        },
+        "50": {
+          "nmae_mean": 0.11350880563259125,
+          "nmae_std": 0.03313937038183212,
+          "survival_rate": 1.0
+        },
+        "100": {
+          "nmae_mean": 0.3614630103111267,
+          "nmae_std": 0.21070508658885956,
+          "survival_rate": 1.0
+        },
+        "200": {
+          "nmae_mean": 0.7715346217155457,
+          "nmae_std": 0.3035639822483063,
+          "survival_rate": 1.0
+        },
+        "500": {
+          "nmae_mean": 1.2520554065704346,
+          "nmae_std": 0.141328364610672,
+          "survival_rate": 1.0
+        }
+      }
+    }
+  }
+}
