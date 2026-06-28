@@ -1,0 +1,41 @@
+============================================================
+Quick Screen: Physics-Constrained Neural ODE
+============================================================
+
+1. Loading data...
+
+2. Training Physics-Constrained model...
+Training Physics-Constrained model (seed=43, lambda_physics=0.5)...
+  Epoch 50/200: loss=1009.255537, val_loss=650.950854, rollout=1, time=31.6s
+  Epoch 100/200: loss=701.002895, val_loss=494.370314, rollout=5, time=75.5s
+  Epoch 150/200: loss=529.205391, val_loss=434.056508, rollout=10, time=153.7s
+  Epoch 200/200: loss=539.264048, val_loss=365.491895, rollout=20, time=289.0s
+Training completed in 289.0s
+
+3. Evaluating...
+
+============================================================
+RESULTS: Physics-Constrained Neural ODE
+============================================================
+
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0232       100.00%     
+H=10      0.0642       100.00%     
+H=50      0.1617       100.00%     
+H=100     0.5020       100.00%     
+H=200     0.8464       100.00%     
+H=500     1.2730       60.00%      
+
+Comparison with v9 baseline:
+Horizon    v9 NMAE      Physics      Improvement 
+----------------------------------------------
+H=1       0.0051       0.0232       -355.0      %
+H=10      0.0628       0.0642       -2.2        %
+H=50      0.4557       0.1617       64.5        %
+H=100     0.5064       0.5020       0.9         %
+H=200     0.4737       0.8464       -78.7       %
+H=500     0.5529       1.2730       -130.2      %
+
+Results saved to: D:/系统辨识作业/sindy_bicycle/research_72h/05_candidates/EXP006_physics_loss.json
+Model saved to: D:/系统辨识作业/sindy_bicycle/research_72h/07_models/physics_constrained_seed43.pt
