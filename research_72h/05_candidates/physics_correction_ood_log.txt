@@ -1,0 +1,71 @@
+D:\系统辨识作业\sindy_bicycle\research_72h\05_candidates\physics_correction_ood.py:282: UserWarning: Creating a tensor from a list of numpy.ndarrays is extremely slow. Please consider converting the list to a single numpy.ndarray with numpy.array() before converting to a tensor. (Triggered internally at C:\actions-runner\_work\pytorch\pytorch\pytorch\torch\csrc\utils\tensor_new.cpp:256.)
+  a_norm = torch.FloatTensor([actions[step] / action_std]).unsqueeze(0)
+============================================================
+Physics-Informed Correction OOD Testing
+============================================================
+
+1. Loading data...
+
+2. Training model...
+
+3. Building state corrector...
+  Built nearest-neighbor corrector with 101404 training samples
+
+4. Generating OOD scenarios...
+  Generated 8 OOD scenarios
+
+5. Evaluating on OOD scenarios...
+
+============================================================
+OOD Testing Results
+============================================================
+
+Scenario: high_speed
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       nan          0.00%       
+H=10      nan          0.00%       
+H=50      nan          0.00%       
+H=100     nan          0.00%       
+H=200     nan          0.00%       
+H=500     nan          0.00%       
+
+Scenario: large_heading_error
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       nan          0.00%       
+H=10      nan          0.00%       
+H=50      nan          0.00%       
+H=100     nan          0.00%       
+H=200     nan          0.00%       
+H=500     nan          0.00%       
+
+Scenario: large_lateral_error
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       nan          0.00%       
+H=10      nan          0.00%       
+H=50      nan          0.00%       
+H=100     nan          0.00%       
+H=200     nan          0.00%       
+H=500     nan          0.00%       
+
+Scenario: aggressive_steering
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       nan          0.00%       
+H=10      nan          0.00%       
+H=50      nan          0.00%       
+H=100     nan          0.00%       
+H=200     nan          0.00%       
+H=500     nan          0.00%       
+
+Comparison with in-distribution:
+Scenario             H=50       H=100      H=200      H=500     
+------------------------------------------------------------
+high_speed           nan        nan        nan        nan        
+large_heading_error  nan        nan        nan        nan        
+large_lateral_error  nan        nan        nan        nan        
+aggressive_steering  nan        nan        nan        nan        
+
+Results saved to: D:/系统辨识作业/sindy_bicycle/research_72h/05_candidates/EXP035_physics_correction_ood.json
