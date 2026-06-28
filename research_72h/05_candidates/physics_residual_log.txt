@@ -1,0 +1,102 @@
+============================================================
+Physics Residual Model
+============================================================
+
+1. Loading data...
+
+============================================================
+Testing: small_residual
+============================================================
+Training Physics Residual model (seed=43)...
+  residual_scale: 0.01
+  Epoch 50/200: loss=2617569.039673, time=121.5s
+  Epoch 100/200: loss=2607664.957179, time=226.9s
+  Epoch 150/200: loss=2602643.194584, time=331.3s
+  Epoch 200/200: loss=2601993.129093, time=436.2s
+Training completed in 436.2s
+
+Evaluating small_residual...
+
+Results for small_residual:
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0623       100.00%     
+H=10      0.4382       100.00%     
+H=50      0.7044       0.00%       
+H=100     0.7044       0.00%       
+H=200     0.7044       0.00%       
+H=500     0.7044       0.00%       
+
+PrimaryLongHorizonScore: 0.7044
+
+============================================================
+Testing: medium_residual
+============================================================
+Training Physics Residual model (seed=43)...
+  residual_scale: 0.1
+  Epoch 50/200: loss=2489534.451511, time=103.4s
+  Epoch 100/200: loss=2388414.823678, time=206.8s
+  Epoch 150/200: loss=2342002.926952, time=309.0s
+  Epoch 200/200: loss=2334574.260705, time=408.5s
+Training completed in 408.5s
+
+Evaluating medium_residual...
+
+Results for medium_residual:
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0347       100.00%     
+H=10      0.4397       80.00%      
+H=50      0.5143       0.00%       
+H=100     0.5143       0.00%       
+H=200     0.5143       0.00%       
+H=500     0.5143       0.00%       
+
+PrimaryLongHorizonScore: 0.5143
+
+============================================================
+Testing: large_residual
+============================================================
+Training Physics Residual model (seed=43)...
+  residual_scale: 1.0
+  Epoch 50/200: loss=1398463.980479, time=99.3s
+  Epoch 100/200: loss=750246.269679, time=199.0s
+  Epoch 150/200: loss=518474.081864, time=296.7s
+  Epoch 200/200: loss=483927.876181, time=395.5s
+Training completed in 395.5s
+
+Evaluating large_residual...
+
+Results for large_residual:
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0212       100.00%     
+H=10      0.0470       100.00%     
+H=50      0.1270       100.00%     
+H=100     0.8607       100.00%     
+H=200     1.0132       0.00%       
+H=500     1.0132       0.00%       
+
+PrimaryLongHorizonScore: 0.9624
+
+============================================================
+SUMMARY: Physics Residual Results
+============================================================
+
+Config               H=50       H=100      H=200      H=500      Primary   
+----------------------------------------------------------------------
+small_residual       0.7044     0.7044     0.7044     0.7044     0.7044    
+medium_residual      0.5143     0.5143     0.5143     0.5143     0.5143    
+large_residual       0.1270     0.8607     1.0132     1.0132     0.9624    
+
+Comparison with baselines:
+Horizon    v9 NMAE      Best Physics Improvement 
+----------------------------------------------
+H=1       0.0051       0.0347       -579.5      %
+H=10      0.0628       0.4397       -600.1      %
+H=50      0.4557       0.5143       -12.9       %
+H=100     0.5064       0.5143       -1.6        %
+H=200     0.4737       0.5143       -8.6        %
+H=500     0.5529       0.5143       7.0         %
+
+Results saved to: D:/系统辨识作业/sindy_bicycle/research_72h/05_candidates/EXP016_physics_residual.json

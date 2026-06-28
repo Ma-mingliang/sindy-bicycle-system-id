@@ -1,0 +1,22 @@
+{
+  "timestamp": "2026-06-28T22:16:54.143752",
+  "run_id": "20260628_175824_neural_ode_144h",
+  "experiment": "physics_residual",
+  "configs": [
+    "small_residual",
+    "medium_residual",
+    "large_residual"
+  ],
+  "results": {
+    "small_residual": {
+      "primary": 0.7043575048446655
+    },
+    "medium_residual": {
+      "primary": 0.514306366443634
+    },
+    "large_residual": {
+      "primary": 0.9623666206995646
+    }
+  },
+  "best_config": "medium_residual"
+}
