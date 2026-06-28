@@ -1,0 +1,16 @@
+{
+  "n_total": 5000,
+  "n_train": 2500,
+  "n_cal": 1250,
+  "n_test": 1250,
+  "train_frac": 0.5,
+  "cal_frac": 0.25,
+  "test_frac": 0.25,
+  "seed": 42,
+  "train_mean_error": 0.8301023871915891,
+  "train_std_error": 1.7973562269257677,
+  "calibration_mean_error": 0.8477662476751826,
+  "calibration_std_error": 1.835521675685013,
+  "test_mean_error": 0.8363117699704339,
+  "test_std_error": 1.8214588502823188
+}

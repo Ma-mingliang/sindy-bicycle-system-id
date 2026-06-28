@@ -1,0 +1,141 @@
+{
+  "meta": {
+    "agent": "F (Route 8D Restructuring Planner)",
+    "generated": "2026-06-25",
+    "check_type": "Pre-delivery self-check"
+  },
+
+  "file_checklist": {
+    "ROUTE8D_STATE_RECLASSIFICATION.md": {
+      "exists": true,
+      "purpose": "Per-variable classification with evidence levels",
+      "sections_completed": [
+        "F1: Classification of all 8 variables + tau",
+        "Evidence basis for each classification",
+        "kappa reclassification rationale",
+        "v gray area analysis",
+        "7D vs 6D comparison"
+      ]
+    },
+    "ROUTE8D_LAYERED_ARCHITECTURE.md": {
+      "exists": true,
+      "purpose": "Four-layer architecture design",
+      "sections_completed": [
+        "F2: Recommended 7D structure",
+        "F3: Layer 1 (Path Kinematics) - analytical",
+        "F3: Layer 2 (Balance Dynamics) - SINDy",
+        "F3: Layer 3 (Steering Actuator) - SINDy",
+        "F3: Layer 4 (Coupling/Residuals) - optional",
+        "Layered vs monolithic comparison",
+        "Implementation priority"
+      ]
+    },
+    "ROUTE8D_DATA_REQUIREMENTS.csv": {
+      "exists": true,
+      "purpose": "Per-variable data coverage and recommendations",
+      "sections_completed": [
+        "F4: Per-variable statistics from current data",
+        "F4: Coverage assessment",
+        "F4: Recommendations per variable"
+      ]
+    },
+    "ROUTE8D_MINIMUM_VALIDATION_PLAN.md": {
+      "exists": true,
+      "purpose": "Structure decision + minimum validation protocol",
+      "sections_completed": [
+        "F1: Structure decisions (complete)",
+        "F5: Single-step validation protocol",
+        "F5: Multi-step rollout validation",
+        "F5: Ablation tests",
+        "Phase execution roadmap",
+        "Risk assessment"
+      ]
+    },
+    "ROUTE8D_DECISION_FACTS.json": {
+      "exists": true,
+      "purpose": "Structured facts with evidence levels",
+      "sections_completed": [
+        "All state classifications",
+        "Recommended structure",
+        "Layered architecture details",
+        "Current data metrics",
+        "Data requirements",
+        "SINDy model analysis",
+        "Validation plan",
+        "Open questions",
+        "Blocking items"
+      ]
+    },
+    "SELF_CHECK.json": {
+      "exists": true,
+      "purpose": "This file"
+    }
+  },
+
+  "task_completion": {
+    "F1_classify_states": {
+      "status": "completed",
+      "output": "ROUTE8D_STATE_RECLASSIFICATION.md",
+      "variables_classified": 9,
+      "evidence_provided": "All CONFIRMED or INFERRED with code references"
+    },
+    "F2_recommend_structure": {
+      "status": "completed",
+      "output": "ROUTE8D_LAYERED_ARCHITECTURE.md",
+      "recommendation": "7D state + 2D input, layered approach",
+      "comparison_done": "7D vs 6D compared"
+    },
+    "F3_layered_modeling": {
+      "status": "completed",
+      "output": "ROUTE8D_LAYERED_ARCHITECTURE.md",
+      "layers_defined": 4,
+      "layer_details": "All 4 layers documented with equations and SINDy specs"
+    },
+    "F4_data_requirements": {
+      "status": "completed",
+      "output": "ROUTE8D_DATA_REQUIREMENTS.csv + DECISION_FACTS.json",
+      "data_analyzed": "2083 samples from bicycle_data_improved.npz",
+      "coverage_assessed": "Per-variable min/max/mean/std/range"
+    },
+    "F5_minimum_validation": {
+      "status": "completed",
+      "output": "ROUTE8D_MINIMUM_VALIDATION_PLAN.md",
+      "validation_protocol": "Single-step + multi-step + ablation",
+      "execution_roadmap": "P1-P7 with time estimates"
+    }
+  },
+
+  "quality_checks": {
+    "no_original_files_modified": true,
+    "all_evidence_marked": true,
+    "CONFIRMED_vs_INFERRED_vs_UNKNOWN": true,
+    "code_references_provided": true,
+    "mathematical_correctness": {
+      "library_terms_count": "55 for 9 features (verified: 1 + 9 + C(10,2) = 55)",
+      "layered_parameters": "36 x 2 = 72 (verified: 1 + 7 + C(8,2) = 36 per layer)",
+      "reduction_percentage": "84% (verified: (440-72)/440 = 83.6%)"
+    },
+    "data_metrics_verified": {
+      "sample_count": "2083 (verified via numpy load)",
+      "speed_range": "[2.0009, 5.9984] (verified via numpy)",
+      "kappa_range": "[-0.2943, 0.2959] (verified via numpy)",
+      "unique_k_values": "750 (verified via numpy)"
+    }
+  },
+
+  "blocking_items": [
+    "Code restructuring (Phase 2) not performed -- per constraint: planning only",
+    "New data collection (Phase 3) not performed -- per constraint: planning only",
+    "SINDy re-identification (Phase 4) not performed -- per constraint: planning only",
+    "Validation (Phase 5-6) not performed -- no new model exists yet"
+  ],
+
+  "risks_identified": [
+    "Layered model might not improve over monolithic -- LOW probability",
+    "delta_dot SINDy may have too many terms -- MEDIUM probability",
+    "0.5x damping might still be needed -- LOW probability",
+    "Existing data may be insufficient for per-layer identification -- LOW probability"
+  ],
+
+  "summary": "All 5 required deliverables (F1-F5) completed. Structure decision: 7D state + 2D input with layered architecture (5 analytical + 2 SINDy outputs). This reduces parameters from 440 to 72 (84% reduction). No original files modified. Main output: restructuring plan ready for Phase 2 implementation."
+}

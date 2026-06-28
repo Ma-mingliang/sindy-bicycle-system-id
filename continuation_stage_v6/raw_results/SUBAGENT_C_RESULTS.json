@@ -1,0 +1,148 @@
+{
+  "subagent": "C",
+  "leakage_report": {
+    "train_size": 4800,
+    "cal_size": 1600,
+    "test_size": 1600,
+    "leakage_train_cal": 0,
+    "leakage_train_test": 0,
+    "random_split": true,
+    "episode_based": false,
+    "note": "Single-step random splits. No episode structure in training data. Rollout calibration is separate."
+  },
+  "calibration": {
+    "optimal_scalar_scale": 0.3,
+    "cal_set_coverage": {
+      "coverage_68": [
+        0.986875,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "avg_coverage_68": 0.99671875,
+      "coverage_90": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "avg_coverage_90": 1.0,
+      "coverage_95": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "avg_coverage_95": 1.0,
+      "coverage_99": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "avg_coverage_99": 1.0
+    },
+    "test_set_coverage": {
+      "coverage_68": [
+        0.443125,
+        0.971875,
+        0.991875,
+        0.974375
+      ],
+      "avg_coverage_68": 0.8453124999999999,
+      "coverage_90": [
+        0.72375,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "avg_coverage_90": 0.9309375,
+      "coverage_95": [
+        0.824375,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "avg_coverage_95": 0.95609375,
+      "coverage_99": [
+        0.93625,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "avg_coverage_99": 0.9840625000000001
+    },
+    "per_state": {
+      "phi": {
+        "scale": 0.3,
+        "test_coverage_95": 0.824375
+      },
+      "delta": {
+        "scale": 0.3,
+        "test_coverage_95": 1.0
+      },
+      "phi_dot": {
+        "scale": 0.3,
+        "test_coverage_95": 1.0
+      },
+      "delta_dot": {
+        "scale": 0.3,
+        "test_coverage_95": 1.0
+      }
+    }
+  },
+  "reliability": {
+    "ece_raw": {
+      "ece": 0.7178125,
+      "bins": [
+        {
+          "nominal": 0.05,
+          "empirical": 0.7678125,
+          "gap": 0.7178125,
+          "count": 1600
+        }
+      ]
+    },
+    "ece_calibrated": {
+      "ece": 0.5025,
+      "bins": [
+        {
+          "nominal": 0.05,
+          "empirical": 0.5525,
+          "gap": 0.5025,
+          "count": 1600
+        }
+      ]
+    },
+    "nll": -41.10457703181148
+  },
+  "rollout_uncertainty": {
+    "10": {
+      "mean_uncertainty": 0.0007335866162928922,
+      "mean_error": 0.0003563280712807642,
+      "ratio": 2.058739334389605
+    },
+    "50": {
+      "mean_uncertainty": 0.00025704139221936946,
+      "mean_error": 0.0051626022654856635,
+      "ratio": 0.0497891139005241
+    },
+    "100": {
+      "mean_uncertainty": 0.00015799468550090678,
+      "mean_error": 0.01243644341512748,
+      "ratio": 0.012704169530392002
+    },
+    "200": {
+      "mean_uncertainty": 0.0453531233584192,
+      "mean_error": 2.0046314730885273,
+      "ratio": 0.02262417006181382
+    }
+  },
+  "ood": {
+    "id_mean_uncertainty": 0.00017104083374473857,
+    "ood_state_range": 0.0006190090691471899,
+    "ood_action_extreme": 0.00031047472398390173,
+    "ood_critical_region": 0.00026321069903387494
+  },
+  "mode_b_equals_c": "In current deterministic setup, Mode B and C use same tau_func from real state. Numerically equivalent but protocol semantics differ."
+}

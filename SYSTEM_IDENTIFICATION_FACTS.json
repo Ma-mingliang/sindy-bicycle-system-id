@@ -1,0 +1,320 @@
+{
+  "metadata": {
+    "generated": "2026-06-23",
+    "project": "sindy_bicycle",
+    "path": "D:\\系统辨识作业\\sindy_bicycle",
+    "purpose": "System identification for unmanned bicycle dynamics"
+  },
+  "data_sources": {
+    "whipple_8d": {
+      "file": "bicycle_dynamics.py",
+      "lines": "87-160",
+      "evidence": "CONFIRMED",
+      "model": "Simplified Whipple bicycle",
+      "state_dim": 8,
+      "state_names": ["ey", "epsi", "v", "theta", "theta_dot", "k", "delta", "delta_dot"],
+      "parameters": {
+        "wheelbase": 1.02,
+        "head_angle": 1.3963,
+        "trail": 0.08,
+        "m_total": 95,
+        "h_com": 0.97
+      }
+    },
+    "meijaard_4d": {
+      "file": "meijaard_dynamics.py",
+      "lines": "10-81",
+      "evidence": "CONFIRMED",
+      "model": "Meijaard 2007 benchmark",
+      "state_dim": 4,
+      "state_names": ["phi", "delta", "phi_dot", "delta_dot"],
+      "parameters_count": 25,
+      "parameters_file": "methods_common.py",
+      "parameters_lines": "14-26"
+    }
+  },
+  "data_collection": {
+    "closed_loop_8d": {
+      "file": "data_collector.py",
+      "lines": "75-303",
+      "evidence": "CONFIRMED",
+      "method": "Stratified sampling with PD controller",
+      "scenarios": ["straight", "curved", "sharp"],
+      "sampling_rate_hz": 30,
+      "episode_duration_s": 10,
+      "episodes_per_scenario": 40,
+      "control": {
+        "Kp_roll": 8.0,
+        "Kd_roll": 2.0,
+        "Kp_delta": -1.5,
+        "perturbation_amplitude": {
+          "straight": 0.3,
+          "curved": 0.5,
+          "sharp": 0.8
+        }
+      }
+    },
+    "open_loop_4d": {
+      "file": "collect_meijaard_data.py",
+      "lines": "31-180",
+      "evidence": "CONFIRMED",
+      "method": "Open-loop linearized dynamics",
+      "speeds_ms": [5.5, 5.0, 3.5],
+      "torque_types": ["sinusoidal", "impulse", "mixed", "chirp", "zero"],
+      "episodes": 500,
+      "steps_per_episode": 300,
+      "integration": "RK4 with 5 sub-steps",
+      "fall_threshold_rad": 0.785
+    }
+  },
+  "data_files": {
+    "bicycle_data.npz": {
+      "state_dim": 8,
+      "source": "Closed-loop Whipple",
+      "estimated_samples": 6000
+    },
+    "meijaard_openloop_data.npz": {
+      "state_dim": 4,
+      "speed_ms": 5.5,
+      "source": "Open-loop Meijaard",
+      "estimated_samples": 29000
+    },
+    "meijaard_openloop_data_v5.npz": {
+      "state_dim": 4,
+      "speed_ms": 5.0,
+      "source": "Open-loop Meijaard",
+      "estimated_samples": 25000
+    },
+    "meijaard_openloop_data_v35.npz": {
+      "state_dim": 4,
+      "speed_ms": 3.5,
+      "source": "Open-loop Meijaard",
+      "samples": 29478
+    }
+  },
+  "state_transition_equation": {
+    "general_form": "s_{t+1} = s_t + f(s_t, a_t) + ξ_t",
+    "file": "world_model.py",
+    "lines": "22-24",
+    "evidence": "CONFIRMED",
+    "meijaard_continuous": "M * q_dd = -C1 * v * q_dot - (g*K0 + v^2*K2) * q + F",
+    "meijaard_file": "meijaard_dynamics.py",
+    "meijaard_lines": "10-81",
+    "linearized_discrete": "s_{t+1} = A_d @ s_t + B_d * tau",
+    "linearized_file": "compare_dynamics_models.py",
+    "linearized_lines": "81-85"
+  },
+  "identification_methods": {
+    "sindy_variants": {
+      "file": "methods_sindy.py",
+      "lines": "1-151",
+      "evidence": "CONFIRMED",
+      "methods": [
+        {
+          "id": 1,
+          "name": "SINDyPoly",
+          "features": 21,
+          "library": "constant + linear + quadratic"
+        },
+        {
+          "id": 2,
+          "name": "SINDyTrig",
+          "features": 32,
+          "library": "polynomial + trigonometric"
+        },
+        {
+          "id": 3,
+          "name": "SINDyTrigExp",
+          "features": 36,
+          "library": "polynomial + trig + exponential"
+        }
+      ],
+      "algorithm": "STLSQ",
+      "threshold_sweep": [0.005, 0.01, 0.02, 0.05, 0.1, 0.15, 0.2, 0.3, 0.5]
+    },
+    "classic_methods": {
+      "file": "methods_classic.py",
+      "lines": "1-208",
+      "evidence": "CONFIRMED",
+      "methods": [
+        {
+          "id": 7,
+          "name": "GP",
+          "description": "Gaussian Process with RBF kernel",
+          "max_samples": 5000,
+          "kernel": "ConstantKernel(1.0) * RBF(length_scale=1.0)"
+        },
+        {
+          "id": 8,
+          "name": "PINN",
+          "description": "Physics-Informed Neural Network",
+          "architecture": "3-layer MLP (128 hidden, SiLU)",
+          "physics_weight": 0.1
+        },
+        {
+          "id": 9,
+          "name": "ParamID",
+          "description": "Linear parameter identification"
+        }
+      ]
+    },
+    "neural_network_methods": {
+      "file": "methods_nn.py",
+      "lines": "1-190",
+      "evidence": "CONFIRMED",
+      "methods": [
+        {
+          "id": 4,
+          "name": "SINDyBestNN",
+          "description": "SINDy + NN residual"
+        },
+        {
+          "id": 5,
+          "name": "NNE2E",
+          "description": "End-to-end neural network"
+        },
+        {
+          "id": 6,
+          "name": "NeuralODE",
+          "description": "Neural ODE with Euler integration"
+        }
+      ],
+      "residual_net_architecture": {
+        "input_dim": 5,
+        "hidden_dim": 128,
+        "hidden_layers": 2,
+        "activation": "SiLU",
+        "output_dim": 4
+      }
+    },
+    "ensemble_methods": {
+      "file": "test_ensemble.py",
+      "lines": "33-141",
+      "evidence": "CONFIRMED",
+      "model_counts": [3, 5, 7],
+      "dagger_rounds": 3,
+      "residual_scale": 0.3
+    },
+    "adaptive_methods": {
+      "file": "test_adaptive_scale.py",
+      "evidence": "INFERRED",
+      "method": "Sigmoid-based OOD detector",
+      "parameters": {
+        "k": 3.0,
+        "threshold": 3.0
+      }
+    }
+  },
+  "normalization": {
+    "state_8d": {
+      "file": "data_collector.py",
+      "lines": "17-26",
+      "evidence": "CONFIRMED",
+      "factors": {
+        "ey": 10.0,
+        "epsi": 1.57,
+        "v": 5.0,
+        "theta": 1.57,
+        "theta_dot": 10.0,
+        "k": 8.0,
+        "delta": 0.785,
+        "delta_dot": 3.0
+      }
+    },
+    "action": {
+      "file": "methods_classic.py",
+      "lines": "43-44",
+      "evidence": "CONFIRMED",
+      "method": "max(std(actions), 1.0)"
+    }
+  },
+  "evaluation": {
+    "file": "methods_evaluate.py",
+    "lines": "1-109",
+    "evidence": "CONFIRMED",
+    "eval_steps": [1, 5, 10, 20, 50, 100, 200, 500],
+    "n_segments": 5,
+    "lqr": {
+      "Q": [1000, 100, 10, 1],
+      "R": 0.2,
+      "speed_ms": 3.5
+    },
+    "disturbance": {
+      "type": "uniform",
+      "range": [-0.5, 0.5]
+    }
+  },
+  "results": {
+    "best_result": {
+      "method": "GP + Ensemble(5 models)",
+      "mae_500_steps_rad": 0.064,
+      "improvement_percent": 99,
+      "file": "REPORT_全面改进总结.md",
+      "line": 11,
+      "evidence": "CONFIRMED"
+    },
+    "rankings": [
+      {"rank": 1, "method": "GP + Ensemble(5)", "mae_rad": 0.064, "improvement": "99%"},
+      {"rank": 2, "method": "GP + Adaptive", "mae_rad": 0.081, "improvement": "99%"},
+      {"rank": 3, "method": "NeuralODE + Multistep", "mae_rad": 0.097, "improvement": "92%"},
+      {"rank": 4, "method": "NeuralODE + Standard", "mae_rad": 0.122, "improvement": "91%"},
+      {"rank": 5, "method": "NeuralODE + Adaptive(opt)", "mae_rad": 0.135, "improvement": "89%"}
+    ],
+    "baseline_comparisons": [
+      {"baseline": "GP", "pure_500step": 7.023, "best_improved": 0.064, "improvement": "99.1%"},
+      {"baseline": "NeuralODE", "pure_500step": 1.278, "best_improved": 0.097, "improvement": "92.4%"},
+      {"baseline": "ParamID", "pure_500step": 1000000000, "best_improved": 0.168, "improvement": "99.9%"}
+    ]
+  },
+  "world_model": {
+    "file": "world_model.py",
+    "lines": "17-212",
+    "evidence": "CONFIRMED",
+    "capabilities": [
+      "state_transition",
+      "multi_step_rollout",
+      "uncertainty_estimation",
+      "residual_statistics"
+    ],
+    "usage": "SINDyWorldModel('sindy_model.npz')"
+  },
+  "key_findings": [
+    "GP + Ensemble is optimal: 0.064 rad MAE, 99% improvement",
+    "Simple methods outperform complex ones",
+    "Ensemble reduces variance without increasing bias",
+    "DAgger reduces distribution shift",
+    "Residual scaling 0.3 is optimal",
+    "Linear model diverges after ~100 steps",
+    "SINDy captures key dynamics terms",
+    "NN residual improves accuracy",
+    "Meijaard model is self-stable at v=4-6 m/s"
+  ],
+  "limitations": [
+    "8D model uses simplified Whipple, not exact Meijaard",
+    "4D model is linearized, only valid near equilibrium",
+    "Fixed speed (most tests at v=3.5 m/s)",
+    "No wind or road disturbances",
+    "Simulation only, no real-world validation",
+    "Single metric (MAE at 500 steps)"
+  ],
+  "training_configuration": {
+    "epochs": 100,
+    "batch_size": 256,
+    "learning_rate": 0.001,
+    "optimizer": "Adam",
+    "scheduler": "CosineAnnealingLR"
+  },
+  "glossary": {
+    "SINDy": "Sparse Identification of Nonlinear Dynamics",
+    "STLSQ": "Sequentially Thresholded Least Squares",
+    "GP": "Gaussian Process",
+    "PINN": "Physics-Informed Neural Network",
+    "NeuralODE": "Neural Ordinary Differential Equation",
+    "DAgger": "Dataset Aggregation",
+    "OOD": "Out-of-Distribution",
+    "MAE": "Mean Absolute Error",
+    "RMSE": "Root Mean Square Error",
+    "LQR": "Linear Quadratic Regulator",
+    "Meijaard2007": "Benchmark bicycle dynamics model"
+  }
+}

@@ -1,0 +1,156 @@
+{
+  "agent": "G",
+  "task": "Independent Review and Anti-Fraud Verification",
+  "review_scope": "Cross-agent conflict detection, anti-fraud tests, data consistency audit",
+  "agents_reviewed": ["A", "B", "C", "D", "E", "F"],
+
+  "conflict_matrix": {
+    "A_vs_C_gp_divergence": {
+      "status": "PARTIAL_CONFLICT",
+      "detail": "Both agree GP diverges at H=200, but Agent A's summary table reports GP H=200 NMAE=0.934 (below threshold) while Agent A's JSON shows 1.773 (above threshold). Agent C's JSON shows 1.575 (above threshold). Agent A's summary table has numerical errors.",
+      "agents_agree_on_horizon": true,
+      "numerical_consistency": false
+    },
+    "A_vs_C_best_rde": {
+      "status": "CONFIRMED",
+      "detail": "Both agree RDE-L is best RDE variant. A: RDE-L NMAE=0.090 at H=100. C: RDE-L NMAE=0.127 at H=100. Numerical differences due to different eval configs (5 vs 3 segments), but ranking identical.",
+      "best_rde": "RDE-L"
+    },
+    "B_vs_A_rde_independence": {
+      "status": "CONFIRMED",
+      "detail": "B proves structural independence (label correlations: 0.039, 0.003, -0.112). A demonstrates independent performance profiles (RDE-T 100x worse than GP at H=1)."
+    },
+    "D_vs_C_mpc_horizon": {
+      "status": "MINOR_TENSION",
+      "detail": "C recommends H=30-50, D shows perfect ranking at H=10-20. Not a true conflict: D uses large random actions ([-30,30]) that destabilize at H=50, while C uses LQR-guided rollout. For practical MPC with small inputs, H=30-50 is likely feasible."
+    },
+    "E_vs_A_ood_detection": {
+      "status": "CONFIRMED",
+      "detail": "E shows OOD detection AUROC=0.76 (moderate). A's per-state data confirms differential difficulty. E's finding that phi is hardest to calibrate (scale=5.0) aligns with A showing phi_dot/delta_dot have largest errors at long horizons."
+    }
+  },
+
+  "anti_fraud_tests": {
+    "test_1_gp_best_short_horizons": {
+      "status": "CONFIRMED",
+      "claim": "GP is best at short horizons",
+      "evidence_A": "GP H=1 NMAE=3.5e-5, all other models 2-100x worse. GP dominates H<=100.",
+      "evidence_C": "GP H=1 NMAE=5.6e-5, E1 is 2-3x worse, RDE-T is 100-200x worse. GP dominates H<=100.",
+      "supported": true
+    },
+    "test_2_rde_diverges_before_gp": {
+      "status": "CONFIRMED",
+      "claim": "RDE diverges before GP",
+      "evidence_A": "At H=200: GP=1.77, RDE-L=4.93, RDE-T=16.55, RDE-M=86.24. RDE-M already diverged at H=100 (NMAE=16.81).",
+      "evidence_C": "Divergence horizons: RDE-M=50, RDE-T=100, RDE-L=150, GP=200. All RDE diverge first.",
+      "supported": true
+    },
+    "test_3_rde_independence": {
+      "status": "CONFIRMED",
+      "claim": "RDE-L/T/M are independent",
+      "evidence_B": "Label correlations: RDE-L vs RDE-T=0.039, RDE-L vs RDE-M=0.003, RDE-T vs RDE-M=-0.112. All near zero or negative. Different formulas confirmed.",
+      "supported": true
+    },
+    "test_4_gp_sufficient_for_mpc": {
+      "status": "CONFIRMED",
+      "claim": "GP sufficient for MPC",
+      "evidence_D": "GP Spearman rho=1.0, Kendall tau=1.0 at H=10 and H=20. Perfect ranking. Mean rel error < 0.1%. 14x faster than RDE-L.",
+      "evidence_C": "GP NMAE < 0.001 at H=20, confirming high accuracy in MPC range.",
+      "supported": true
+    },
+    "test_5_uncertainty_underestimated": {
+      "status": "CONFIRMED",
+      "claim": "Uncertainty is underestimated",
+      "evidence_E": "Raw 95% coverage: all=0.098 (target 0.95). Optimal scale factor s=5.0 (capped). After calibration: 95% coverage=0.880. Ensemble std is ~5x too narrow.",
+      "supported": true
+    },
+    "test_6_delta_dot_hardest": {
+      "status": "CONFIRMED",
+      "claim": "delta_dot is hardest state to predict",
+      "evidence_A": "At H=100: GP delta_dot NMAE=0.021 vs phi=0.014. RDE-M delta_dot=32.09 vs phi=9.61. Consistently highest across all models.",
+      "evidence_C": "At H=100: GP delta_dot NMAE=0.021 vs phi=0.014. Same pattern.",
+      "supported": true
+    },
+    "test_7_sindylong_horizon": {
+      "status": "CONFIRMED",
+      "claim": "SINDy unusable at long horizons",
+      "evidence_A": "SINDy H=50 NMAE=0.060 (ok), H=200 NMAE=40.50 (diverged), H=500 NMAE=2.3e+299 (overflow). Polynomial blowup.",
+      "supported": true
+    }
+  },
+
+  "data_quality_issues": {
+    "agent_a_summary_vs_json": {
+      "severity": "CRITICAL",
+      "description": "Agent A summary table GP NMAE values do not match JSON data. Summary H=100=0.0091 vs JSON=0.0195 (2.1x error). Summary H=200=0.934 vs JSON=1.773 (1.9x error). Summary H=500=20.03 vs JSON=27.85 (1.4x error).",
+      "impact": "Summary incorrectly implies GP survives at H=200 (NMAE=0.934 < 1.0), but JSON shows GP has diverged (NMAE=1.773 > 1.0).",
+      "action_required": "Regenerate summary table from JSON data."
+    },
+    "agent_e_ece_interpretation": {
+      "severity": "MINOR",
+      "description": "ECE values increase after calibration (raw: 0.842, scalar: 0.934). This is not an error -- it reflects that scalar calibration improves marginal coverage but not conditional calibration (uncertainty shape is wrong).",
+      "impact": "Could be misleading if interpreted as 'calibration makes things worse'.",
+      "action_required": "Clarify in Agent E summary that ECE measures conditional calibration, not marginal coverage."
+    },
+    "agent_d_h50_skip": {
+      "severity": "NOTE",
+      "description": "Agent D skipped H=50 because large random actions ([-30,30]) destabilize the bicycle. This is a test setup limitation, not a model limitation.",
+      "impact": "Does not invalidate H=10 and H=20 results. For actual MPC with small inputs, H=50 may be feasible.",
+      "action_required": "Note this limitation in final reporting."
+    }
+  },
+
+  "model_ranking_consensus": {
+    "gp": {"rank": 1, "agents_agree": ["A", "C", "D", "F"], "detail": "Dominant at H<=100, best cost predictor, fastest inference"},
+    "rde_l": {"rank": 2, "agents_agree": ["A", "C", "D"], "detail": "Viable alternative, 2-3x worse than GP, matches GP ranking quality"},
+    "e1": {"rank": 2, "agents_agree": ["A", "C"], "detail": "Similar to RDE-L, offline NN residual"},
+    "rde_t": {"rank": 4, "agents_agree": ["A", "C"], "detail": "100x worse than GP at short horizons, never outperforms GP"},
+    "rde_m": {"rank": 5, "agents_agree": ["A", "C", "D"], "detail": "Worst RDE, diverges first (H=50), DAgger hurts performance"},
+    "sindy": {"rank": 6, "agents_agree": ["A"], "detail": "Viable H<=50, catastrophic divergence H>=200"}
+  },
+
+  "verdict": "PASS_WITH_CORRECTIONS",
+  "verdict_rationale": "Core scientific findings are sound and consistently supported across all agents. All 7 anti-fraud tests pass. One CRITICAL data quality issue: Agent A's summary table has numerical errors that must be corrected before reporting. No scientific contradictions found between agents.",
+
+  "required_corrections": [
+    {
+      "id": 1,
+      "severity": "CRITICAL",
+      "agent": "A",
+      "target": "AGENT_A_SUMMARY.md",
+      "description": "Regenerate NMAE summary table from AGENT_A_RESULTS.json. Corrected values: GP H=100=0.0195, GP H=200=1.773, GP H=500=27.85."
+    },
+    {
+      "id": 2,
+      "severity": "CRITICAL",
+      "agent": "A",
+      "target": "AGENT_A_SUMMARY.md",
+      "description": "Update Key Finding #1 to note GP diverges at H=200 (NMAE=1.773 > 1.0), not 'survives through H=200'."
+    },
+    {
+      "id": 3,
+      "severity": "MINOR",
+      "agent": "E",
+      "target": "AGENT_E_SUMMARY.md",
+      "description": "Clarify that ECE measures conditional calibration (uncertainty shape), not marginal coverage. Higher ECE after scalar calibration reflects that the uncertainty distribution shape is wrong, not that calibration made coverage worse."
+    }
+  ],
+
+  "no_corrections_needed": [
+    "Agent B: Independence verification is robust and complete",
+    "Agent C: Horizon crossover analysis is internally consistent",
+    "Agent D: MPC ranking results are valid for H=10 and H=20",
+    "Agent F: 7D baseline is independent and well-documented",
+    "All anti-fraud test results are correct"
+  ],
+
+  "final_recommendations": {
+    "model_choice": "GP is the default for both 4D and 7D prediction at H<=50",
+    "mpc_horizon": "H=20-30 balances accuracy and planning depth",
+    "uncertainty": "Use calibrated uncertainty (scale ~5x) for coverage guarantees",
+    "avoid": "RDE-T, RDE-M, and SINDy at long horizons",
+    "next_steps": "Correct Agent A summary, then proceed to final reporting"
+  },
+
+  "elapsed_seconds": 0
+}

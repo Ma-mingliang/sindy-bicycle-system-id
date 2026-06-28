@@ -1,0 +1,111 @@
+{
+  "version_l": {
+    "mode_a": {
+      "mean_mae": 0.0025351519470968847
+    },
+    "mode_b": {
+      "mae_100steps": 0.6185025804608187,
+      "n_seeds": 5
+    },
+    "mode_c": {
+      "mae_100steps": 0.6185025804608187,
+      "n_seeds": 5
+    },
+    "mode_d": {
+      "mae_100steps": 0.004502386958691073,
+      "n_seeds": 5
+    },
+    "per_state_mode_b_100": {
+      "phi": 0.29381115597302504,
+      "delta": 0.43849345180717775,
+      "phi_dot": 0.7927148382553667,
+      "delta_dot": 0.9489908758077051
+    },
+    "initial_conditions": {
+      "nominal": {
+        "mae": 0.4308321779885997,
+        "survival": 101
+      },
+      "large_phi": {
+        "mae": 0.659154835053881,
+        "survival": 101
+      },
+      "high_vel": {
+        "mae": 2.1317092862205795,
+        "survival": 101
+      },
+      "combined": {
+        "mae": 3.4593219761392224,
+        "survival": 101
+      }
+    },
+    "action_signals": {
+      "small_sine": 0.021152183254808974,
+      "large_sine": 0.19445965181416128,
+      "step": 0.09644676357591309
+    },
+    "ood_states": {
+      "extreme_phi": 0.001255418864936869,
+      "extreme_delta": 0.0024660581141262234
+    }
+  },
+  "version_t": {
+    "mode_a": {
+      "mean_mae": 0.0338794638681275
+    },
+    "mode_b": {
+      "mae_100steps": 0.4361896869279177,
+      "n_seeds": 5
+    },
+    "mode_c": {
+      "mae_100steps": 0.4361896869279177,
+      "n_seeds": 5
+    },
+    "mode_d": {
+      "mae_100steps": 0.13885264261477476,
+      "n_seeds": 5
+    },
+    "per_state_mode_b_100": {
+      "phi": 0.260826435864371,
+      "delta": 0.18170559406216322,
+      "phi_dot": 0.8122447675719136,
+      "delta_dot": 0.48998195021322316
+    },
+    "initial_conditions": {
+      "nominal": {
+        "mae": 0.4401397202035687,
+        "survival": 101
+      },
+      "large_phi": {
+        "mae": 0.39776106516734216,
+        "survival": 101
+      },
+      "high_vel": {
+        "mae": 0.5744758532997637,
+        "survival": 101
+      },
+      "combined": {
+        "mae": 0.60291834642406,
+        "survival": 101
+      }
+    },
+    "action_signals": {
+      "small_sine": 0.1937531087468679,
+      "large_sine": 0.7420525299251267,
+      "step": 0.4394473972848928
+    },
+    "ood_states": {
+      "extreme_phi": 0.027407964626238776,
+      "extreme_delta": 0.027015368713734667
+    }
+  },
+  "config": {
+    "n_models": 3,
+    "dagger_rounds": 2,
+    "n_epochs": 50,
+    "residual_scale": 0.3,
+    "training_samples": 2000,
+    "gp_max_samples": 2000,
+    "seed": 42
+  }
+}

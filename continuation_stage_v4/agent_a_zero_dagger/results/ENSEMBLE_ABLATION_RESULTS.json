@@ -1,0 +1,682 @@
+{
+  "mode_a_teacher_forcing": {
+    "E0_gp": {
+      "1_steps": {
+        "overall_mae": 5.45334230032037e-06,
+        "survival_steps": 1.0,
+        "n_seeds": 5,
+        "mae_phi": 3.3887467200122144e-07,
+        "mae_delta": 3.4985450720536813e-07,
+        "mae_phi_dot": 1.715917292414125e-06,
+        "mae_delta_dot": 1.9408722729660767e-05
+      },
+      "5_steps": {
+        "overall_mae": 1.0871526482212743e-05,
+        "survival_steps": 5.0,
+        "n_seeds": 5,
+        "mae_phi": 5.436337029281665e-07,
+        "mae_delta": 6.981171757002661e-07,
+        "mae_phi_dot": 3.6256639040938066e-06,
+        "mae_delta_dot": 3.861869114612874e-05
+      },
+      "10_steps": {
+        "overall_mae": 1.0480967619450236e-05,
+        "survival_steps": 10.0,
+        "n_seeds": 5,
+        "mae_phi": 5.88271266653877e-07,
+        "mae_delta": 6.191133581886329e-07,
+        "mae_phi_dot": 3.402100288760911e-06,
+        "mae_delta_dot": 3.731438556419753e-05
+      },
+      "20_steps": {
+        "overall_mae": 8.98253960330005e-06,
+        "survival_steps": 20.0,
+        "n_seeds": 5,
+        "mae_phi": 5.484631545154242e-07,
+        "mae_delta": 5.387005701456553e-07,
+        "mae_phi_dot": 2.6913359878948418e-06,
+        "mae_delta_dot": 3.215165870064427e-05
+      },
+      "50_steps": {
+        "overall_mae": 8.103663788484155e-06,
+        "survival_steps": 50.0,
+        "n_seeds": 5,
+        "mae_phi": 5.315906056183283e-07,
+        "mae_delta": 4.96644723834709e-07,
+        "mae_phi_dot": 2.7611986110599734e-06,
+        "mae_delta_dot": 2.8625221213423604e-05
+      },
+      "100_steps": {
+        "overall_mae": 7.985972331644754e-06,
+        "survival_steps": 100.0,
+        "n_seeds": 5,
+        "mae_phi": 5.311274485718963e-07,
+        "mae_delta": 4.931509812111869e-07,
+        "mae_phi_dot": 2.885382695891918e-06,
+        "mae_delta_dot": 2.8034228200904018e-05
+      },
+      "200_steps": {
+        "overall_mae": 7.936323797341387e-06,
+        "survival_steps": 200.0,
+        "n_seeds": 5,
+        "mae_phi": 5.310571614165704e-07,
+        "mae_delta": 4.922488479076342e-07,
+        "mae_phi_dot": 2.9516492999750485e-06,
+        "mae_delta_dot": 2.777033988006629e-05
+      },
+      "500_steps": {
+        "overall_mae": 7.898404221501279e-06,
+        "survival_steps": 500.0,
+        "n_seeds": 5,
+        "mae_phi": 5.3116785767432e-07,
+        "mae_delta": 4.911109507592184e-07,
+        "mae_phi_dot": 2.9891322895778065e-06,
+        "mae_delta_dot": 2.758220578799377e-05
+      },
+      "1000_steps": {
+        "overall_mae": 7.14885525374614e-06,
+        "survival_steps": 1000.0,
+        "n_seeds": 5,
+        "mae_phi": 4.870405993778175e-07,
+        "mae_delta": 4.566251476423815e-07,
+        "mae_phi_dot": 2.3379385165020322e-06,
+        "mae_delta_dot": 2.531381675146233e-05
+      }
+    },
+    "E1_offline_nn": {
+      "1_steps": {
+        "overall_mae": 3.2269866292964796e-06,
+        "survival_steps": 1.0,
+        "n_seeds": 5,
+        "mae_phi": 1.556233797467277e-07,
+        "mae_delta": 2.6952608903020245e-07,
+        "mae_phi_dot": 1.8168770532664414e-06,
+        "mae_delta_dot": 1.0665919995142548e-05
+      },
+      "5_steps": {
+        "overall_mae": 4.731447989324393e-05,
+        "survival_steps": 5.0,
+        "n_seeds": 5,
+        "mae_phi": 9.18307458495915e-07,
+        "mae_delta": 4.911476054136454e-06,
+        "mae_phi_dot": 2.928156932589068e-06,
+        "mae_delta_dot": 0.00018049997912775428
+      },
+      "10_steps": {
+        "overall_mae": 3.80667452525453e-05,
+        "survival_steps": 10.0,
+        "n_seeds": 5,
+        "mae_phi": 7.262950598774243e-07,
+        "mae_delta": 3.659138084345466e-06,
+        "mae_phi_dot": 2.9025306789437796e-06,
+        "mae_delta_dot": 0.0001449790171870145
+      },
+      "20_steps": {
+        "overall_mae": 2.7340493834482783e-05,
+        "survival_steps": 20.0,
+        "n_seeds": 5,
+        "mae_phi": 5.5621952790793e-07,
+        "mae_delta": 2.353522636500387e-06,
+        "mae_phi_dot": 2.448721166518672e-06,
+        "mae_delta_dot": 0.00010400351200700412
+      },
+      "50_steps": {
+        "overall_mae": 1.6639920219663552e-05,
+        "survival_steps": 50.0,
+        "n_seeds": 5,
+        "mae_phi": 3.761672312320492e-07,
+        "mae_delta": 1.1903757278681664e-06,
+        "mae_phi_dot": 2.6596563715724134e-06,
+        "mae_delta_dot": 6.233348154798159e-05
+      },
+      "100_steps": {
+        "overall_mae": 1.289447807372042e-05,
+        "survival_steps": 100.0,
+        "n_seeds": 5,
+        "mae_phi": 3.303838392254577e-07,
+        "mae_delta": 7.923377225606105e-07,
+        "mae_phi_dot": 2.8292207497567034e-06,
+        "mae_delta_dot": 4.762596998333891e-05
+      },
+      "200_steps": {
+        "overall_mae": 1.1026471465224797e-05,
+        "survival_steps": 200.0,
+        "n_seeds": 5,
+        "mae_phi": 3.0792776903105804e-07,
+        "mae_delta": 5.912781764522639e-07,
+        "mae_phi_dot": 2.9175142454788806e-06,
+        "mae_delta_dot": 4.0289165669936984e-05
+      },
+      "500_steps": {
+        "overall_mae": 9.886089804851135e-06,
+        "survival_steps": 500.0,
+        "n_seeds": 5,
+        "mae_phi": 2.943733249311388e-07,
+        "mae_delta": 4.6938634957534717e-07,
+        "mae_phi_dot": 2.968469483156009e-06,
+        "mae_delta_dot": 3.581213006174204e-05
+      },
+      "1000_steps": {
+        "overall_mae": 9.637535164272963e-06,
+        "survival_steps": 1000.0,
+        "n_seeds": 5,
+        "mae_phi": 2.9370945887553586e-07,
+        "mae_delta": 5.238874867973198e-07,
+        "mae_phi_dot": 2.7914887443817697e-06,
+        "mae_delta_dot": 3.4941054967037225e-05
+      }
+    },
+    "E2_dagger_3": {
+      "1_steps": {
+        "overall_mae": 0.0009557548911579037,
+        "survival_steps": 1.0,
+        "n_seeds": 5,
+        "mae_phi": 0.0005290102577366201,
+        "mae_delta": 0.0011874767237000834,
+        "mae_phi_dot": 0.001016711879394888,
+        "mae_delta_dot": 0.0010898207038000235
+      },
+      "5_steps": {
+        "overall_mae": 0.03866810947305529,
+        "survival_steps": 5.0,
+        "n_seeds": 5,
+        "mae_phi": 0.021055399025083688,
+        "mae_delta": 0.01859134756972137,
+        "mae_phi_dot": 0.02347879841023378,
+        "mae_delta_dot": 0.09154689288718235
+      },
+      "10_steps": {
+        "overall_mae": 0.03376747969469851,
+        "survival_steps": 10.0,
+        "n_seeds": 5,
+        "mae_phi": 0.019416018129887767,
+        "mae_delta": 0.016133817261647455,
+        "mae_phi_dot": 0.025578171261897535,
+        "mae_delta_dot": 0.0739419121253613
+      },
+      "20_steps": {
+        "overall_mae": 0.02899859201111136,
+        "survival_steps": 20.0,
+        "n_seeds": 5,
+        "mae_phi": 0.01672666020102316,
+        "mae_delta": 0.016760578537618122,
+        "mae_phi_dot": 0.02168684319519975,
+        "mae_delta_dot": 0.06082028611060438
+      },
+      "50_steps": {
+        "overall_mae": 0.015403107076346506,
+        "survival_steps": 50.0,
+        "n_seeds": 5,
+        "mae_phi": 0.008497339225649752,
+        "mae_delta": 0.009430423746160804,
+        "mae_phi_dot": 0.014514526835911284,
+        "mae_delta_dot": 0.029170138497664182
+      },
+      "100_steps": {
+        "overall_mae": 0.01055911399904893,
+        "survival_steps": 100.0,
+        "n_seeds": 5,
+        "mae_phi": 0.005701058854329965,
+        "mae_delta": 0.0065154623697685765,
+        "mae_phi_dot": 0.011297763799108934,
+        "mae_delta_dot": 0.01872217097298825
+      },
+      "200_steps": {
+        "overall_mae": 0.008098658779066297,
+        "survival_steps": 200.0,
+        "n_seeds": 5,
+        "mae_phi": 0.004281699519783134,
+        "mae_delta": 0.005046996669301526,
+        "mae_phi_dot": 0.009661333535715773,
+        "mae_delta_dot": 0.013404605391464753
+      },
+      "500_steps": {
+        "overall_mae": 0.006609600417763396,
+        "survival_steps": 500.0,
+        "n_seeds": 5,
+        "mae_phi": 0.003418787177581123,
+        "mae_delta": 0.004162446206596307,
+        "mae_phi_dot": 0.008667196203461422,
+        "mae_delta_dot": 0.010189972083414734
+      },
+      "1000_steps": {
+        "overall_mae": 0.006790159965026169,
+        "survival_steps": 1000.0,
+        "n_seeds": 5,
+        "mae_phi": 0.002778625603241998,
+        "mae_delta": 0.003561747573106648,
+        "mae_phi_dot": 0.009350498789763914,
+        "mae_delta_dot": 0.01146976789399211
+      }
+    },
+    "E3_7_5": {
+      "1_steps": {
+        "overall_mae": 0.0017325662132509731,
+        "survival_steps": 1.0,
+        "n_seeds": 5,
+        "mae_phi": 0.0003790023803569895,
+        "mae_delta": 0.0009242775220498478,
+        "mae_phi_dot": 0.0017055476913493035,
+        "mae_delta_dot": 0.003921437259247751
+      },
+      "5_steps": {
+        "overall_mae": 0.040990110364884744,
+        "survival_steps": 5.0,
+        "n_seeds": 5,
+        "mae_phi": 0.01969016435094982,
+        "mae_delta": 0.024622794244407213,
+        "mae_phi_dot": 0.02261512953962414,
+        "mae_delta_dot": 0.09703235332455781
+      },
+      "10_steps": {
+        "overall_mae": 0.03978725219322417,
+        "survival_steps": 10.0,
+        "n_seeds": 5,
+        "mae_phi": 0.020148921591150334,
+        "mae_delta": 0.021608346469528934,
+        "mae_phi_dot": 0.028526457148034146,
+        "mae_delta_dot": 0.08886528356418329
+      },
+      "20_steps": {
+        "overall_mae": 0.032875935132183544,
+        "survival_steps": 20.0,
+        "n_seeds": 5,
+        "mae_phi": 0.01753282729404746,
+        "mae_delta": 0.018618774509813724,
+        "mae_phi_dot": 0.023401508030510096,
+        "mae_delta_dot": 0.07195063069436292
+      },
+      "50_steps": {
+        "overall_mae": 0.017370879504576484,
+        "survival_steps": 50.0,
+        "n_seeds": 5,
+        "mae_phi": 0.009051768268331987,
+        "mae_delta": 0.010751881828404915,
+        "mae_phi_dot": 0.012190050471626784,
+        "mae_delta_dot": 0.03748981744994223
+      },
+      "100_steps": {
+        "overall_mae": 0.012016162146107191,
+        "survival_steps": 100.0,
+        "n_seeds": 5,
+        "mae_phi": 0.006219887465158445,
+        "mae_delta": 0.00792604716601618,
+        "mae_phi_dot": 0.008102355598060417,
+        "mae_delta_dot": 0.02581635835519372
+      },
+      "200_steps": {
+        "overall_mae": 0.009295437319311163,
+        "survival_steps": 200.0,
+        "n_seeds": 5,
+        "mae_phi": 0.00478807119880656,
+        "mae_delta": 0.006478221310969759,
+        "mae_phi_dot": 0.005991730928343998,
+        "mae_delta_dot": 0.019923725839124332
+      },
+      "500_steps": {
+        "overall_mae": 0.007655274361519937,
+        "survival_steps": 500.0,
+        "n_seeds": 5,
+        "mae_phi": 0.0039217313785495,
+        "mae_delta": 0.005605530985858557,
+        "mae_phi_dot": 0.0047343338004027895,
+        "mae_delta_dot": 0.016359501281268903
+      },
+      "1000_steps": {
+        "overall_mae": 0.007854090553251274,
+        "survival_steps": 1000.0,
+        "n_seeds": 5,
+        "mae_phi": 0.004716212130823371,
+        "mae_delta": 0.005761186089973497,
+        "mae_phi_dot": 0.003755345257363073,
+        "mae_delta_dot": 0.01718361873484516
+      }
+    }
+  },
+  "mode_b_open_loop": {
+    "E0_gp": {
+      "1_steps": {
+        "overall_mae": 5.45334230032037e-06,
+        "survival_steps": 1.0,
+        "n_seeds": 5,
+        "mae_phi": 3.3887467200122144e-07,
+        "mae_delta": 3.4985450720536813e-07,
+        "mae_phi_dot": 1.715917292414125e-06,
+        "mae_delta_dot": 1.9408722729660767e-05
+      },
+      "5_steps": {
+        "overall_mae": 2.514839369184662e-05,
+        "survival_steps": 5.0,
+        "n_seeds": 5,
+        "mae_phi": 2.3054240199748184e-06,
+        "mae_delta": 4.588503299660876e-06,
+        "mae_phi_dot": 1.6148231224393367e-05,
+        "mae_delta_dot": 7.755141622335739e-05
+      },
+      "10_steps": {
+        "overall_mae": 3.680726401826419e-05,
+        "survival_steps": 10.0,
+        "n_seeds": 5,
+        "mae_phi": 7.334121750148034e-06,
+        "mae_delta": 1.257063844743711e-05,
+        "mae_phi_dot": 4.3622909225209964e-05,
+        "mae_delta_dot": 8.370138665026166e-05
+      },
+      "20_steps": {
+        "overall_mae": 6.657391621371323e-05,
+        "survival_steps": 20.0,
+        "n_seeds": 5,
+        "mae_phi": 2.958859158140725e-05,
+        "mae_delta": 1.8985907664656877e-05,
+        "mae_phi_dot": 0.00012290557183425405,
+        "mae_delta_dot": 9.481559377453477e-05
+      },
+      "50_steps": {
+        "overall_mae": 0.000284128726377921,
+        "survival_steps": 50.0,
+        "n_seeds": 5,
+        "mae_phi": 0.00017391565538112179,
+        "mae_delta": 0.0001852490566765671,
+        "mae_phi_dot": 0.0003143546088584571,
+        "mae_delta_dot": 0.000462995584595538
+      },
+      "100_steps": {
+        "overall_mae": 0.0020674022844577966,
+        "survival_steps": 100.0,
+        "n_seeds": 5,
+        "mae_phi": 0.001141292178634519,
+        "mae_delta": 0.001503625034657104,
+        "mae_phi_dot": 0.002455926754818274,
+        "mae_delta_dot": 0.0031687651697212887
+      },
+      "200_steps": {
+        "overall_mae": 0.19273016847471755,
+        "survival_steps": 200.0,
+        "n_seeds": 5,
+        "mae_phi": 0.09166823935599162,
+        "mae_delta": 0.12278796338761641,
+        "mae_phi_dot": 0.2634843824933202,
+        "mae_delta_dot": 0.292980088661942
+      },
+      "500_steps": {
+        "overall_mae": 12.19488229549231,
+        "survival_steps": 500.0,
+        "n_seeds": 5,
+        "mae_phi": 3.3363496165590383,
+        "mae_delta": 1.9043904318090508,
+        "mae_phi_dot": 12.137587739585385,
+        "mae_delta_dot": 31.40120139401577
+      },
+      "1000_steps": {
+        "overall_mae": 17.1848449514658,
+        "survival_steps": 1000.0,
+        "n_seeds": 5,
+        "mae_phi": 4.660972783209237,
+        "mae_delta": 3.1090962942290674,
+        "mae_phi_dot": 17.166916961561974,
+        "mae_delta_dot": 43.80239376686292
+      }
+    },
+    "E1_offline_nn": {
+      "1_steps": {
+        "overall_mae": 3.2269866292964796e-06,
+        "survival_steps": 1.0,
+        "n_seeds": 5,
+        "mae_phi": 1.556233797467277e-07,
+        "mae_delta": 2.6952608903020245e-07,
+        "mae_phi_dot": 1.8168770532664414e-06,
+        "mae_delta_dot": 1.0665919995142548e-05
+      },
+      "5_steps": {
+        "overall_mae": 0.00011437244501421838,
+        "survival_steps": 5.0,
+        "n_seeds": 5,
+        "mae_phi": 3.421759592862432e-06,
+        "mae_delta": 3.142438844623456e-05,
+        "mae_phi_dot": 2.8385016632853925e-05,
+        "mae_delta_dot": 0.0003942586153849226
+      },
+      "10_steps": {
+        "overall_mae": 0.000132575708712246,
+        "survival_steps": 10.0,
+        "n_seeds": 5,
+        "mae_phi": 1.2120097633531054e-05,
+        "mae_delta": 6.808940592975944e-05,
+        "mae_phi_dot": 0.00010938647873485072,
+        "mae_delta_dot": 0.00034070685255084283
+      },
+      "20_steps": {
+        "overall_mae": 0.0002313279735819816,
+        "survival_steps": 20.0,
+        "n_seeds": 5,
+        "mae_phi": 6.983367268954158e-05,
+        "mae_delta": 9.91293903554569e-05,
+        "mae_phi_dot": 0.0003722476553562878,
+        "mae_delta_dot": 0.00038410117592664015
+      },
+      "50_steps": {
+        "overall_mae": 0.0008554017349213898,
+        "survival_steps": 50.0,
+        "n_seeds": 5,
+        "mae_phi": 0.000523067315880628,
+        "mae_delta": 0.0005856763357226957,
+        "mae_phi_dot": 0.00081073381244883,
+        "mae_delta_dot": 0.0015021294756334055
+      },
+      "100_steps": {
+        "overall_mae": 0.005930563150386717,
+        "survival_steps": 100.0,
+        "n_seeds": 5,
+        "mae_phi": 0.003443789347307454,
+        "mae_delta": 0.004476978557915708,
+        "mae_phi_dot": 0.006393516120220412,
+        "mae_delta_dot": 0.009407968576103293
+      },
+      "200_steps": {
+        "overall_mae": 0.649078849907002,
+        "survival_steps": 200.0,
+        "n_seeds": 5,
+        "mae_phi": 0.24443286708100637,
+        "mae_delta": 0.32574636983712757,
+        "mae_phi_dot": 0.8154285095618773,
+        "mae_delta_dot": 1.210707653147997
+      },
+      "500_steps": {
+        "overall_mae": 13.222922897946631,
+        "survival_steps": 500.0,
+        "n_seeds": 5,
+        "mae_phi": 3.426497555237867,
+        "mae_delta": 1.6881332165399558,
+        "mae_phi_dot": 11.985856190449585,
+        "mae_delta_dot": 35.79120462955911
+      },
+      "1000_steps": {
+        "overall_mae": 21.414105465470012,
+        "survival_steps": 1000.0,
+        "n_seeds": 5,
+        "mae_phi": 4.575665649396921,
+        "mae_delta": 2.5025967740450383,
+        "mae_phi_dot": 16.47558251730236,
+        "mae_delta_dot": 62.10257692113574
+      }
+    },
+    "E2_dagger_3": {
+      "1_steps": {
+        "overall_mae": 0.0009557548911579037,
+        "survival_steps": 1.0,
+        "n_seeds": 5,
+        "mae_phi": 0.0005290102577366201,
+        "mae_delta": 0.0011874767237000834,
+        "mae_phi_dot": 0.001016711879394888,
+        "mae_delta_dot": 0.0010898207038000235
+      },
+      "5_steps": {
+        "overall_mae": 0.07954963990888095,
+        "survival_steps": 5.0,
+        "n_seeds": 5,
+        "mae_phi": 0.044949408768445734,
+        "mae_delta": 0.03671753367835182,
+        "mae_phi_dot": 0.05733362113054441,
+        "mae_delta_dot": 0.17919799605818182
+      },
+      "10_steps": {
+        "overall_mae": 0.10909627202167418,
+        "survival_steps": 10.0,
+        "n_seeds": 5,
+        "mae_phi": 0.0727353198144878,
+        "mae_delta": 0.0720348252402799,
+        "mae_phi_dot": 0.07114599795001936,
+        "mae_delta_dot": 0.2204689450819096
+      },
+      "20_steps": {
+        "overall_mae": 0.13856787232031467,
+        "survival_steps": 20.0,
+        "n_seeds": 5,
+        "mae_phi": 0.09230154058116649,
+        "mae_delta": 0.12447651650863137,
+        "mae_phi_dot": 0.10685947330871345,
+        "mae_delta_dot": 0.2306339588827473
+      },
+      "50_steps": {
+        "overall_mae": 0.2672316921056878,
+        "survival_steps": 50.0,
+        "n_seeds": 5,
+        "mae_phi": 0.11234923647931985,
+        "mae_delta": 0.1429029163006508,
+        "mae_phi_dot": 0.42709313573222235,
+        "mae_delta_dot": 0.3865814799105583
+      },
+      "100_steps": {
+        "overall_mae": 0.3025893156300343,
+        "survival_steps": 100.0,
+        "n_seeds": 5,
+        "mae_phi": 0.14202047359456646,
+        "mae_delta": 0.13626053420669307,
+        "mae_phi_dot": 0.43338765448094063,
+        "mae_delta_dot": 0.498688600237937
+      },
+      "200_steps": {
+        "overall_mae": 0.2912212725293376,
+        "survival_steps": 200.0,
+        "n_seeds": 5,
+        "mae_phi": 0.15193286893780517,
+        "mae_delta": 0.1513811185266753,
+        "mae_phi_dot": 0.368959122824703,
+        "mae_delta_dot": 0.49261197982816674
+      },
+      "500_steps": {
+        "overall_mae": 0.29575089116078895,
+        "survival_steps": 500.0,
+        "n_seeds": 5,
+        "mae_phi": 0.159575836260399,
+        "mae_delta": 0.14786140869806325,
+        "mae_phi_dot": 0.3573060746998369,
+        "mae_delta_dot": 0.5182602449848568
+      },
+      "1000_steps": {
+        "overall_mae": 0.29709454169048816,
+        "survival_steps": 1000.0,
+        "n_seeds": 5,
+        "mae_phi": 0.1568674829352088,
+        "mae_delta": 0.11706064035675205,
+        "mae_phi_dot": 0.3768727904762495,
+        "mae_delta_dot": 0.5375772529937423
+      }
+    },
+    "E3_7_5": {
+      "1_steps": {
+        "overall_mae": 0.0017325662132509731,
+        "survival_steps": 1.0,
+        "n_seeds": 5,
+        "mae_phi": 0.0003790023803569895,
+        "mae_delta": 0.0009242775220498478,
+        "mae_phi_dot": 0.0017055476913493035,
+        "mae_delta_dot": 0.003921437259247751
+      },
+      "5_steps": {
+        "overall_mae": 0.08019277249773141,
+        "survival_steps": 5.0,
+        "n_seeds": 5,
+        "mae_phi": 0.042909497930871454,
+        "mae_delta": 0.056364599925053424,
+        "mae_phi_dot": 0.04738072532010945,
+        "mae_delta_dot": 0.17411626681489126
+      },
+      "10_steps": {
+        "overall_mae": 0.10297704195099325,
+        "survival_steps": 10.0,
+        "n_seeds": 5,
+        "mae_phi": 0.05171521544647214,
+        "mae_delta": 0.08425958616745348,
+        "mae_phi_dot": 0.10451891236581065,
+        "mae_delta_dot": 0.17141445382423676
+      },
+      "20_steps": {
+        "overall_mae": 0.17328586182127062,
+        "survival_steps": 20.0,
+        "n_seeds": 5,
+        "mae_phi": 0.08949755938143246,
+        "mae_delta": 0.10462302089979025,
+        "mae_phi_dot": 0.2175246961450143,
+        "mae_delta_dot": 0.28149817085884543
+      },
+      "50_steps": {
+        "overall_mae": 0.25588712881034886,
+        "survival_steps": 50.0,
+        "n_seeds": 5,
+        "mae_phi": 0.12948263008336516,
+        "mae_delta": 0.14679900219183603,
+        "mae_phi_dot": 0.34367300000777756,
+        "mae_delta_dot": 0.40359388295841675
+      },
+      "100_steps": {
+        "overall_mae": 0.29199921844471194,
+        "survival_steps": 100.0,
+        "n_seeds": 5,
+        "mae_phi": 0.1363697296794072,
+        "mae_delta": 0.14744469293183565,
+        "mae_phi_dot": 0.4502653055541724,
+        "mae_delta_dot": 0.4339171456134328
+      },
+      "200_steps": {
+        "overall_mae": 0.31041875906426813,
+        "survival_steps": 200.0,
+        "n_seeds": 5,
+        "mae_phi": 0.1440900879404489,
+        "mae_delta": 0.1424401713827565,
+        "mae_phi_dot": 0.48451445268131915,
+        "mae_delta_dot": 0.47063032425254814
+      },
+      "500_steps": {
+        "overall_mae": 0.3101731796403821,
+        "survival_steps": 500.0,
+        "n_seeds": 5,
+        "mae_phi": 0.14191710652412987,
+        "mae_delta": 0.1378422990807569,
+        "mae_phi_dot": 0.49093630680984585,
+        "mae_delta_dot": 0.46999700614679557
+      },
+      "1000_steps": {
+        "overall_mae": 0.2640766526121648,
+        "survival_steps": 1000.0,
+        "n_seeds": 5,
+        "mae_phi": 0.12155625772446621,
+        "mae_delta": 0.12457132944168484,
+        "mae_phi_dot": 0.4217748210604168,
+        "mae_delta_dot": 0.3884042022220913
+      }
+    }
+  },
+  "horizons": [
+    1,
+    5,
+    10,
+    20,
+    50,
+    100,
+    200,
+    500,
+    1000
+  ],
+  "n_eval_seeds": 5
+}

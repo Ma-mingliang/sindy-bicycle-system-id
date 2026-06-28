@@ -1,0 +1,316 @@
+{
+  "horizon_10": {
+    "horizon": 10,
+    "n_candidates": 50,
+    "n_start_states": 10,
+    "ranking_metrics_per_state": [
+      {
+        "segment_idx": 0,
+        "spearman_rho": -0.060168067226890755,
+        "kendall_tau": -0.0563265306122449,
+        "top_k_overlap": 0.2,
+        "mae_ratio": 0.38014113235951663,
+        "mean_gp_cost": 437.44545476929926,
+        "mean_nn_cost": 316.95704483601173
+      },
+      {
+        "segment_idx": 1,
+        "spearman_rho": 0.07966386554621849,
+        "kendall_tau": 0.05795918367346938,
+        "top_k_overlap": 0.0,
+        "mae_ratio": 0.19232061052378882,
+        "mean_gp_cost": 1437.982846906024,
+        "mean_nn_cost": 1206.037062694333
+      },
+      {
+        "segment_idx": 2,
+        "spearman_rho": 0.2632893157262905,
+        "kendall_tau": 0.15918367346938775,
+        "top_k_overlap": 0.2,
+        "mae_ratio": 0.022725264417639893,
+        "mean_gp_cost": 432.78474071895647,
+        "mean_nn_cost": 432.0244239180127
+      },
+      {
+        "segment_idx": 3,
+        "spearman_rho": -0.4286674669867947,
+        "kendall_tau": -0.2979591836734694,
+        "top_k_overlap": 0.0,
+        "mae_ratio": 0.4141581602914169,
+        "mean_gp_cost": 1416.1680321047877,
+        "mean_nn_cost": 1001.4212496662727
+      },
+      {
+        "segment_idx": 4,
+        "spearman_rho": 0.14420168067226888,
+        "kendall_tau": 0.11673469387755102,
+        "top_k_overlap": 0.2,
+        "mae_ratio": 0.7744320396866372,
+        "mean_gp_cost": 761.9099411505507,
+        "mean_nn_cost": 429.3824300451108
+      },
+      {
+        "segment_idx": 5,
+        "spearman_rho": 0.23322929171668666,
+        "kendall_tau": 0.1689795918367347,
+        "top_k_overlap": 0.0,
+        "mae_ratio": 0.3839122803866347,
+        "mean_gp_cost": 269.75367730648145,
+        "mean_nn_cost": 437.84946318321244
+      },
+      {
+        "segment_idx": 6,
+        "spearman_rho": -0.3485714285714286,
+        "kendall_tau": -0.2440816326530612,
+        "top_k_overlap": 0.2,
+        "mae_ratio": 0.3010815396525578,
+        "mean_gp_cost": 214.87685507386158,
+        "mean_nn_cost": 307.441951049688
+      },
+      {
+        "segment_idx": 7,
+        "spearman_rho": 0.0017767106842737094,
+        "kendall_tau": -0.007346938775510204,
+        "top_k_overlap": 0.0,
+        "mae_ratio": 0.12149736209806535,
+        "mean_gp_cost": 1429.550188561893,
+        "mean_nn_cost": 1276.0818747748067
+      },
+      {
+        "segment_idx": 8,
+        "spearman_rho": 0.3890996398559423,
+        "kendall_tau": 0.27183673469387754,
+        "top_k_overlap": 0.0,
+        "mae_ratio": 0.10832215122119992,
+        "mean_gp_cost": 4.350525340868,
+        "mean_nn_cost": 4.879032653806837
+      },
+      {
+        "segment_idx": 9,
+        "spearman_rho": -0.21430972388955583,
+        "kendall_tau": -0.14285714285714285,
+        "top_k_overlap": 0.0,
+        "mae_ratio": 0.8271614583221392,
+        "mean_gp_cost": 876.666325667372,
+        "mean_nn_cost": 479.7968574010993
+      }
+    ],
+    "aggregated_ranking": {
+      "spearman_rho_mean": 0.0059543817527010654,
+      "spearman_rho_std": 0.25626382000307957,
+      "kendall_tau_mean": 0.0026122448979591815,
+      "kendall_tau_std": 0.17795985770327324,
+      "top_k_overlap_mean": 0.08,
+      "top_k_overlap_std": 0.09797958971132713,
+      "mae_ratio_mean": 0.35257519989595965,
+      "mae_ratio_std": 0.2566944279733966
+    },
+    "cost_stats": {
+      "gp_cost_mean": 728.1488587600095,
+      "gp_cost_std": 515.9073256502676,
+      "nn_cost_mean": 589.1871390222354,
+      "nn_cost_std": 408.43231700182247,
+      "cost_correlation": 0.9226265784382307,
+      "relative_error": 0.32631835772683526
+    }
+  },
+  "horizon_20": {
+    "horizon": 20,
+    "n_candidates": 50,
+    "n_start_states": 10,
+    "ranking_metrics_per_state": [
+      {
+        "segment_idx": 0,
+        "spearman_rho": -0.13171668667466988,
+        "kendall_tau": -0.10040816326530612,
+        "top_k_overlap": 0.2,
+        "mae_ratio": 0.3176678957743865,
+        "mean_gp_cost": 1412.311959078135,
+        "mean_nn_cost": 1144.2083661742172
+      },
+      {
+        "segment_idx": 1,
+        "spearman_rho": -0.16398559423769507,
+        "kendall_tau": -0.10530612244897959,
+        "top_k_overlap": 0.0,
+        "mae_ratio": 0.7116857068480245,
+        "mean_gp_cost": 2875.785348065542,
+        "mean_nn_cost": 1680.0895962151503
+      },
+      {
+        "segment_idx": 2,
+        "spearman_rho": 0.11183673469387755,
+        "kendall_tau": 0.07428571428571429,
+        "top_k_overlap": 0.4,
+        "mae_ratio": 0.24283729220501518,
+        "mean_gp_cost": 871.5567997291846,
+        "mean_nn_cost": 1021.7449740452903
+      },
+      {
+        "segment_idx": 3,
+        "spearman_rho": 0.14468187274909963,
+        "kendall_tau": 0.09061224489795917,
+        "top_k_overlap": 0.0,
+        "mae_ratio": 0.27754118432334224,
+        "mean_gp_cost": 2832.529537305457,
+        "mean_nn_cost": 2217.172778508682
+      },
+      {
+        "segment_idx": 4,
+        "spearman_rho": -0.1499639855942377,
+        "kendall_tau": -0.10204081632653061,
+        "top_k_overlap": 0.0,
+        "mae_ratio": 0.7341503129972863,
+        "mean_gp_cost": 1721.2117513653468,
+        "mean_nn_cost": 992.5389618564395
+      },
+      {
+        "segment_idx": 5,
+        "spearman_rho": 0.006962785114045618,
+        "kendall_tau": -0.0008163265306122448,
+        "top_k_overlap": 0.0,
+        "mae_ratio": 0.5959231030716194,
+        "mean_gp_cost": 615.7170286045989,
+        "mean_nn_cost": 1523.7620197665735
+      },
+      {
+        "segment_idx": 6,
+        "spearman_rho": 0.026938775510204082,
+        "kendall_tau": 0.020408163265306124,
+        "top_k_overlap": 0.2,
+        "mae_ratio": 0.37113721629863655,
+        "mean_gp_cost": 775.9764379605128,
+        "mean_nn_cost": 794.4187345853409
+      },
+      {
+        "segment_idx": 7,
+        "spearman_rho": -0.23236494597839136,
+        "kendall_tau": -0.1689795918367347,
+        "top_k_overlap": 0.2,
+        "mae_ratio": 0.11589911976308162,
+        "mean_gp_cost": 2859.129753418793,
+        "mean_nn_cost": 2562.175830039027
+      },
+      {
+        "segment_idx": 8,
+        "spearman_rho": 0.26338535414165665,
+        "kendall_tau": 0.17061224489795918,
+        "top_k_overlap": 0.0,
+        "mae_ratio": 0.2492512319839607,
+        "mean_gp_cost": 9.265120315538518,
+        "mean_nn_cost": 12.217854068677113
+      },
+      {
+        "segment_idx": 9,
+        "spearman_rho": 0.0848499399759904,
+        "kendall_tau": 0.05469387755102041,
+        "top_k_overlap": 0.2,
+        "mae_ratio": 0.761852430941804,
+        "mean_gp_cost": 1764.9395909486127,
+        "mean_nn_cost": 1001.7522239391855
+      }
+    ],
+    "aggregated_ranking": {
+      "spearman_rho_mean": -0.003937575030012012,
+      "spearman_rho_std": 0.15210325946924572,
+      "kendall_tau_mean": -0.006693877551020415,
+      "kendall_tau_std": 0.1029250180970143,
+      "top_k_overlap_mean": 0.12,
+      "top_k_overlap_std": 0.132664991614216,
+      "mae_ratio_mean": 0.43779454942071566,
+      "mae_ratio_std": 0.22684567245231482
+    },
+    "cost_stats": {
+      "gp_cost_mean": 1573.8423326791722,
+      "gp_cost_std": 988.7227225648656,
+      "nn_cost_mean": 1295.0081339198584,
+      "nn_cost_std": 706.5935226986443,
+      "cost_correlation": 0.799945147540304,
+      "relative_error": 0.4183287470981737
+    }
+  },
+  "actual_trajectory_validation": {
+    "n_segments": 10,
+    "mean_relative_error": 0.5014586772490266,
+    "median_relative_error": 0.6253330393365891,
+    "max_relative_error": 0.9054568182283017,
+    "cost_correlation": 0.7084273444078332,
+    "details": [
+      {
+        "true_cost": 1148.9699211701839,
+        "gp_cost": 2189.3125702330517,
+        "relative_error": 0.9054568182283017
+      },
+      {
+        "true_cost": 1668.412885668422,
+        "gp_cost": 2875.8607938682285,
+        "relative_error": 0.7237104907134484
+      },
+      {
+        "true_cost": 674.544484923662,
+        "gp_cost": 881.5192117749793,
+        "relative_error": 0.3068362894920264
+      },
+      {
+        "true_cost": 2787.774448851283,
+        "gp_cost": 2831.880706097595,
+        "relative_error": 0.015821314835740972
+      },
+      {
+        "true_cost": 1038.0210798380085,
+        "gp_cost": 1832.3317656843094,
+        "relative_error": 0.7652163344988937
+      },
+      {
+        "true_cost": 1500.1189818739856,
+        "gp_cost": 612.6360061151529,
+        "relative_error": 0.591608390055906
+      },
+      {
+        "true_cost": 1614.7092052625214,
+        "gp_cost": 550.5226886531058,
+        "relative_error": 0.6590576886172722
+      },
+      {
+        "true_cost": 2639.9619911251,
+        "gp_cost": 2859.1212652296576,
+        "relative_error": 0.08301607176213462
+      },
+      {
+        "true_cost": 13.08567010854146,
+        "gp_cost": 9.310818666222671,
+        "relative_error": 0.288472153965273
+      },
+      {
+        "true_cost": 1054.6762201872289,
+        "gp_cost": 1766.9952795833722,
+        "relative_error": 0.6753912203212689
+      }
+    ]
+  },
+  "summary": {
+    "agent": "F",
+    "task": "MPC/MPPI Planning Validation",
+    "elapsed_seconds": 431.3,
+    "config": {
+      "n_candidates": 50,
+      "horizons": [
+        10,
+        20
+      ],
+      "n_start_states": 10,
+      "cost_weights": {
+        "e_y": 100.0,
+        "e_psi": 100.0,
+        "v": 1.0,
+        "theta": 10.0,
+        "theta_dot": 1.0,
+        "delta": 10.0,
+        "delta_dot": 1.0,
+        "u": 0.1
+      },
+      "k_nn": 5,
+      "gp_max_samples": 2000
+    }
+  }
+}

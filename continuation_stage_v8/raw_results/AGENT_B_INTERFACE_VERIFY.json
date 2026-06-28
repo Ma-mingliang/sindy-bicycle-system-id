@@ -1,0 +1,59 @@
+{
+  "agent": "B",
+  "task": "canonical_7d package interface verification",
+  "total_tests": 10,
+  "passed": 10,
+  "failed": 0,
+  "results": {
+    "test1_all_imports": {
+      "status": "PASS",
+      "detail": "STATE_DIM=7, ACTION_DIM=1, names=['e_y', 'e_psi', 'v', 'theta', 'theta_dot', 'delta', 'delta_dot'], idx=[0, 1, 2, 3, 4, 6, 7]",
+      "elapsed_s": 0.015
+    },
+    "test2_load_7d_data": {
+      "status": "PASS",
+      "detail": "train=(106214,7), test=(43786,7), all=(150000,7), episodes=148, state_std_shape=(7,)",
+      "elapsed_s": 0.109
+    },
+    "test3_get_test_segments": {
+      "status": "PASS",
+      "detail": "3 segments, states=(51,7), actions=(50,), start_idxs=[68980, 148382, 124488]",
+      "elapsed_s": 0.006
+    },
+    "test4_gp_train_predict": {
+      "status": "PASS",
+      "detail": "gp.n_gps=7, predict_shape=(7,), predict_val=[-7.2000e-04  0.0000e+00  5.6823e-01 -2.4824e-02  0.0000e+00  9.5304e-69\n  0.0000e+00]",
+      "elapsed_s": 1.886
+    },
+    "test5_sindy_train_predict": {
+      "status": "PASS",
+      "detail": "coeffs_shape=(45, 7), predict_shape=(7,), predict_val=[ 0.1877  2.8698  0.5682 -0.0575 -0.0288  0.1563  0.2044]",
+      "elapsed_s": 0.006
+    },
+    "test6_compute_metrics": {
+      "status": "PASS",
+      "detail": "overall_nmae=2.3016, overall_rmse=1.4420, survival=20",
+      "elapsed_s": 0.002
+    },
+    "test7_compute_cost": {
+      "status": "PASS",
+      "detail": "J=2010.6538, J_manual=2010.6538, edge_case_J=0.0",
+      "elapsed_s": 0.0
+    },
+    "test8_model_names_unique": {
+      "status": "PASS",
+      "detail": "names=['gp', 'sindy', 'e1_offline_nn', 'rde_local', 'rde_trajectory', 'rde_hybrid'], all_unique=True",
+      "elapsed_s": 0.0
+    },
+    "test9_predict_7d_all_models": {
+      "status": "PASS",
+      "detail": "all 6 models return (7,): gp:shape=(7), sindy:shape=(7), e1:shape=(7), rde_l:shape=(7), rde_t:shape=(7), rde_m:shape=(7)",
+      "elapsed_s": 16.981
+    },
+    "test10_predict_with_uncertainty": {
+      "status": "PASS",
+      "detail": "all 6 models have predict_with_uncertainty: e1_offline_nn:unc_mean=0.0014, rde_local:unc_mean=0.0014, rde_trajectory:unc_mean=0.0014, rde_hybrid:unc_mean=0.0014, gp:unc=None(default), sindy:unc=None(default)",
+      "elapsed_s": 0.005
+    }
+  }
+}

@@ -1,0 +1,105 @@
+{
+  "timestamp": "20260617_110249",
+  "seed": 42,
+  "lqr_config": {
+    "lqr_Q": [
+      500,
+      50,
+      10,
+      1
+    ],
+    "lqr_R": 0.2
+  },
+  "modes": {
+    "stanley_ref_zero": {
+      "steps": 200,
+      "total_reward": -2.492831599806845,
+      "terminated": false,
+      "ey_mean": 1.7176303174377454,
+      "theta_mean": 0.7601795533848196,
+      "theta_max": 1.57,
+      "u_total_mean": 50.49140839091614,
+      "u_total_max": 493.1648245876475
+    },
+    "stanley_ref_small_positive": {
+      "steps": 200,
+      "total_reward": -2.6487483971422625,
+      "terminated": false,
+      "ey_mean": 1.7870429952726579,
+      "theta_mean": 0.8381293271436379,
+      "theta_max": 1.57,
+      "u_total_mean": 56.50748447826809,
+      "u_total_max": 493.2179390236993
+    },
+    "stanley_ref_small_negative": {
+      "steps": 200,
+      "total_reward": -1.7787509622707096,
+      "terminated": false,
+      "ey_mean": 1.331685667881695,
+      "theta_mean": 0.5909236830951761,
+      "theta_max": 1.57,
+      "u_total_mean": 33.59287533089284,
+      "u_total_max": 485.9623471024581
+    },
+    "theta_target_zero": {
+      "steps": 200,
+      "total_reward": -2.492831599806845,
+      "terminated": false,
+      "ey_mean": 1.7176303174377454,
+      "theta_mean": 0.7601795533848196,
+      "theta_max": 1.57,
+      "u_total_mean": 50.49140839091614,
+      "u_total_max": 493.1648245876475
+    },
+    "theta_target_small_positive": {
+      "steps": 200,
+      "total_reward": -2.833791572817214,
+      "terminated": false,
+      "ey_mean": 1.7985035069762245,
+      "theta_mean": 0.8540138896578067,
+      "theta_max": 1.57,
+      "u_total_mean": 57.56497841847995,
+      "u_total_max": 492.7880627671096
+    },
+    "theta_target_small_negative": {
+      "steps": 200,
+      "total_reward": 2.047043864652985,
+      "terminated": false,
+      "ey_mean": 1.076266700013241,
+      "theta_mean": 0.46303464787625925,
+      "theta_max": 1.57,
+      "u_total_mean": 28.790518105293714,
+      "u_total_max": 485.7746004422425
+    },
+    "final_action_zero": {
+      "steps": 200,
+      "total_reward": -2.492831599806845,
+      "terminated": false,
+      "ey_mean": 1.7176303174377454,
+      "theta_mean": 0.7601795533848196,
+      "theta_max": 1.57,
+      "u_total_mean": 50.49140839091614,
+      "u_total_max": 493.1648245876475
+    },
+    "final_action_small_positive": {
+      "steps": 200,
+      "total_reward": -2.4877603881367767,
+      "terminated": false,
+      "ey_mean": 1.714467459821783,
+      "theta_mean": 0.759293556955608,
+      "theta_max": 1.57,
+      "u_total_mean": 50.5310753693027,
+      "u_total_max": 493.0666787357841
+    },
+    "final_action_small_negative": {
+      "steps": 200,
+      "total_reward": -2.498359851093087,
+      "terminated": false,
+      "ey_mean": 1.7208450783165299,
+      "theta_mean": 0.7610662369996846,
+      "theta_max": 1.57,
+      "u_total_mean": 50.45452165190595,
+      "u_total_max": 493.241812705801
+    }
+  }
+}

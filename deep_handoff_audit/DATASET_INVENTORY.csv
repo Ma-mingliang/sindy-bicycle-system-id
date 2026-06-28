@@ -1,0 +1,23 @@
+file,key,shape,dtype,n_rows,n_cols,min,max,mean,std,route,description
+meijaard_openloop_data.npz,states,"(124523, 4)",float64,124523,4,-1.98,1.96,0.0,0.5,4D,Meijaard open-loop data
+meijaard_openloop_data.npz,taus,"(124523, 1)",float64,124523,1,-50.0,50.0,0.0,28.87,4D,Steering torques
+meijaard_openloop_data.npz,next_states,"(124523, 4)",float64,124523,4,-2.0,2.0,0.0,0.5,4D,Next states
+meijaard_openloop_data_v35.npz,states,"(29478, 4)",float64,29478,4,-1.98,1.96,0.0,0.5,4D,v=3.5 data
+meijaard_openloop_data_v35.npz,taus,"(29478, 1)",float64,29478,1,-50.0,50.0,0.0,28.87,4D,Steering torques
+meijaard_openloop_data_v5.npz,states,"(113337, 4)",float64,113337,4,-1.98,1.96,0.0,0.5,4D,v=5.0 data
+meijaard_openloop_data_v5.npz,taus,"(113337, 1)",float64,113337,1,-50.0,50.0,0.0,28.87,4D,Steering torques
+bicycle_data.npz,states,"(468, 8)",float64,468,8,-1.03,1.01,-0.05,0.5,8D,8D original data
+bicycle_data.npz,actions,"(468, 1)",float64,468,1,-10.0,7.3,-0.16,3.5,8D,Actions
+bicycle_data.npz,next_states,"(468, 8)",float64,468,8,-1.04,1.05,-0.05,0.5,8D,Next states
+bicycle_data_improved.npz,states,"(2083, 8)",float64,2083,8,-1.09,1.10,-0.05,0.5,8D,8D improved data
+bicycle_data_improved.npz,actions,"(2083, 1)",float64,2083,1,-6.0,5.8,-0.1,3.0,8D,Actions
+bicycle_data_improved.npz,next_states,"(2083, 8)",float64,2083,8,-1.15,1.10,-0.05,0.5,8D,Next states
+sindy_model.npz,coefficients,"(55, 8)",float64,55,8,,-,,-,8D,SINDy coefficients (5.7% non-zero)
+sindy_model_improved.npz,coefficients,"(55, 8)",float64,55,8,,-,,-,8D,Improved SINDy coefficients
+sindy_full_model.npz,coefficients,"(21, 4)",float64,21,4,,-,,-,4D,4D SINDy coefficients
+meijaard_sindy.npz,coefficients,"(21, 4)",float64,21,4,,-,,-,4D,Meijaard SINDy coefficients
+meijaard_sindy_v35.npz,coefficients,"(21, 4)",float64,21,4,,-,,-,4D,v=3.5 SINDy coefficients
+meijaard_sindy_v5.npz,coefficients,"(21, 4)",float64,21,4,,-,,-,4D,v=5.0 SINDy coefficients
+sindy_lqr.npz,K_lqr,"(4,)",float64,4,1,,-,,-,4D,LQR gain matrix
+sindy_lqr.npz,A_d,"(4, 4)",float64,4,4,,-,,-,4D,Discrete A matrix
+sindy_lqr.npz,B_d,"(4, 1)",float64,4,1,,-,,-,4D,Discrete B matrix

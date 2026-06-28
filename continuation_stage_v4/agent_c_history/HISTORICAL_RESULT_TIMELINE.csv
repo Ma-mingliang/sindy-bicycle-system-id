@@ -1,0 +1,4 @@
+event_order,result_value,script,event_description,evaluation_mode,metric,state_channels,unit,steps,nn_count,dagger_rounds,lr_scheduler,seeds,reproducible,confidence
+1,0.064,test_ensemble.py,"First produced by GP+Ensemble(5) evaluation at step 500",Mode C style,phi-only endpoint error,phi only,rad,500,5,3,NONE,unseeded,NO,CONFIRMED
+2,0.066,test_ensemble_optimization.py,"Attempted improvement with 7 NN + 5 DAgger",Mode C style,phi-only endpoint error,phi only,rad,500,7,5,NONE,unseeded,NO,CONFIRMED
+3,0.252,run_full_evaluation_v2.py,"Full evaluation v2, mean of 5 seeds (42-46), Mode B 500-step MAE",Mode B fixed action,full-trajectory MAE (4 states),all 4 (phi delta phi_dot delta_dot),mixed (rad + rad/s),500,7,5,CosineAnnealingLR,seeded (42-46),YES,CONFIRMED

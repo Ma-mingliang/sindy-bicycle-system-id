@@ -1,0 +1,89 @@
+{
+  "subagent": "G",
+  "code_review": {
+    "issues": [
+      {
+        "agent": "A+B",
+        "severity": "CRITICAL",
+        "description": "range(max(1,...)) fix pattern not found in source"
+      }
+    ],
+    "total_issues": 1,
+    "critical": 1,
+    "high": 0
+  },
+  "anti_fraud": {
+    "equivalence": {
+      "status": "CONFIRMED",
+      "expected": "PASS with 0.00e+00 difference",
+      "source": "V4 ENSEMBLE_EQUIVALENCE_RESULTS.json"
+    },
+    "zero_dagger_ma": {
+      "status": "CONFIRMED",
+      "expected": "dagger_rounds=0 with fix \u2192 non-zero MAE",
+      "source": "V4 ENSEMBLE_ABLATION_RESULTS.json E0/E1 show MAE > 0"
+    },
+    "dagger_improvement": {
+      "status": "CONFIRMED",
+      "expected": "E2/E3 MAE < E0 MAE at 1000 steps",
+      "source": "V4: E0=14.25, E2=0.36, E3=0.19"
+    },
+    "v4_overcoverage": {
+      "status": "CONFIRMED",
+      "expected": "V4 raw 95% coverage \u2248 99.7%",
+      "source": "V4 FINAL_FACTS_V4.json"
+    },
+    "mode_b_equals_c": {
+      "status": "CONFIRMED",
+      "expected": "Identical results when tau_func is the same",
+      "source": "Mathematical analysis: both use same tau from real state"
+    },
+    "gp_divergence": {
+      "status": "CONFIRMED",
+      "expected": "E0 GP-only MAE grows rapidly beyond 50 steps",
+      "source": "V4: E0 MAE=14.25 at 1000 steps in Mode B"
+    },
+    "ood_detection": {
+      "status": "EXPECTED",
+      "expected": "OOD mean uncertainty > ID mean uncertainty",
+      "source": "To be verified by Subagent C"
+    }
+  },
+  "completion_adjudication": {
+    "individual": {
+      "A": {
+        "status": "incomplete",
+        "fix_verified": false,
+        "equivalence_pass": false
+      },
+      "B": {
+        "status": "incomplete"
+      },
+      "C": {
+        "status": "completed",
+        "calibration_fixed": true,
+        "ood_detected": true
+      },
+      "D": {
+        "status": "completed",
+        "naming_decided": true,
+        "all_modes_tested": true
+      },
+      "E": {
+        "status": "completed",
+        "gate_decision": "GO_WITH_MORE_DATA"
+      },
+      "F": {
+        "status": "completed",
+        "model_selection": {
+          "short_term_accuracy": "GP_pure",
+          "long_term_stability": "GP_pure",
+          "best_survival": "GP_pure"
+        }
+      }
+    },
+    "overall": "partial (4/6)",
+    "completed_count": 4,
+    "total_count": 6
+  }
+}

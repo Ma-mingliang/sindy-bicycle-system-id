@@ -1,0 +1,34 @@
+{
+  "stage": 1,
+  "checkpoint": "stage1_ensemble.pt",
+  "obs_dim": 8,
+  "action_dim": 1,
+  "mlp_dim": 256,
+  "ensemble_size": 3,
+  "lqr_label": "Q1000_D100_R02",
+  "lqr_Q": [
+    1000,
+    100,
+    10,
+    1
+  ],
+  "lqr_R": 0.2,
+  "horizon": 8,
+  "epsilon_max": 0.1,
+  "uncertainty_threshold": 9.794709476409477e-05,
+  "baseline": {
+    "return": 7.624361178429407,
+    "ET": 0,
+    "ET_rate": 0.0,
+    "theta_rms": 0.0266292347506774
+  },
+  "mppi": {
+    "return": 0.8306249519484105,
+    "ET": 0,
+    "ET_rate": 0.0,
+    "theta_rms": 0.04544659506418306,
+    "mean_eps": 0.00017603084444999697
+  },
+  "advantage": -6.793736226480997,
+  "timestamp": "20260617_164230"
+}

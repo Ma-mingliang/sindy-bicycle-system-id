@@ -1,0 +1,31 @@
+{
+  "algorithm": "MBPO-SAC v7 (SINDy+NN)",
+  "world_model": "SINDy polynomial + NN residual",
+  "world_model_accuracy": "35x better than linear (v6)",
+  "num_episodes": 600,
+  "max_steps": 1000,
+  "warmup_episodes": 150,
+  "ramp_episodes": 150,
+  "rollout_horizon": 10,
+  "alpha": 0.5,
+  "gamma": 0.99,
+  "tau": 0.005,
+  "lr": 0.0003,
+  "batch_size": 256,
+  "buffer_size": 300000,
+  "v0": 3.5,
+  "lqr_Q": [
+    1000,
+    100,
+    10,
+    1
+  ],
+  "lqr_R": 0.2,
+  "lqr_K": [
+    -103.91775923072369,
+    -34.200656363858016,
+    38.04390577396349,
+    3.7017208365451446
+  ],
+  "device": "cuda"
+}

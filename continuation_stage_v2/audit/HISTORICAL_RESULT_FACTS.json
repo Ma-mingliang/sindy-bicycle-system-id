@@ -1,0 +1,62 @@
+{
+  "audit_date": "2026-06-25",
+  "scope": "Historical 0.064/0.066 result tracing",
+
+  "results": {
+    "0.066": {
+      "source_file": "test_ensemble_optimization.py",
+      "evaluation_mode": "Mode C (hybrid)",
+      "metric": "phi-only endpoint error",
+      "steps": 500,
+      "configuration": "7 NN models + 5 DAgger rounds + residual_scale=0.3",
+      "equivalent_model": "gp_ensemble_7_5",
+      "initial_state": "unseeded (non-reproducible)",
+      "status": "CONFIRMED"
+    },
+    "0.064": {
+      "source_file": "test_ensemble_optimization.py",
+      "evaluation_mode": "Mode C (hybrid)",
+      "metric": "phi-only endpoint error",
+      "steps": 500,
+      "configuration": "7 NN models + 5 DAgger rounds + residual_scale=0.3",
+      "equivalent_model": "gp_ensemble_7_5",
+      "initial_state": "unseeded (non-reproducible)",
+      "status": "CONFIRMED (same path as 0.066, different random seed)"
+    },
+    "0.252": {
+      "source_file": "continuation_stage/evaluate/run_full_evaluation_v2.py",
+      "evaluation_mode": "Mode B (fixed action open-loop)",
+      "metric": "full-trajectory MAE (all 4 states)",
+      "steps": 100,
+      "configuration": "gp_ensemble_7_5",
+      "initial_state": "seeded (42-46)",
+      "status": "CONFIRMED"
+    }
+  },
+
+  "comparison": {
+    "0.066_vs_0.252": {
+      "comparable": false,
+      "reasons": [
+        "Different evaluation modes (Mode C vs Mode B)",
+        "Different metrics (phi-only endpoint vs full-trajectory MAE)",
+        "Different step counts (500 vs 100)",
+        "Different initial states (unseeded vs seeded)"
+      ]
+    }
+  },
+
+  "corrected_values": {
+    "gp_ensemble_7_5_mode_b_100_step_mae": "0.222 ± 0.108",
+    "gp_ensemble_7_5_mode_b_500_step_mae": "0.252 ± 0.117",
+    "gp_ensemble_7_5_mode_b_1000_step_mae": "0.257 ± 0.122",
+    "gp_ensemble_7_5_mode_d_1000_step_mae": "0.074 ± 0.003"
+  },
+
+  "recommendations": [
+    "Use Mode B as primary world model evaluation metric",
+    "Always use fixed random seeds for reproducibility",
+    "Distinguish endpoint error from trajectory MAE",
+    "Record complete evaluation configuration"
+  ]
+}

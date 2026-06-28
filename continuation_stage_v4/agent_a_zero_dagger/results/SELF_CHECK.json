@@ -1,0 +1,31 @@
+{
+  "checks": {
+    "equivalence_test_passed": false,
+    "e0_gp_trained": true,
+    "e1_offline_nn_trained": true,
+    "e2_dagger_trained": true,
+    "e3_7_5_trained": true,
+    "mode_a_evaluated": true,
+    "mode_b_evaluated": true,
+    "all_horizons_present": true,
+    "e1_mae_nonzero": true,
+    "e2_mae_nonzero": true,
+    "e0_ge_e1_mode_a": false,
+    "e1_ge_e2_mode_a": false,
+    "e0_ge_e1_mode_b": false,
+    "e1_ge_e2_mode_b": false
+  },
+  "all_passed": false,
+  "metrics": {
+    "mode_a_10_steps": {
+      "e0_mae": 1.0480967619450236e-05,
+      "e1_mae": 3.80667452525453e-05,
+      "e2_mae": 0.03376747969469851
+    },
+    "mode_b_10_steps": {
+      "e0_mae": 3.680726401826419e-05,
+      "e1_mae": 0.000132575708712246,
+      "e2_mae": 0.10909627202167418
+    }
+  }
+}

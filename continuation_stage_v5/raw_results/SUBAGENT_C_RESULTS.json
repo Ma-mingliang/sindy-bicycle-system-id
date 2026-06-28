@@ -1,0 +1,118 @@
+{
+  "subagent": "C",
+  "audit_findings": {
+    "v4_scalar_scale_issue": "V4 used max-coverage optimization, not |coverage-0.95| minimization",
+    "v4_coverage_95": 0.997,
+    "v4_target": 0.95,
+    "v4_gap": 0.047,
+    "fix": "Search for scale minimizing |coverage - 0.95|"
+  },
+  "cal_set_results": {
+    "n_eval": 200,
+    "coverage": {
+      "coverage_68": [
+        0.9,
+        0.86,
+        0.915,
+        0.9
+      ],
+      "avg_coverage_68": 0.8937499999999999,
+      "coverage_90": [
+        0.98,
+        0.97,
+        0.995,
+        0.975
+      ],
+      "avg_coverage_90": 0.98,
+      "coverage_95": [
+        0.995,
+        0.98,
+        1.0,
+        0.985
+      ],
+      "avg_coverage_95": 0.99,
+      "coverage_99": [
+        1.0,
+        0.985,
+        1.0,
+        0.99
+      ],
+      "avg_coverage_99": 0.9937499999999999
+    },
+    "ece": {
+      "ece": 0.5774999999999999,
+      "bins": [
+        {
+          "nominal": 0.05,
+          "empirical": 0.6275,
+          "gap": 0.5774999999999999,
+          "count": 200
+        }
+      ]
+    },
+    "per_state": {
+      "phi": {
+        "mean_abs_error": 6.942080072815844e-06,
+        "mean_std": 1.4942477500443125e-05,
+        "pearson_r": 0.7539240424201151
+      },
+      "delta": {
+        "mean_abs_error": 1.1027252313630223e-05,
+        "mean_std": 2.397732879981717e-05,
+        "pearson_r": 0.6120192432848531
+      },
+      "phi_dot": {
+        "mean_abs_error": 1.8526906424312546e-05,
+        "mean_std": 5.6783136720278086e-05,
+        "pearson_r": 0.5284491201473007
+      },
+      "delta_dot": {
+        "mean_abs_error": 0.0004427789958819751,
+        "mean_std": 0.001492364781606938,
+        "pearson_r": 0.39332643756765023
+      }
+    },
+    "mean_abs_error": 0.00011981880867318343,
+    "mean_std": 0.0003970169311568691
+  },
+  "optimal_scalar_scale": 0.7000000000000002,
+  "per_state_scales": {
+    "phi": 0.7,
+    "delta": 0.7999999999999999,
+    "phi_dot": 0.7,
+    "delta_dot": 0.7
+  },
+  "test_set_calibrated": {
+    "coverage_68_calibrated": 0.7645,
+    "coverage_90_calibrated": 0.9225,
+    "coverage_95_calibrated": 0.952,
+    "coverage_99_calibrated": 0.9775,
+    "phi_scale": 0.7,
+    "phi_test_coverage_95": 0.954,
+    "delta_scale": 0.7999999999999999,
+    "delta_test_coverage_95": 0.942,
+    "phi_dot_scale": 0.7,
+    "phi_dot_test_coverage_95": 0.97,
+    "delta_dot_scale": 0.7,
+    "delta_dot_test_coverage_95": 0.962
+  },
+  "ece_calibrated": {
+    "ece": 0.48500000000000004,
+    "bins": [
+      {
+        "nominal": 0.05,
+        "empirical": 0.535,
+        "gap": 0.48500000000000004,
+        "count": 500
+      }
+    ]
+  },
+  "mode_b_vs_c": "Identical in V4 because same tau_func, CONFIRMED",
+  "ood": {
+    "id_mean_uncertainty": 0.00016330131735893278,
+    "ood_mean_uncertainty": 0.010027150640660374,
+    "ratio": 61.40275414080655,
+    "auroc": 0.992525,
+    "auprc": 0.9947546014658722
+  }
+}

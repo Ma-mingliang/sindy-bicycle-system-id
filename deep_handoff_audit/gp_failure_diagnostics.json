@@ -1,0 +1,18 @@
+{
+  "gp_b1_ard": {
+    "status": "diagnosed",
+    "issue": "ARD overfitting in 5D space"
+  },
+  "gp_b2_composite": {
+    "status": "diagnosed",
+    "issue": "Composite kernel overfitting/numerical instability"
+  },
+  "gp_b3_physics": {
+    "status": "diagnosed",
+    "issue": "Physics model mismatch + residual accumulation"
+  },
+  "gp_b4_sparse": {
+    "status": "diagnosed",
+    "issue": "None - this method works well"
+  }
+}

@@ -1,0 +1,10 @@
+Variable,Current_Min,Current_Max,Current_Mean,Current_Std,Norm_Scale,Category,Coverage_Assessment,Recommendation
+e_y,-1.0942,1.1046,-0.0273,0.5894,10.0,Path_Error_State,GOOD: full range used,Maintain current initialization range [-1.0 1.0]
+e_psi,-0.3460,0.2647,-0.0064,0.1202,1.57,Path_Error_State,GOOD: meaningful range,Maintain current initialization range [-0.2 0.2]
+v,2.0009,5.9984,3.5219,1.0855,5.0,Vehicle_Dynamic_State,PARTIAL: skewed toward low speed,Uniform sampling in [2.0 6.0]; increase high-speed episodes
+theta,-0.2453,0.2668,-0.0014,0.0893,1.57,Vehicle_Dynamic_State,GOOD: balanced,Extend initialization to [-0.2 0.2] for more excitation
+theta_dot,-1.1549,1.2172,-0.0171,0.3309,10.0,Vehicle_Dynamic_State,GOOD: full range used,Maintain current initialization range [-0.5 0.5]
+k,-0.2943,0.2959,0.0017,0.1096,8.0,Exogenous_Context,GOOD: 3 scenarios covered,Move to input; maintain scenario distribution
+delta,-1.0173,0.9251,-0.0044,0.1978,0.785,Vehicle_Dynamic_State,GOOD: meaningful range,Maintain current initialization range [-0.2 0.2]
+delta_dot,-12.6595,12.3729,-0.0465,3.6122,3.0,Vehicle_Dynamic_State,GOOD: full range used,Maintain current initialization range [-0.5 0.5]
+tau,-5.9783,5.7849,0.0508,1.4100,N/A,Control_Input,GOOD: broad range,Increase exploration weight for sharp scenarios

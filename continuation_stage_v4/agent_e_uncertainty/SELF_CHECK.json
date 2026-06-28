@@ -1,0 +1,22 @@
+{
+  "E1_raw_diagnostic": true,
+  "E2_data_split": true,
+  "E3_calibration_methods": true,
+  "E4_metrics_computed": true,
+  "E5_focus_states": true,
+  "E6_mode_isolated": true,
+  "calibration_set_independent": true,
+  "test_set_independent": true,
+  "no_original_files_modified": true,
+  "files_generated": [
+    "CALIBRATION_SPLIT.json",
+    "RAW_UNCERTAINTY_AUDIT.md",
+    "SCALAR_SCALING_RESULTS.json",
+    "PER_STATE_SCALING_RESULTS.json",
+    "CONFORMAL_RESULTS.json",
+    "OOD_RESULTS.csv",
+    "POST_CALIBRATION_REPORT.md",
+    "SELF_CHECK.json"
+  ],
+  "runtime_seconds": 139.844486951828
+}

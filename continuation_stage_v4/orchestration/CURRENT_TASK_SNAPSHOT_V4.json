@@ -1,0 +1,92 @@
+{
+  "snapshot_time": "2026-06-25",
+  "previous_stages": {
+    "continuation_stage": {
+      "status": "COMPLETE_WITH_ISSUES",
+      "completed": ["P0", "P1", "P3", "P5", "P7"],
+      "partial": ["P2", "P4", "P6"],
+      "failed": ["P8"],
+      "known_issues": [
+        "gp_ensemble_5_0 MAE=0 (BUG)",
+        "500=1000 same (NaN filtering)",
+        "Metric units mixed (rad + rad/s)",
+        "Historical 0.066 untraced",
+        "DAgger semantics unclear"
+      ]
+    },
+    "continuation_stage_v2": {
+      "status": "COMPLETE",
+      "completed": ["P0", "P1", "P2", "P3", "P4", "P5", "P6(PARTIAL)", "P7", "P8"],
+      "deliverables": [
+        "FINAL_HANDOVER_V2.md",
+        "FINAL_HANDOVER_V3.md",
+        "uncertainty_calibration.json",
+        "ENSEMBLE_ZERO_DAGGER_BUG_REPORT.md",
+        "MODE_B_IMPLEMENTATION_PROOF.md",
+        "DIVERGENCE_AND_METRIC_AUDIT.md",
+        "DAGGER_SEMANTICS_AUDIT.md",
+        "HISTORICAL_0064_0066_CODE_TRACE.md",
+        "ROUTE_8D_FINAL_AUDIT.md"
+      ]
+    }
+  },
+  "current_state": {
+    "gp_ensemble_5_0": {
+      "status": "DIAGNOSED",
+      "root_cause": "dagger_rounds=0 causes empty _ensemble_models list",
+      "fix_suggested": "range(max(1, self.dagger_rounds))",
+      "fix_applied": false,
+      "fix_verified": false
+    },
+    "mode_b_implementation": {
+      "status": "VERIFIED",
+      "tests_passed": 4,
+      "proof": "MODE_B_IMPLEMENTATION_PROOF.md"
+    },
+    "divergence_handling": {
+      "status": "DOCUMENTED",
+      "issue": "500=1000 same due to NaN filtering after divergence",
+      "fix_applied": false
+    },
+    "metric_units": {
+      "status": "DOCUMENTED",
+      "issue": "Mixed rad and rad/s in overall MAE",
+      "fix_applied": false
+    },
+    "historical_0066": {
+      "status": "TRACED",
+      "source": "test_ensemble_optimization.py",
+      "mode": "C",
+      "metric": "phi-only endpoint error",
+      "steps": 500
+    },
+    "dagger_semantics": {
+      "status": "AUDITED",
+      "finding": "Trajectory-level residual (Version T), not pure local dynamics",
+      "formula": "residual = (s_real[k+1] - GP(GP(s_base[k], tau), tau)) / delta_std"
+    },
+    "uncertainty_calibration": {
+      "status": "BASIC_ONLY",
+      "completed": "Raw evaluation with Pearson/Spearman/coverage",
+      "missing": ["Proper train/cal/test split", "Scaling calibration", "Conformal calibration", "OOD evaluation"],
+      "results": {
+        "gp_ensemble_5_3_mode_d": {"pearson_r": 0.584, "coverage": 0.820, "cal_error": 0.130},
+        "gp_ensemble_7_5_mode_d": {"pearson_r": 0.614, "coverage": 0.682, "cal_error": 0.268}
+      }
+    },
+    "route_8d": {
+      "status": "AUDITED",
+      "finding": "kappa should be exogenous input, no GP/NN models exist",
+      "action_taken": false
+    }
+  },
+  "v4_tasks": {
+    "P0": "Complete current tasks and create snapshot",
+    "P1": "Launch parallel agents A-F",
+    "P2": "Wait for all agents to complete",
+    "P3": "Launch independent review agent G",
+    "P4": "Main agent resolves conflicts",
+    "P5": "Reproduction experiments if needed",
+    "P6": "Generate V4 final handover"
+  }
+}

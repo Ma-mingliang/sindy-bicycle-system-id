@@ -1,0 +1,150 @@
+{
+  "subagent": "G",
+  "verdict": "PASS",
+  "code_review": {
+    "issues": []
+  },
+  "equivalence": {
+    "passed": "True",
+    "max_diff": 0.0
+  },
+  "rde_independence": {
+    "e1_vs_t": 0.004456721200799696,
+    "e1_vs_m": 0.09760745593669547,
+    "t_vs_m": 0.09413075731492983,
+    "independent": "True",
+    "e1_sample": [
+      [
+        8.066514829296645e-06,
+        -1.1887189171852484e-05,
+        3.2073057549477842e-06,
+        -0.00019203146236821916
+      ],
+      [
+        8.472010660467791e-06,
+        -7.014198020084409e-06,
+        3.2679345961629495e-06,
+        -0.0001568080571889669
+      ],
+      [
+        8.71187167300128e-06,
+        -1.5968886993612933e-06,
+        2.614932445247181e-06,
+        -0.0001408526805807027
+      ]
+    ],
+    "t_sample": [
+      [
+        8.066514829296645e-06,
+        -1.1887189171852484e-05,
+        3.2073057549477842e-06,
+        -0.00019203146236821916
+      ],
+      [
+        9.123439822830371e-06,
+        -2.489372533585775e-05,
+        6.790279377417637e-06,
+        -9.900746850287493e-05
+      ],
+      [
+        1.0448926193224867e-05,
+        -2.851692340327585e-05,
+        9.092381597013962e-06,
+        -5.010562169356909e-05
+      ]
+    ],
+    "m_sample": [
+      [
+        8.066514829296645e-06,
+        -1.1887189171852484e-05,
+        3.2073057549477842e-06,
+        -0.00019203146236821916
+      ],
+      [
+        1.7189954652127018e-05,
+        -3.6780914507730275e-05,
+        9.997585132365422e-06,
+        -0.00029103893087109405
+      ],
+      [
+        2.7638880845351884e-05,
+        -6.529783791100613e-05,
+        1.9089966729379382e-05,
+        -0.00034114455256466317
+      ]
+    ]
+  },
+  "planning_consistency": {
+    "spearman": 1.0,
+    "cost_mae": 0.5450371790247952
+  },
+  "v5_checks": [
+    {
+      "file": "SUBAGENT_A_B_RESULTS.json",
+      "loaded": true,
+      "keys": [
+        "subagent",
+        "equivalence",
+        "e0_e1_rollout_diff",
+        "step_by_step_growth",
+        "mode_a"
+      ]
+    },
+    {
+      "file": "SUBAGENT_C_RESULTS.json",
+      "loaded": true,
+      "keys": [
+        "subagent",
+        "audit_findings",
+        "cal_set_results",
+        "optimal_scalar_scale",
+        "per_state_scales"
+      ]
+    },
+    {
+      "file": "SUBAGENT_D_RESULTS.json",
+      "loaded": true,
+      "keys": [
+        "subagent",
+        "formulas",
+        "budget",
+        "results",
+        "naming_decision"
+      ]
+    },
+    {
+      "file": "SUBAGENT_E_RESULTS.json",
+      "loaded": true,
+      "keys": [
+        "subagent",
+        "data_schema",
+        "data_stats",
+        "action_stats",
+        "sindy_r2"
+      ]
+    },
+    {
+      "file": "SUBAGENT_F_RESULTS.json",
+      "loaded": true,
+      "keys": [
+        "subagent",
+        "statistical_design",
+        "results",
+        "model_selection"
+      ]
+    },
+    {
+      "file": "SUBAGENT_G_RESULTS.json",
+      "loaded": true,
+      "keys": [
+        "subagent",
+        "code_review",
+        "anti_fraud",
+        "completion_adjudication"
+      ]
+    }
+  ],
+  "must_fix": [],
+  "suggest_fix": [],
+  "cannot_confirm": []
+}

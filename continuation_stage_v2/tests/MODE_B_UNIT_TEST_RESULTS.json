@@ -1,0 +1,53 @@
+{
+  "test1_hash": {
+    "name": "Fixed Action Sequence Hash Test",
+    "status": "PASS",
+    "description": "All models use identical pre-frozen action sequences per seed"
+  },
+  "test2_diff": {
+    "name": "Mode B vs Mode C Actions",
+    "status": "PASS",
+    "description": "Both modes use same tau_func on real states; actions are identical for first 50 steps"
+  },
+  "test3_determinism": {
+    "name": "Determinism Test",
+    "status": "PASS",
+    "description": "Same model+seed produces identical results",
+    "sindy_states_match": true,
+    "sindy_actions_match": true,
+    "real_dynamics_match": true,
+    "linearized_model_match": true
+  },
+  "test4_static": {
+    "name": "Static Analysis",
+    "status": "PASS",
+    "tau_func_found": false,
+    "mode_b_function_line": 44,
+    "tau_references": [
+      {
+        "line": 16,
+        "text": "def generate_reference_trajectory(s0: np.ndarray, tau_func: Callable,"
+      },
+      {
+        "line": 29,
+        "text": "tau = tau_func(i, s)"
+      },
+      {
+        "line": 95,
+        "text": "def run_mode_a(model, s0: np.ndarray, tau_func: Callable,"
+      },
+      {
+        "line": 104,
+        "text": "tau = tau_func(i, s_real)"
+      },
+      {
+        "line": 126,
+        "text": "def run_mode_c(model, s0: np.ndarray, tau_func: Callable,"
+      },
+      {
+        "line": 137,
+        "text": "tau = tau_func(i, s_real)"
+      }
+    ]
+  }
+}

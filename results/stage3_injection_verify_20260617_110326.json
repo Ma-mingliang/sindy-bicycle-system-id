@@ -1,0 +1,147 @@
+{
+  "timestamp": "20260617_110326",
+  "n_seeds": 20,
+  "lqr_config": {
+    "lqr_Q": [
+      500,
+      50,
+      10,
+      1
+    ],
+    "lqr_R": 0.2
+  },
+  "results": {
+    "stanley_ref_zero": {
+      "mode": "stanley_ref",
+      "action": "zero",
+      "return": 67.46937963178058,
+      "ET": 5,
+      "ey_rms": 2.966084871201362,
+      "epsi_rms": 1.1928142843385419,
+      "theta_rms": 1.4625846256390653,
+      "theta_max": 1.57,
+      "control_energy": 13132.675975473383
+    },
+    "stanley_ref_small_pos": {
+      "mode": "stanley_ref",
+      "action": "small_pos",
+      "return": 57.36918868587037,
+      "ET": 7,
+      "ey_rms": 2.9421037835295643,
+      "epsi_rms": 1.2196418951027062,
+      "theta_rms": 1.4357903228610216,
+      "theta_max": 1.57,
+      "control_energy": 13079.98880178509
+    },
+    "stanley_ref_small_neg": {
+      "mode": "stanley_ref",
+      "action": "small_neg",
+      "return": 71.26512955986509,
+      "ET": 4,
+      "ey_rms": 2.978190049758858,
+      "epsi_rms": 1.184339774360504,
+      "theta_rms": 1.4774792884809764,
+      "theta_max": 1.57,
+      "control_energy": 13335.241860103803
+    },
+    "stanley_ref_noise": {
+      "mode": "stanley_ref",
+      "action": "noise",
+      "return": 67.46399695744078,
+      "ET": 5,
+      "ey_rms": 2.966629354084553,
+      "epsi_rms": 1.1931576921080518,
+      "theta_rms": 1.4622200240276113,
+      "theta_max": 1.57,
+      "control_energy": 13165.445139333428
+    },
+    "theta_target_zero": {
+      "mode": "theta_target",
+      "action": "zero",
+      "return": 67.46937963178058,
+      "ET": 5,
+      "ey_rms": 2.966084871201362,
+      "epsi_rms": 1.1928142843385419,
+      "theta_rms": 1.4625846256390653,
+      "theta_max": 1.57,
+      "control_energy": 13132.675975473383
+    },
+    "theta_target_small_pos": {
+      "mode": "theta_target",
+      "action": "small_pos",
+      "return": 57.065369901323265,
+      "ET": 7,
+      "ey_rms": 2.9469476010135307,
+      "epsi_rms": 1.2220467848433911,
+      "theta_rms": 1.4363555700062807,
+      "theta_max": 1.57,
+      "control_energy": 13098.370585727094
+    },
+    "theta_target_small_neg": {
+      "mode": "theta_target",
+      "action": "small_neg",
+      "return": 71.62234691060365,
+      "ET": 4,
+      "ey_rms": 2.9822027547941454,
+      "epsi_rms": 1.183869676265609,
+      "theta_rms": 1.4796666193479266,
+      "theta_max": 1.57,
+      "control_energy": 13307.868265597634
+    },
+    "theta_target_noise": {
+      "mode": "theta_target",
+      "action": "noise",
+      "return": 67.73535728666755,
+      "ET": 5,
+      "ey_rms": 2.964750025347908,
+      "epsi_rms": 1.1923843764585125,
+      "theta_rms": 1.4620656235217522,
+      "theta_max": 1.57,
+      "control_energy": 13156.312175917574
+    },
+    "final_action_zero": {
+      "mode": "final_action",
+      "action": "zero",
+      "return": 67.46937963178058,
+      "ET": 5,
+      "ey_rms": 2.966084871201362,
+      "epsi_rms": 1.1928142843385419,
+      "theta_rms": 1.4625846256390653,
+      "theta_max": 1.57,
+      "control_energy": 13132.675975473383
+    },
+    "final_action_small_pos": {
+      "mode": "final_action",
+      "action": "small_pos",
+      "return": 67.29295182478417,
+      "ET": 5,
+      "ey_rms": 2.9581576213633967,
+      "epsi_rms": 1.1902603635173803,
+      "theta_rms": 1.4585401988867641,
+      "theta_max": 1.57,
+      "control_energy": 13134.21829210867
+    },
+    "final_action_small_neg": {
+      "mode": "final_action",
+      "action": "small_neg",
+      "return": 67.38964963660598,
+      "ET": 5,
+      "ey_rms": 2.9664220679162323,
+      "epsi_rms": 1.1942018472995608,
+      "theta_rms": 1.4625989815379632,
+      "theta_max": 1.57,
+      "control_energy": 13198.771123363844
+    },
+    "final_action_noise": {
+      "mode": "final_action",
+      "action": "noise",
+      "return": 67.47292510238955,
+      "ET": 5,
+      "ey_rms": 2.9665787150560403,
+      "epsi_rms": 1.1930358653154516,
+      "theta_rms": 1.4625854479790643,
+      "theta_max": 1.57,
+      "control_energy": 13133.998355690026
+    }
+  }
+}

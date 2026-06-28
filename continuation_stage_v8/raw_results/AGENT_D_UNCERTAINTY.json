@@ -1,0 +1,189 @@
+{
+  "agent": "D",
+  "task": "uncertainty_calibration_ood_detection",
+  "model": "E1 (GP + offline NN residual)",
+  "n_test_samples": 43786,
+  "n_models_ensemble": 5,
+  "training_time_s": 0.00957942008972168,
+  "prediction_time_s": 0.0,
+  "total_time_s": 3.0023586750030518,
+  "calibration": {
+    "pearson_per_state": {
+      "e_y": {
+        "r": 0.5098260957422437,
+        "p_value": 0.0
+      },
+      "e_psi": {
+        "r": 0.29177962282646996,
+        "p_value": 0.0
+      },
+      "v": {
+        "r": 0.020705340896752803,
+        "p_value": 1.4712119361810796e-05
+      },
+      "theta": {
+        "r": 0.39701089211163193,
+        "p_value": 0.0
+      },
+      "theta_dot": {
+        "r": 0.6740451890530288,
+        "p_value": 0.0
+      },
+      "delta": {
+        "r": 0.660732213191093,
+        "p_value": 0.0
+      },
+      "delta_dot": {
+        "r": 0.4868919385183862,
+        "p_value": 0.0
+      }
+    },
+    "pearson_overall": {
+      "r": 0.4126495713723288,
+      "p_value": 0.0
+    },
+    "optimal_scalar_scale": 50.991991991991995,
+    "optimal_scalar_coverage": 0.797720732654273,
+    "per_state_scales": {
+      "e_y": {
+        "scale": 13.886186186186185,
+        "coverage": 0.9498926597542594
+      },
+      "e_psi": {
+        "scale": 22.77727727727728,
+        "coverage": 0.9499840131548897
+      },
+      "v": {
+        "scale": 7.392692692692692,
+        "coverage": 0.9497784680034714
+      },
+      "theta": {
+        "scale": 4.046046046046046,
+        "coverage": 0.9500982049056776
+      },
+      "theta_dot": {
+        "scale": 89.67935871743487,
+        "coverage": 0.9501438816059928
+      },
+      "delta": {
+        "scale": 5.6943943943943935,
+        "coverage": 0.95007536655552
+      },
+      "delta_dot": {
+        "scale": 10.189889889889889,
+        "coverage": 0.9499611748047321
+      }
+    },
+    "ece_per_state": {
+      "e_y": 0.07372084651950832,
+      "e_psi": 0.12892967884735582,
+      "v": 0.32830393382938755,
+      "theta": 0.07829757068721918,
+      "theta_dot": 0.39254157338642476,
+      "delta": 0.06330786659350948,
+      "delta_dot": 0.07875787392019802
+    },
+    "ece_overall": 0.16340847768337183,
+    "macd": 0.9798172931987393,
+    "target_coverage": 0.95,
+    "scales_for_confidence_levels": {
+      "0.68": 36.493931310436814,
+      "0.9": 77.28712904301433,
+      "0.95": 101.28312770923641,
+      "0.99": 169.27179059686563
+    }
+  },
+  "ood_detection": {
+    "ood_definition": "any |s_i| > 2*std_i",
+    "n_ood": 43786,
+    "n_total": 43786,
+    "ood_fraction": 1.0,
+    "auroc_max_uncertainty": null,
+    "auprc_max_uncertainty": 1.0,
+    "auroc_mean_uncertainty": null,
+    "auprc_mean_uncertainty": 1.0,
+    "per_state_auroc": {
+      "e_y": 0.8324450270648148,
+      "e_psi": null,
+      "v": null,
+      "theta": null,
+      "theta_dot": 0.7420109639791771,
+      "delta": null,
+      "delta_dot": null
+    },
+    "per_state_auprc": {
+      "e_y": 0.614385948784842,
+      "e_psi": null,
+      "v": null,
+      "theta": null,
+      "theta_dot": 0.21634665860180136,
+      "delta": null,
+      "delta_dot": null
+    }
+  },
+  "per_state_summary": {
+    "e_y": {
+      "pearson_r": 0.5098260957422437,
+      "pearson_p": 0.0,
+      "optimal_scale": 13.886186186186185,
+      "coverage": 0.9498926597542594,
+      "ece": 0.07372084651950832,
+      "mean_abs_error": 0.0197268082956005,
+      "mean_uncertainty": 0.0028868672078956833
+    },
+    "e_psi": {
+      "pearson_r": 0.29177962282646996,
+      "pearson_p": 0.0,
+      "optimal_scale": 22.77727727727728,
+      "coverage": 0.9499840131548897,
+      "ece": 0.12892967884735582,
+      "mean_abs_error": 0.054356665491408857,
+      "mean_uncertainty": 0.00634828026494734
+    },
+    "v": {
+      "pearson_r": 0.020705340896752803,
+      "pearson_p": 1.4712119361810796e-05,
+      "optimal_scale": 7.392692692692692,
+      "coverage": 0.9497784680034714,
+      "ece": 0.32830393382938755,
+      "mean_abs_error": 2.0168358866620194e-08,
+      "mean_uncertainty": 8.494572691405925e-09
+    },
+    "theta": {
+      "pearson_r": 0.39701089211163193,
+      "pearson_p": 0.0,
+      "optimal_scale": 4.046046046046046,
+      "coverage": 0.9500982049056776,
+      "ece": 0.07829757068721918,
+      "mean_abs_error": 0.00010616422144254248,
+      "mean_uncertainty": 4.14349131502295e-05
+    },
+    "theta_dot": {
+      "pearson_r": 0.6740451890530288,
+      "pearson_p": 0.0,
+      "optimal_scale": 89.67935871743487,
+      "coverage": 0.9501438816059928,
+      "ece": 0.39254157338642476,
+      "mean_abs_error": 0.0018733383975297457,
+      "mean_uncertainty": 8.531678654583315e-05
+    },
+    "delta": {
+      "pearson_r": 0.660732213191093,
+      "pearson_p": 0.0,
+      "optimal_scale": 5.6943943943943935,
+      "coverage": 0.95007536655552,
+      "ece": 0.06330786659350948,
+      "mean_abs_error": 0.0002597232614374095,
+      "mean_uncertainty": 0.0001140627691095449
+    },
+    "delta_dot": {
+      "pearson_r": 0.4868919385183862,
+      "pearson_p": 0.0,
+      "optimal_scale": 10.189889889889889,
+      "coverage": 0.9499611748047321,
+      "ece": 0.07875787392019802,
+      "mean_abs_error": 0.0002719429001340326,
+      "mean_uncertainty": 8.750081504489014e-05
+    }
+  }
+}

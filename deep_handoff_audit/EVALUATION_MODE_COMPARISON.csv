@@ -1,0 +1,5 @@
+mode,name,tau_source,state_source,current_use,description
+A,Teacher forcing,real state,real state,No,Single-step prediction from real state
+B,Fixed action sequence,pre-generated,model state,No,Open-loop with fixed actions
+C,Hybrid,real state,model state,Yes,Current evaluation mode - tau from real, state from model
+D,Full closed-loop,model state,model state,No,Full model control - tau and state from model

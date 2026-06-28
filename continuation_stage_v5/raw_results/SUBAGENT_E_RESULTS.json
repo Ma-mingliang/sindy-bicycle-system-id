@@ -1,0 +1,211 @@
+{
+  "subagent": "E",
+  "data_schema": {
+    "state": [
+      "e_y",
+      "e_psi",
+      "v",
+      "theta",
+      "theta_dot",
+      "delta",
+      "delta_dot"
+    ],
+    "context": [
+      "v",
+      "kappa"
+    ],
+    "action": [
+      "tau"
+    ],
+    "note": "kappa reclassified as exogenous input, not prediction state",
+    "original_8d": [
+      "e_y",
+      "e_psi",
+      "v",
+      "theta",
+      "theta_dot",
+      "kappa",
+      "delta",
+      "delta_dot"
+    ],
+    "proposed_7d": [
+      "e_y",
+      "e_psi",
+      "v",
+      "theta",
+      "theta_dot",
+      "delta",
+      "delta_dot"
+    ],
+    "proposed_6d": [
+      "e_y",
+      "e_psi",
+      "theta",
+      "theta_dot",
+      "delta",
+      "delta_dot"
+    ]
+  },
+  "data_stats": {
+    "phi": {
+      "min": -0.49998836524463386,
+      "max": 0.4997176732861306,
+      "std": 0.28960468629175223,
+      "mean": -0.0031680090095771406
+    },
+    "delta": {
+      "min": -0.2999683038406219,
+      "max": 0.2997031138251099,
+      "std": 0.17135276773838412,
+      "mean": -0.005107725373094115
+    },
+    "phi_dot": {
+      "min": -1.999369021687773,
+      "max": 1.999220576535206,
+      "std": 1.1629629571742333,
+      "mean": 0.005500214031984513
+    },
+    "delta_dot": {
+      "min": -0.9994950910188758,
+      "max": 0.999849653666353,
+      "std": 0.575554871503486,
+      "mean": 0.015369399706146277
+    }
+  },
+  "action_stats": {
+    "min": -49.99518761056883,
+    "max": 49.99009770092316,
+    "std": 28.87123919381058,
+    "mean": 0.8777114439039743
+  },
+  "sindy_r2": 0.9999843602612213,
+  "significant_coefficients": {
+    "phi": [
+      [
+        "phi_dot",
+        0.03328551916769819
+      ],
+      [
+        "delta",
+        -0.00482205775659884
+      ],
+      [
+        "phi",
+        0.004355449265318612
+      ],
+      [
+        "delta_dot",
+        -0.0004228203368739305
+      ],
+      [
+        "tau",
+        -5.746186253110106e-05
+      ]
+    ],
+    "delta": [
+      [
+        "delta_dot",
+        0.028334977939027704
+      ],
+      [
+        "phi",
+        0.009835319245511788
+      ],
+      [
+        "phi_dot",
+        0.0035919800341077746
+      ],
+      [
+        "tau",
+        0.002204719187180878
+      ],
+      [
+        "delta",
+        0.0012460568116997946
+      ]
+    ],
+    "phi_dot": [
+      [
+        "delta",
+        -0.2896338662940538
+      ],
+      [
+        "phi",
+        0.25848186589042943
+      ],
+      [
+        "delta_dot",
+        -0.02556575971108613
+      ],
+      [
+        "tau",
+        -0.004076272039934409
+      ],
+      [
+        "phi_dot",
+        -0.0021551222370989544
+      ]
+    ],
+    "delta_dot": [
+      [
+        "phi",
+        0.5695555515383058
+      ],
+      [
+        "delta_dot",
+        -0.2835744283526877
+      ],
+      [
+        "phi_dot",
+        0.20774189760998793
+      ],
+      [
+        "tau",
+        0.12524436195200284
+      ],
+      [
+        "delta",
+        0.059739489461966215
+      ]
+    ]
+  },
+  "evaluation": {
+    "1_steps": {
+      "mae": 0.0005734702555204214,
+      "survival_steps": 2.0,
+      "failure_rate": 0.0
+    },
+    "5_steps": {
+      "mae": 0.0020035943626101004,
+      "survival_steps": 6.0,
+      "failure_rate": 0.0
+    },
+    "10_steps": {
+      "mae": 0.002605601578779495,
+      "survival_steps": 11.0,
+      "failure_rate": 0.0
+    },
+    "20_steps": {
+      "mae": 0.004692410831373087,
+      "survival_steps": 21.0,
+      "failure_rate": 0.0
+    },
+    "50_steps": {
+      "mae": 0.016433990074250962,
+      "survival_steps": 51.0,
+      "failure_rate": 0.0
+    },
+    "100_steps": {
+      "mae": 0.13522849110628324,
+      "survival_steps": 101.0,
+      "failure_rate": 0.0
+    }
+  },
+  "gate_decision": "GO_WITH_MORE_DATA",
+  "gate_reason": "20-step MAE=0.0047 is reasonable, but 8D needs >5000 samples",
+  "data_gap": {
+    "current_samples": 5000,
+    "minimum_for_7d": 10000,
+    "recommended": 20000
+  }
+}

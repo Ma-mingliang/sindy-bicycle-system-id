@@ -1,0 +1,24 @@
+{
+  "best_weights": [
+    2.0,
+    0.05,
+    0.2,
+    0.005
+  ],
+  "baseline": {
+    "return": -249.241056933567,
+    "ET": 1,
+    "ET_rate": 0.2,
+    "theta_rms": 0.40137185447225165
+  },
+  "mppi": {
+    "return": -307.02225703079694,
+    "ET": 1,
+    "ET_rate": 0.2,
+    "theta_rms": 0.4574602828242729,
+    "mean_action": 0.0,
+    "mean_smoothness": 0.0
+  },
+  "advantage": -57.78120009722994,
+  "timestamp": "20260617_175738"
+}

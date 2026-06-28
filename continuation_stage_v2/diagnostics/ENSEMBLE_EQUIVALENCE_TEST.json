@@ -1,0 +1,33 @@
+{
+  "t1_empty_predict": {
+    "output": [
+      NaN,
+      NaN,
+      NaN,
+      NaN
+    ],
+    "all_nan": true
+  },
+  "t2_empty_uncertainty": {
+    "pred_nan": true,
+    "unc_nan": true
+  },
+  "t3_nan_masking": {
+    "mae": 0.0,
+    "ep": NaN
+  },
+  "t4_train_leaves_empty": {
+    "count": 0,
+    "empty": true,
+    "baseline_exists": true
+  },
+  "t5_trained_empty_predict": {
+    "output": [
+      NaN,
+      NaN,
+      NaN,
+      NaN
+    ],
+    "all_nan": true
+  }
+}

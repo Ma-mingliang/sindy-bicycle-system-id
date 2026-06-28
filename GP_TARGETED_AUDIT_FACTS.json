@@ -1,0 +1,233 @@
+{
+  "metadata": {
+    "generated": "2026-06-23",
+    "project": "sindy_bicycle",
+    "purpose": "Targeted audit of GP-related code paths and evaluation methodology",
+    "audit_type": "GP-specific"
+  },
+  "route_relationship": {
+    "4d_route": {
+      "model": "Meijaard 2007 benchmark",
+      "state_dim": 4,
+      "state_names": ["phi", "delta", "phi_dot", "delta_dot"],
+      "file": "meijaard_dynamics.py:10-81",
+      "data_file": "meijaard_openloop_data*.npz",
+      "evidence": "CONFIRMED"
+    },
+    "8d_route": {
+      "model": "Simplified Whipple",
+      "state_dim": 8,
+      "state_names": ["ey", "epsi", "v", "theta", "theta_dot", "k", "delta", "delta_dot"],
+      "file": "bicycle_dynamics.py:87-160",
+      "data_file": "bicycle_data.npz",
+      "evidence": "CONFIRMED"
+    },
+    "relationship": "completely_independent",
+    "shared_components": [],
+    "evidence": "CONFIRMED"
+  },
+  "gp_baseline": {
+    "file": "methods_classic.py:19-59",
+    "class": "GPMethod",
+    "evidence": "CONFIRMED",
+    "configuration": {
+      "kernel": "ConstantKernel(1.0) * RBF(length_scale=1.0)",
+      "max_samples": 5000,
+      "independent_gps": 4,
+      "ard": false,
+      "n_restarts_optimizer": 2,
+      "alpha": 1e-6
+    },
+    "input": {
+      "dimensions": 5,
+      "format": ["phi/state_std[0]", "delta/state_std[1]", "phi_dot/state_std[2]", "delta_dot/state_std[3]", "tau/action_std"],
+      "normalization": "std-based"
+    },
+    "output": {
+      "dimensions": 4,
+      "format": ["delta_phi_norm", "delta_delta_norm", "delta_phi_dot_norm", "delta_delta_dot_norm"],
+      "denormalization": "s_next = s + delta_norm * delta_std"
+    }
+  },
+  "ensemble_method": {
+    "file": "test_ensemble.py:33-141",
+    "class": "EnsembleResidualNet",
+    "evidence": "CONFIRMED",
+    "components": {
+      "baseline": "GPMethod",
+      "residual_models": 5,
+      "residual_architecture": "ResidualNet (methods_nn.py:21-33)",
+      "dagger_rounds": 3,
+      "residual_scale": 0.3
+    },
+    "prediction_formula": "s_next = GP(s,tau) + mean(NN_1..5)(s_norm,a_norm) * delta_std * 0.3",
+    "training_seeds": [0, 42, 84, 126, 168]
+  },
+  "evaluation": {
+    "file": "test_ensemble.py:171-220",
+    "evidence": "CONFIRMED",
+    "configuration": {
+      "segments": 5,
+      "steps": 500,
+      "eval_points": [1, 5, 10, 20, 50, 100, 200, 500],
+      "metric": "MAE on roll angle (phi)"
+    },
+    "mode": "hybrid",
+    "mode_description": "tau from real state, model predicts from its own state",
+    "tau_source": "tau_func(step, s_real)",
+    "state_source": "model's own prediction",
+    "lqr": {
+      "Q": "diag([1000, 100, 10, 1])",
+      "R": 0.2,
+      "speed_ms": 3.5,
+      "file": "methods_common.py:34-42"
+    },
+    "disturbance": {
+      "type": "uniform",
+      "range": [-0.5, 0.5],
+      "seed": "42 + seg_idx"
+    }
+  },
+  "random_seed_issue": {
+    "evidence": "CONFIRMED",
+    "issue": "phi_init uses np.random.uniform(-0.25, 0.25) without fixed seed",
+    "file": "test_ensemble.py:190",
+    "impact": "Non-reproducible evaluation results",
+    "recommendation": "Fix random seeds for all evaluation runs"
+  },
+  "reproducibility": {
+    "reported_result": {
+      "method": "GP + Ensemble(5)",
+      "mae_500_rad": 0.064,
+      "file": "REPORT_全面改进总结.md:11",
+      "evidence": "CONFIRMED"
+    },
+    "reproduction_attempts": [
+      {
+        "attempt": 1,
+        "script": "reproduce_064.py",
+        "result_rad": 0.15002,
+        "discrepancy_factor": 2.34,
+        "evidence": "CONFIRMED"
+      },
+      {
+        "attempt": 2,
+        "script": "reproduce_064.py",
+        "result_rad": 0.08493,
+        "discrepancy_factor": 1.33,
+        "evidence": "CONFIRMED"
+      }
+    ],
+    "possible_causes": [
+      "Unfixed random seed for phi_init",
+      "GP random downsample uses global state",
+      "Different code version for original result"
+    ],
+    "root_cause_found": {
+      "evidence": "CONFIRMED",
+      "source": "test_ensemble_optimization.py output (task bnq0mkmxr)",
+      "finding": "0.064 result used optimized hyperparameters, not standard config",
+      "standard_config": {
+        "n_models": 5,
+        "dagger_rounds": 3,
+        "result_rad": 0.25710
+      },
+      "optimized_config": {
+        "n_models": 7,
+        "dagger_rounds": 5,
+        "result_rad": 0.06600
+      }
+    }
+  },
+  "data_leakage": {
+    "evidence": "CONFIRMED",
+    "finding": "No data leakage detected",
+    "details": {
+      "training_data": "seed=42, random uniform sampling",
+      "dagger_seeds": [142, 143, 144],
+      "evaluation_seeds": [42, 43, 44, 45, 46],
+      "overlap": false
+    }
+  },
+  "key_files": {
+    "methods_common.py": {
+      "lines": "14-112",
+      "content": "Meijaard parameters, dynamics, LQR, training data generation"
+    },
+    "methods_classic.py": {
+      "lines": "19-59",
+      "content": "GPMethod implementation"
+    },
+    "methods_nn.py": {
+      "lines": "21-33",
+      "content": "ResidualNet architecture"
+    },
+    "methods_evaluate.py": {
+      "lines": "1-18",
+      "content": "make_tau_func() for evaluation"
+    },
+    "test_ensemble.py": {
+      "lines": "33-220",
+      "content": "EnsembleResidualNet, train_ensemble, evaluation"
+    }
+  },
+  "recommendations": [
+    "Fix random seeds for all evaluation runs",
+    "Report mean ± std across multiple runs",
+    "Add additional metrics (RMSE, max error)",
+    "Document exact code version for reported results"
+  ],
+  "confirmed_results": {
+    "gp_only_500step": {
+      "mean_rad": 4.81,
+      "std_rad": 1.10,
+      "evidence": "CONFIRMED"
+    },
+    "gp_b1_ard": {
+      "mean_rad": 14.66,
+      "std_rad": 2.07,
+      "evidence": "CONFIRMED"
+    },
+    "gp_b2_composite_kernel": {
+      "mean_rad": 298.81,
+      "std_rad": 29.00,
+      "evidence": "CONFIRMED"
+    },
+    "gp_b3_physics_residual": {
+      "mean_rad": 2709.26,
+      "std_rad": 925.47,
+      "evidence": "CONFIRMED"
+    },
+    "gp_b4_sparse_local": {
+      "mean_rad": 0.42,
+      "std_rad": 0.08,
+      "evidence": "CONFIRMED",
+      "note": "Best pure GP method, 100x faster training"
+    },
+    "gp_b5_bootstrap_ensemble": {
+      "mean_rad": 6.21,
+      "std_rad": 0.26,
+      "uncertainty_rad": 0.053,
+      "evidence": "CONFIRMED",
+      "note": "Severely underestimates uncertainty (120x)"
+    },
+    "gp_b6_uncertainty_gated": {
+      "mean_rad": 2.28,
+      "std_rad": 0.31,
+      "evidence": "CONFIRMED"
+    },
+    "gp_nn_ensemble_no_dagger": {
+      "mean_rad": 5.41,
+      "std_rad": 0.83,
+      "evidence": "CONFIRMED"
+    },
+    "gp_nn_ensemble_5models_3dagger": {
+      "range_rad": [0.15, 0.25],
+      "evidence": "CONFIRMED"
+    },
+    "gp_nn_ensemble_7models_5dagger": {
+      "mean_rad": 0.066,
+      "evidence": "CONFIRMED"
+    }
+  }
+}

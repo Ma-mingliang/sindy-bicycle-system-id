@@ -1,0 +1,113 @@
+{
+  "task_id": "agent_d_dagger",
+  "task_name": "DAgger Semantics and Residual Structure Analysis",
+  "completion_date": "2026-06-25",
+  "status": "completed",
+
+  "subtasks": {
+    "D1_formula_restoration": {
+      "status": "completed",
+      "confidence": "CONFIRMED",
+      "summary": "Round 0: (F_real(s,u) - GP(s,u))/std (Version L at expert states). Round 1+: (s_real[k+1] - GP(GP(s_base[k],tau),tau))/std (two-step GP trajectory comparison).",
+      "evidence_file": "CURRENT_DAGGER_EXACT_FORMULA.md",
+      "code_references": {
+        "round_0": "evaluate/eval_models.py lines 288-292",
+        "round_1_plus": "evaluate/eval_models.py lines 352-379",
+        "audit_wrong": "DAGGER_SEMANTICS_AUDIT.md claims 'pure local dynamics' but code shows two-step GP"
+      }
+    },
+    "D2_two_versions": {
+      "status": "completed",
+      "confidence": "CONFIRMED",
+      "summary": "Version L (local dynamics residual) and Version T (trajectory synchronization residual) implemented as standalone classes.",
+      "files_created": [
+        "version_l_local_residual.py",
+        "version_t_trajectory_residual.py"
+      ],
+      "doc_files": [
+        "LOCAL_RESIDUAL_IMPLEMENTATION.md",
+        "TRAJECTORY_RESIDUAL_IMPLEMENTATION.md"
+      ]
+    },
+    "D3_fair_comparison": {
+      "status": "completed",
+      "confidence": "CONFIRMED",
+      "summary": "Same data (2000 samples), same NN (ResidualNet 3 models), same seeds (42), same training (50 epochs, 2 rounds). Evaluated on Mode A/B/C/D, per-state, initial conditions, action signals, OOD.",
+      "results_file": "LOCAL_VS_TRAJECTORY_RESULTS.json",
+      "experiment_config": {
+        "n_models": 3,
+        "dagger_rounds": 2,
+        "n_epochs": 50,
+        "residual_scale": 0.3,
+        "training_samples": 2000,
+        "gp_max_samples": 2000,
+        "seed": 42
+      },
+      "key_findings": {
+        "mode_a": "L wins (0.0023 vs 0.032, 14x better)",
+        "mode_b": "T wins (0.458 vs 0.777, 40% better)",
+        "mode_c": "T wins (same as B)",
+        "mode_d": "L wins (0.004 vs 0.129, 33x better)",
+        "initial_conditions": "T is more robust (0.52 vs 1.80 for large_phi)",
+        "per_state": "T better on delta (0.20 vs 0.51) and delta_dot (0.46 vs 1.22)",
+        "ood": "L better on single-step OOD (0.004 vs 0.041)"
+      }
+    },
+    "D4_naming_decision": {
+      "status": "completed",
+      "confidence": "CONFIRMED",
+      "summary": "Original code is NOT standard DAgger, NOT clean Version L, NOT clean Version T. It is an inconsistent residual ensemble. Recommended names: L-Dagger (Version L) and T-Dagger (Version T).",
+      "decision_file": "DAGGER_NAMING_DECISION.md",
+      "recommendation": "Use 'Residual Dynamics Ensemble' (RDE) as umbrella; qualify with -L or -T suffix"
+    }
+  },
+
+  "files_produced": [
+    "CURRENT_DAGGER_EXACT_FORMULA.md",
+    "LOCAL_RESIDUAL_IMPLEMENTATION.md",
+    "TRAJECTORY_RESIDUAL_IMPLEMENTATION.md",
+    "LOCAL_VS_TRAJECTORY_RESULTS.json",
+    "DAGGER_NAMING_DECISION.md",
+    "SELF_CHECK.json",
+    "version_l_local_residual.py",
+    "version_t_trajectory_residual.py",
+    "run_comparison.py",
+    "run_comparison_fast.py",
+    "run_comparison_optimized.py"
+  ],
+
+  "constraints_check": {
+    "original_evaluate_not_modified": true,
+    "independent_directory": true,
+    "confident_inferred_unknown_distinction": true
+  },
+
+  "confidence_levels": {
+    "CONFIRMED": [
+      "Round 0 formula is Version L",
+      "Round 1+ formula is two-step GP trajectory comparison",
+      "Audit conclusion is wrong",
+      "Version L is better for Mode A and Mode D",
+      "Version T is better for Mode B and initial condition robustness",
+      "Original code has inconsistent training objectives across rounds"
+    ],
+    "INFERRED": [
+      "Two-step GP in original was likely a coding error (not intentional design)",
+      "residual_scale=0.3 limits trajectory divergence within one DAgger round",
+      "NN structure (128-hidden) is adequate for both versions"
+    ],
+    "UNKNOWN": [
+      "Whether larger n_models would change the winner",
+      "Whether more DAgger rounds would close the gap",
+      "Performance on real bicycle hardware",
+      "Optimal residual_scale for each version"
+    ]
+  },
+
+  "risk_notes": [
+    "GP training takes ~4 min with 2000 samples (scalability concern)",
+    "Results may vary with different random seeds (only seed=42 tested)",
+    "Mode B and C are identical in this evaluation (both use model trajectory)",
+    "OOD test is single-step only; multi-step OOD not tested"
+  ]
+}

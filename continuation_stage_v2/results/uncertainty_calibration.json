@@ -1,0 +1,366 @@
+{
+  "gp_ensemble_5_3": {
+    "A": {
+      "n_samples": 150,
+      "per_state": {
+        "state_0": {
+          "pearson_r": 0.36277767854173437,
+          "spearman_r": 0.4451202275656696,
+          "coverage": 1.0,
+          "calibration_error": 0.050000000000000044,
+          "mean_error": 0.013555094022716438,
+          "mean_uncertainty": 0.05030240059157377
+        },
+        "state_1": {
+          "pearson_r": 0.44515157608627387,
+          "spearman_r": 0.4706395839815103,
+          "coverage": 1.0,
+          "calibration_error": 0.050000000000000044,
+          "mean_error": 0.0060221713842283486,
+          "mean_uncertainty": 0.06940133451020589
+        },
+        "state_2": {
+          "pearson_r": 0.5177383061106156,
+          "spearman_r": 0.6295159784879328,
+          "coverage": 1.0,
+          "calibration_error": 0.050000000000000044,
+          "mean_error": 0.019261051072551327,
+          "mean_uncertainty": 0.13313354771185404
+        },
+        "state_3": {
+          "pearson_r": 0.7564458960983262,
+          "spearman_r": 0.6161038268367484,
+          "coverage": 1.0,
+          "calibration_error": 0.050000000000000044,
+          "mean_error": 0.02693105837493691,
+          "mean_uncertainty": 0.2019706262116723
+        }
+      },
+      "overall": {
+        "pearson_r": 0.38118575455796705,
+        "spearman_r": 0.1711973644371234,
+        "coverage": 1.0,
+        "calibration_error": 0.050000000000000044,
+        "mean_error": 0.016442343713608257,
+        "mean_uncertainty": 0.1137019772563265
+      }
+    },
+    "B": {
+      "n_samples": 150,
+      "per_state": {
+        "state_0": {
+          "pearson_r": -0.06410812473217088,
+          "spearman_r": -0.11364593981954754,
+          "coverage": 0.6533333333333333,
+          "calibration_error": 0.29666666666666663,
+          "mean_error": 0.09408448530249013,
+          "mean_uncertainty": 0.05702025113258223
+        },
+        "state_1": {
+          "pearson_r": 0.46439466139801316,
+          "spearman_r": 0.4794328636828304,
+          "coverage": 0.6266666666666667,
+          "calibration_error": 0.32333333333333325,
+          "mean_error": 0.11176614383758761,
+          "mean_uncertainty": 0.07193808757438176
+        },
+        "state_2": {
+          "pearson_r": -0.19301277924449145,
+          "spearman_r": -0.08918618605271346,
+          "coverage": 0.44,
+          "calibration_error": 0.51,
+          "mean_error": 0.425745962272786,
+          "mean_uncertainty": 0.1352613213461191
+        },
+        "state_3": {
+          "pearson_r": 0.3754273229842761,
+          "spearman_r": 0.33225121116494066,
+          "coverage": 0.5733333333333334,
+          "calibration_error": 0.3766666666666666,
+          "mean_error": 0.36945751120264975,
+          "mean_uncertainty": 0.23569486347658228
+        }
+      },
+      "overall": {
+        "pearson_r": 0.48461909877856973,
+        "spearman_r": 0.5583789399414998,
+        "coverage": 0.5733333333333334,
+        "calibration_error": 0.3766666666666666,
+        "mean_error": 0.2502635256538783,
+        "mean_uncertainty": 0.12497863088241634
+      }
+    },
+    "C": {
+      "n_samples": 150,
+      "per_state": {
+        "state_0": {
+          "pearson_r": -0.06410812473217088,
+          "spearman_r": -0.11364593981954754,
+          "coverage": 0.6533333333333333,
+          "calibration_error": 0.29666666666666663,
+          "mean_error": 0.09408448530249013,
+          "mean_uncertainty": 0.05702025113258223
+        },
+        "state_1": {
+          "pearson_r": 0.46439466139801316,
+          "spearman_r": 0.4794328636828304,
+          "coverage": 0.6266666666666667,
+          "calibration_error": 0.32333333333333325,
+          "mean_error": 0.11176614383758761,
+          "mean_uncertainty": 0.07193808757438176
+        },
+        "state_2": {
+          "pearson_r": -0.19301277924449145,
+          "spearman_r": -0.08918618605271346,
+          "coverage": 0.44,
+          "calibration_error": 0.51,
+          "mean_error": 0.425745962272786,
+          "mean_uncertainty": 0.1352613213461191
+        },
+        "state_3": {
+          "pearson_r": 0.3754273229842761,
+          "spearman_r": 0.33225121116494066,
+          "coverage": 0.5733333333333334,
+          "calibration_error": 0.3766666666666666,
+          "mean_error": 0.36945751120264975,
+          "mean_uncertainty": 0.23569486347658228
+        }
+      },
+      "overall": {
+        "pearson_r": 0.48461909877856973,
+        "spearman_r": 0.5583789399414998,
+        "coverage": 0.5733333333333334,
+        "calibration_error": 0.3766666666666666,
+        "mean_error": 0.2502635256538783,
+        "mean_uncertainty": 0.12497863088241634
+      }
+    },
+    "D": {
+      "n_samples": 150,
+      "per_state": {
+        "state_0": {
+          "pearson_r": 0.07865222077956442,
+          "spearman_r": 0.041038268367483,
+          "coverage": 0.9533333333333334,
+          "calibration_error": 0.0033333333333334103,
+          "mean_error": 0.04639207924999541,
+          "mean_uncertainty": 0.060458214016976
+        },
+        "state_1": {
+          "pearson_r": 0.0846007372621691,
+          "spearman_r": 0.20528379039068403,
+          "coverage": 0.9133333333333333,
+          "calibration_error": 0.036666666666666625,
+          "mean_error": 0.10609523068986547,
+          "mean_uncertainty": 0.07868654288755703
+        },
+        "state_2": {
+          "pearson_r": -0.1909944186439764,
+          "spearman_r": -0.10148895506466955,
+          "coverage": 0.9666666666666667,
+          "calibration_error": 0.01666666666666672,
+          "mean_error": 0.07313968740979299,
+          "mean_uncertainty": 0.14016939371526527
+        },
+        "state_3": {
+          "pearson_r": 0.198221623110027,
+          "spearman_r": 0.13443264145073114,
+          "coverage": 0.44666666666666666,
+          "calibration_error": 0.5033333333333333,
+          "mean_error": 0.5284128981882251,
+          "mean_uncertainty": 0.21992774792806433
+        }
+      },
+      "overall": {
+        "pearson_r": 0.5838054995354224,
+        "spearman_r": 0.4883585787738299,
+        "coverage": 0.82,
+        "calibration_error": 0.13,
+        "mean_error": 0.18850997388446977,
+        "mean_uncertainty": 0.12481047463696562
+      }
+    }
+  },
+  "gp_ensemble_7_5": {
+    "A": {
+      "n_samples": 150,
+      "per_state": {
+        "state_0": {
+          "pearson_r": 0.6957374451475293,
+          "spearman_r": 0.204153073469932,
+          "coverage": 1.0,
+          "calibration_error": 0.050000000000000044,
+          "mean_error": 0.012465916969426434,
+          "mean_uncertainty": 0.06169714109777644
+        },
+        "state_1": {
+          "pearson_r": 0.6537181516909198,
+          "spearman_r": 0.41205209120405356,
+          "coverage": 1.0,
+          "calibration_error": 0.050000000000000044,
+          "mean_error": 0.0071303517818987906,
+          "mean_uncertainty": 0.05694836087859958
+        },
+        "state_2": {
+          "pearson_r": 0.5845325679222542,
+          "spearman_r": 0.5048953286812747,
+          "coverage": 1.0,
+          "calibration_error": 0.050000000000000044,
+          "mean_error": 0.018925773341113294,
+          "mean_uncertainty": 0.10090569783395592
+        },
+        "state_3": {
+          "pearson_r": 0.647375097239547,
+          "spearman_r": -0.06278856838081692,
+          "coverage": 1.0,
+          "calibration_error": 0.050000000000000044,
+          "mean_error": 0.04197596012835966,
+          "mean_uncertainty": 0.2042855652454901
+        }
+      },
+      "overall": {
+        "pearson_r": 0.5459379710618988,
+        "spearman_r": 0.5553480981891615,
+        "coverage": 1.0,
+        "calibration_error": 0.050000000000000044,
+        "mean_error": 0.020124500555199543,
+        "mean_uncertainty": 0.1059591912639555
+      }
+    },
+    "B": {
+      "n_samples": 150,
+      "per_state": {
+        "state_0": {
+          "pearson_r": 0.10638907648773173,
+          "spearman_r": 0.16283568158584824,
+          "coverage": 0.6866666666666666,
+          "calibration_error": 0.2633333333333333,
+          "mean_error": 0.08877502564387228,
+          "mean_uncertainty": 0.06084560313952192
+        },
+        "state_1": {
+          "pearson_r": 0.042208510898236525,
+          "spearman_r": 0.06691675185563803,
+          "coverage": 0.5266666666666666,
+          "calibration_error": 0.42333333333333334,
+          "mean_error": 0.10860469971313993,
+          "mean_uncertainty": 0.05979369513512277
+        },
+        "state_2": {
+          "pearson_r": 0.13372419141385128,
+          "spearman_r": 0.13251611182719233,
+          "coverage": 0.34,
+          "calibration_error": 0.6099999999999999,
+          "mean_error": 0.3572874496648015,
+          "mean_uncertainty": 0.10941365519899333
+        },
+        "state_3": {
+          "pearson_r": -0.14040151952307547,
+          "spearman_r": -0.10754433530379127,
+          "coverage": 0.6333333333333333,
+          "calibration_error": 0.31666666666666665,
+          "mean_error": 0.3371433352733577,
+          "mean_uncertainty": 0.2036445263266233
+        }
+      },
+      "overall": {
+        "pearson_r": 0.44395219390519125,
+        "spearman_r": 0.534317873105203,
+        "coverage": 0.5466666666666666,
+        "calibration_error": 0.4033333333333333,
+        "mean_error": 0.22295262757379286,
+        "mean_uncertainty": 0.10842436995006532
+      }
+    },
+    "C": {
+      "n_samples": 150,
+      "per_state": {
+        "state_0": {
+          "pearson_r": 0.10638907648773173,
+          "spearman_r": 0.16283568158584824,
+          "coverage": 0.6866666666666666,
+          "calibration_error": 0.2633333333333333,
+          "mean_error": 0.08877502564387228,
+          "mean_uncertainty": 0.06084560313952192
+        },
+        "state_1": {
+          "pearson_r": 0.042208510898236525,
+          "spearman_r": 0.06691675185563803,
+          "coverage": 0.5266666666666666,
+          "calibration_error": 0.42333333333333334,
+          "mean_error": 0.10860469971313993,
+          "mean_uncertainty": 0.05979369513512277
+        },
+        "state_2": {
+          "pearson_r": 0.13372419141385128,
+          "spearman_r": 0.13251611182719233,
+          "coverage": 0.34,
+          "calibration_error": 0.6099999999999999,
+          "mean_error": 0.3572874496648015,
+          "mean_uncertainty": 0.10941365519899333
+        },
+        "state_3": {
+          "pearson_r": -0.14040151952307547,
+          "spearman_r": -0.10754433530379127,
+          "coverage": 0.6333333333333333,
+          "calibration_error": 0.31666666666666665,
+          "mean_error": 0.3371433352733577,
+          "mean_uncertainty": 0.2036445263266233
+        }
+      },
+      "overall": {
+        "pearson_r": 0.44395219390519125,
+        "spearman_r": 0.534317873105203,
+        "coverage": 0.5466666666666666,
+        "calibration_error": 0.4033333333333333,
+        "mean_error": 0.22295262757379286,
+        "mean_uncertainty": 0.10842436995006532
+      }
+    },
+    "D": {
+      "n_samples": 150,
+      "per_state": {
+        "state_0": {
+          "pearson_r": 0.06631614345117734,
+          "spearman_r": 0.025766478510156007,
+          "coverage": 0.8866666666666667,
+          "calibration_error": 0.06333333333333324,
+          "mean_error": 0.06027187628406004,
+          "mean_uncertainty": 0.06833923227344291
+        },
+        "state_1": {
+          "pearson_r": -0.01679446187109587,
+          "spearman_r": -0.0501160051557847,
+          "coverage": 0.6133333333333333,
+          "calibration_error": 0.33666666666666667,
+          "mean_error": 0.09827944301725156,
+          "mean_uncertainty": 0.06565781498459904
+        },
+        "state_2": {
+          "pearson_r": 0.10915424549199891,
+          "spearman_r": 0.08961287168318594,
+          "coverage": 0.8933333333333333,
+          "calibration_error": 0.05666666666666664,
+          "mean_error": 0.10888024848107582,
+          "mean_uncertainty": 0.11760426260800277
+        },
+        "state_3": {
+          "pearson_r": -0.24831689788196887,
+          "spearman_r": -0.3240766256278057,
+          "coverage": 0.3333333333333333,
+          "calibration_error": 0.6166666666666667,
+          "mean_error": 0.7982239151845363,
+          "mean_uncertainty": 0.239342640043166
+        }
+      },
+      "overall": {
+        "pearson_r": 0.6136454732173611,
+        "spearman_r": 0.5290663029619527,
+        "coverage": 0.6816666666666666,
+        "calibration_error": 0.2683333333333333,
+        "mean_error": 0.2664138707417309,
+        "mean_uncertainty": 0.12273598747730266
+      }
+    }
+  }
+}

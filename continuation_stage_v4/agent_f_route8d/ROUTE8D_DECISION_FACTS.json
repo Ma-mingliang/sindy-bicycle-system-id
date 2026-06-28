@@ -1,0 +1,254 @@
+{
+  "meta": {
+    "generated": "2026-06-25",
+    "agent": "F (Route 8D Restructuring Planner)",
+    "version": "1.0",
+    "evidence_levels": {
+      "CONFIRMED": "Verified by code inspection or mathematical proof",
+      "INFERRED": "Reasoned from physics or existing model behavior",
+      "UNKNOWN": "Not yet validated experimentally"
+    }
+  },
+
+  "state_classification": {
+    "e_y": {
+      "category": "Path Error State",
+      "dynamic": true,
+      "predict": true,
+      "evidence": "CONFIRMED",
+      "rationale": "de_y/dt = v * sin(e_psi); pure kinematic integration"
+    },
+    "e_psi": {
+      "category": "Path Error State",
+      "dynamic": true,
+      "predict": true,
+      "evidence": "CONFIRMED",
+      "rationale": "de_psi/dt = v*tan(delta)/L - v*kappa; pure kinematic integration"
+    },
+    "v": {
+      "category": "Vehicle Dynamic State",
+      "dynamic": true,
+      "predict": true,
+      "evidence": "CONFIRMED (constant in current data) / INFERRED (dynamic in real bicycle)",
+      "rationale": "Physical state (speed); dv/dt=0 in simplified model but would be dynamic with throttle"
+    },
+    "theta": {
+      "category": "Vehicle Dynamic State (Balance)",
+      "dynamic": true,
+      "predict": true,
+      "evidence": "CONFIRMED",
+      "rationale": "Core balance state; theta integrates theta_dot"
+    },
+    "theta_dot": {
+      "category": "Vehicle Dynamic State (Balance)",
+      "dynamic": true,
+      "predict": true,
+      "evidence": "CONFIRMED",
+      "rationale": "Core balance state; governed by gravity + steering coupling"
+    },
+    "kappa": {
+      "category": "Exogenous Context",
+      "dynamic": false,
+      "predict": false,
+      "evidence": "CONFIRMED",
+      "rationale": "Constant per episode; set by reference path; Delta_k = 0 always",
+      "code_evidence": [
+        "data_collector.py:128-135 (set at episode start)",
+        "data_collector.py:209 (broadcast constant to all timesteps)",
+        "bicycle_dynamics.py:227 (passed as ref_path_curvature parameter)"
+      ]
+    },
+    "delta": {
+      "category": "Vehicle Dynamic State (Steering)",
+      "dynamic": true,
+      "predict": true,
+      "evidence": "CONFIRMED",
+      "rationale": "Core steering state; governed by torque and dynamics"
+    },
+    "delta_dot": {
+      "category": "Vehicle Dynamic State (Steering)",
+      "dynamic": true,
+      "predict": true,
+      "evidence": "CONFIRMED",
+      "rationale": "Core steering state; dominated by v*delta coupling (20.68 coefficient)"
+    },
+    "tau": {
+      "category": "Control Input",
+      "dynamic": null,
+      "predict": null,
+      "evidence": "CONFIRMED",
+      "rationale": "Steering torque; external control input"
+    }
+  },
+
+  "recommended_structure": {
+    "state_dim": 7,
+    "input_dim": 2,
+    "state_vector": ["e_y", "e_psi", "v", "theta", "theta_dot", "delta", "delta_dot"],
+    "input_vector": ["tau", "kappa"],
+    "modeling_approach": "Layered (5 analytical + 2 SINDy)",
+    "evidence": "INFERRED",
+    "rationale": "Removes trivial kappa equation; reduces parameters by 84%; physical consistency"
+  },
+
+  "layered_architecture": {
+    "layer_1_path_kinematics": {
+      "states": ["e_y", "e_psi"],
+      "method": "Analytical (exact equations)",
+      "equations": [
+        "e_y_{t+1} = e_y_t + v_t * sin(e_psi_t) * dt",
+        "e_psi_{t+1} = e_psi_t + (v_t * tan(delta_t) / L - v_t * kappa_t) * dt"
+      ],
+      "sindy_terms": 0,
+      "evidence": "CONFIRMED"
+    },
+    "layer_2_balance": {
+      "states": ["theta", "theta_dot"],
+      "analytical": ["theta_{t+1} = theta_t + theta_dot_t * dt"],
+      "sindy_output": "theta_dot",
+      "sindy_features": 7,
+      "sindy_library_terms": 36,
+      "expected_active_terms": 5,
+      "evidence": "CONFIRMED (structure) / INFERRED (coefficients)"
+    },
+    "layer_3_steering": {
+      "states": ["delta", "delta_dot"],
+      "analytical": ["delta_{t+1} = delta_t + delta_dot_t * dt"],
+      "sindy_output": "delta_dot",
+      "sindy_features": 7,
+      "sindy_library_terms": 36,
+      "expected_active_terms": 12,
+      "evidence": "CONFIRMED (structure) / INFERRED (coefficients)"
+    },
+    "layer_4_speed": {
+      "states": ["v"],
+      "method": "Constant per episode (dv/dt = 0)",
+      "sindy_terms": 0,
+      "evidence": "CONFIRMED: bicycle_dynamics.py:160"
+    },
+    "total_parameters": {
+      "analytical": 5,
+      "sindy": 72,
+      "total": 77,
+      "reduction_vs_monolithic": "84% (from 440 to 72 SINDy parameters)"
+    }
+  },
+
+  "current_data": {
+    "file": "bicycle_data_improved.npz",
+    "total_samples": 2083,
+    "estimated_episodes": 10,
+    "dt": 0.0333,
+    "speed_range": [2.0009, 5.9984],
+    "kappa_range": [-0.2943, 0.2959],
+    "action_range": [-5.9783, 5.7849],
+    "coverage_assessment": {
+      "speed": "PARTIAL: skewed toward low speed (39.8% in [2,3])",
+      "kappa": "GOOD: 3 scenarios with reasonable distribution",
+      "episodes": "LOW: ~10 episodes; need 50+ for robust identification"
+    }
+  },
+
+  "data_requirements": {
+    "minimum_samples_per_sindy_model": 360,
+    "target_samples_per_sindy_model": 1800,
+    "total_target_samples": 3600,
+    "recommended_episodes_per_scenario": 50,
+    "total_recommended_episodes": 150,
+    "excitation_types_needed": [
+      "Random walk on tau (already present)",
+      "Uniform speed sampling (needs improvement)",
+      "3 curvature scenarios (already present)",
+      "Near-fall trajectories (needs extension)",
+      "Combined cross-layer excitation (needs addition)"
+    ],
+    "evidence": "INFERRED (standard SINDy data requirements)"
+  },
+
+  "sindy_model_analysis": {
+    "original_model": {
+      "file": "sindy_model.npz",
+      "shape": [55, 8],
+      "active_terms": {
+        "ey": 0,
+        "epsi": 1,
+        "v": 0,
+        "theta": 1,
+        "theta_dot": 1,
+        "k": 0,
+        "delta": 6,
+        "delta_dot": 31
+      },
+      "total_active": 40,
+      "sparsity_ratio": "40/440 = 9.1%"
+    },
+    "improved_model": {
+      "file": "sindy_model_improved.npz",
+      "shape": [55, 8],
+      "threshold": 0.1,
+      "alpha": 0.1,
+      "action_scale": 1.41,
+      "requires_05x_damping": true,
+      "damping_location": "sindy_env.py:142",
+      "diagnosis": "Model over-predicts state changes; 50% damping needed for stability"
+    }
+  },
+
+  "validation_plan": {
+    "single_step_tests": [
+      "theta integration RMSE < 0.001 rad",
+      "delta integration RMSE < 0.001 rad",
+      "theta_dot prediction R^2 > 0.95",
+      "delta_dot prediction R^2 > 0.90",
+      "Overall single-step RMSE < 0.01 (normalized)"
+    ],
+    "multi_step_tests": [
+      "5-step MAE < 0.005 rad",
+      "10-step MAE < 0.01 rad",
+      "50-step MAE < 0.05 rad",
+      "100-step MAE < 0.10 rad",
+      "200-step survival report"
+    ],
+    "ablation_tests": [
+      "No damping factor: should be stable",
+      "k-as-state vs k-as-input: 7D should win",
+      "Monolithic vs layered: layered should be comparable or better",
+      "Analytical vs learned kinematics: analytical should be exact"
+    ],
+    "evidence": "INFERRED (standard validation protocol)"
+  },
+
+  "open_questions": [
+    {
+      "question": "Should v be constant or dynamic?",
+      "impact": "HIGH",
+      "confidence": "INFERRED",
+      "recommendation": "Keep as state; add throttle model later"
+    },
+    {
+      "question": "Does the layered model eliminate the 0.5x damping?",
+      "impact": "HIGH",
+      "confidence": "UNKNOWN",
+      "recommendation": "Key validation target"
+    },
+    {
+      "question": "How many cross-layer residual terms are needed?",
+      "impact": "MEDIUM",
+      "confidence": "UNKNOWN",
+      "recommendation": "Start with zero; add if residuals > 5%"
+    },
+    {
+      "question": "What is the minimum data per layer?",
+      "impact": "MEDIUM",
+      "confidence": "UNKNOWN",
+      "recommendation": "Collect 50+ episodes; validate with subset"
+    }
+  ],
+
+  "blocking_items": [
+    "Code restructuring not yet performed (Phase 2)",
+    "New data not yet collected (Phase 3)",
+    "Layered SINDy not yet identified (Phase 4)",
+    "Validation not yet run (Phase 5-6)"
+  ]
+}

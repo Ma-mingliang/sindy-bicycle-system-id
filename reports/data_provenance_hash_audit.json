@@ -1,0 +1,650 @@
+{
+  "meijaard_openloop_data.npz": {
+    "sha256": "cb2a0b04c260782b71f608bfc48740eb59c9c3454a3984fc75d7ff89a93506bc",
+    "sha256_prefix": "cb2a0b04c260782b",
+    "size_bytes": 8967432,
+    "arrays": {
+      "states": {
+        "shape": [
+          124523,
+          4
+        ],
+        "dtype": "float64",
+        "min": -1.3075792394405534,
+        "max": 1.2441218564814196,
+        "mean": -0.01463691526829384,
+        "std": 0.18443859061042442,
+        "has_nan": false,
+        "has_inf": false
+      },
+      "taus": {
+        "shape": [
+          124523,
+          1
+        ],
+        "dtype": "float64",
+        "min": -3.373422078865199,
+        "max": 3.411272440522158,
+        "mean": 0.06158714425117927,
+        "std": 0.9077511173764516,
+        "has_nan": false,
+        "has_inf": false
+      },
+      "next_states": {
+        "shape": [
+          124523,
+          4
+        ],
+        "dtype": "float64",
+        "min": -1.3075792394405534,
+        "max": 1.2441218564814196,
+        "mean": -0.015180829853929451,
+        "std": 0.18588720370526046,
+        "has_nan": false,
+        "has_inf": false
+      },
+      "v": {
+        "shape": [],
+        "dtype": "float64",
+        "min": 5.5,
+        "max": 5.5,
+        "mean": 5.5,
+        "std": 0.0,
+        "has_nan": false,
+        "has_inf": false
+      },
+      "dt": {
+        "shape": [],
+        "dtype": "float64",
+        "min": 0.03333333333333333,
+        "max": 0.03333333333333333,
+        "mean": 0.03333333333333333,
+        "std": 0.0,
+        "has_nan": false,
+        "has_inf": false
+      },
+      "total_episodes": {
+        "shape": [],
+        "dtype": "int64",
+        "min": 500.0,
+        "max": 500.0,
+        "mean": 500.0,
+        "std": 0.0,
+        "has_nan": false,
+        "has_inf": false
+      },
+      "total_falls": {
+        "shape": [],
+        "dtype": "int64",
+        "min": 101.0,
+        "max": 101.0,
+        "mean": 101.0,
+        "std": 0.0,
+        "has_nan": false,
+        "has_inf": false
+      }
+    }
+  },
+  "meijaard_openloop_data_v35.npz": {
+    "sha256": "e15415f311a399ad899d4fcf40d072062f22d7fc98b22736f0032c4efde92958",
+    "sha256_prefix": "e15415f311a399ad",
+    "size_bytes": 2123662,
+    "arrays": {
+      "states": {
+        "shape": [
+          29478,
+          4
+        ],
+        "dtype": "float64",
+        "min": -5.318669585058809,
+        "max": 5.530086485184842,
+        "mean": -0.10054531700662889,
+        "std": 0.5962733098660653,
+        "has_nan": false,
+        "has_inf": false
+      },
+      "taus": {
+        "shape": [
+          29478,
+          1
+        ],
+        "dtype": "float64",
+        "min": -3.1281288016083315,
+        "max": 3.28018955437723,
+        "mean": 0.22467392094490288,
+        "std": 0.7656394682202714,
+        "has_nan": false,
+        "has_inf": false
+      },
+      "next_states": {
+        "shape": [
+          29478,
+          4
+        ],
+        "dtype": "float64",
+        "min": -5.756377407279605,
+        "max": 5.971871773370851,
+        "mean": -0.10743715661809956,
+        "std": 0.6394329321953233,
+        "has_nan": false,
+        "has_inf": false
+      },
+      "v": {
+        "shape": [],
+        "dtype": "float64",
+        "min": 3.5,
+        "max": 3.5,
+        "mean": 3.5,
+        "std": 0.0,
+        "has_nan": false,
+        "has_inf": false
+      },
+      "dt": {
+        "shape": [],
+        "dtype": "float64",
+        "min": 0.03333333333333333,
+        "max": 0.03333333333333333,
+        "mean": 0.03333333333333333,
+        "std": 0.0,
+        "has_nan": false,
+        "has_inf": false
+      }
+    }
+  },
+  "meijaard_openloop_data_v5.npz": {
+    "sha256": "185af07102dca8badf7488b252d09f9d20e951474e5376db8accedd8d8044e27",
+    "sha256_prefix": "185af07102dca8ba",
+    "size_bytes": 8162040,
+    "arrays": {
+      "states": {
+        "shape": [
+          113337,
+          4
+        ],
+        "dtype": "float64",
+        "min": -2.541014511024362,
+        "max": 2.5513803141334703,
+        "mean": -0.014450149427955125,
+        "std": 0.34168633637040474,
+        "has_nan": false,
+        "has_inf": false
+      },
+      "taus": {
+        "shape": [
+          113337,
+          1
+        ],
+        "dtype": "float64",
+        "min": -3.373422078865199,
+        "max": 3.411272440522158,
+        "mean": 0.06384830874762276,
+        "std": 0.8478389270001971,
+        "has_nan": false,
+        "has_inf": false
+      },
+      "next_states": {
+        "shape": [
+          113337,
+          4
+        ],
+        "dtype": "float64",
+        "min": -2.541014511024362,
+        "max": 2.5513803141334703,
+        "mean": -0.014919820683618103,
+        "std": 0.34400570785249424,
+        "has_nan": false,
+        "has_inf": false
+      },
+      "v": {
+        "shape": [],
+        "dtype": "float64",
+        "min": 5.0,
+        "max": 5.0,
+        "mean": 5.0,
+        "std": 0.0,
+        "has_nan": false,
+        "has_inf": false
+      },
+      "dt": {
+        "shape": [],
+        "dtype": "float64",
+        "min": 0.03333333333333333,
+        "max": 0.03333333333333333,
+        "mean": 0.03333333333333333,
+        "std": 0.0,
+        "has_nan": false,
+        "has_inf": false
+      },
+      "total_episodes": {
+        "shape": [],
+        "dtype": "int64",
+        "min": 500.0,
+        "max": 500.0,
+        "mean": 500.0,
+        "std": 0.0,
+        "has_nan": false,
+        "has_inf": false
+      },
+      "total_falls": {
+        "shape": [],
+        "dtype": "int64",
+        "min": 189.0,
+        "max": 189.0,
+        "mean": 189.0,
+        "std": 0.0,
+        "has_nan": false,
+        "has_inf": false
+      }
+    }
+  },
+  "meijaard_sindy.npz": {
+    "sha256": "bd3b6c1f73698f867a831056b347426099631040a7b431bf71ce5594659668de",
+    "sha256_prefix": "bd3b6c1f73698f86",
+    "size_bytes": 5192,
+    "arrays": {
+      "coefficients": {
+        "shape": [
+          21,
+          4
+        ],
+        "dtype": "float64",
+        "min": -0.9763061735969348,
+        "max": 0.49788762796479824,
+        "mean": -0.010673425124876845,
+        "std": 0.15436201072244904,
+        "has_nan": false,
+        "has_inf": false
+      },
+      "labels": {
+        "shape": [
+          21
+        ],
+        "dtype": "<U17",
+        "sample": "1"
+      },
+      "state_names": {
+        "shape": [
+          4
+        ],
+        "dtype": "<U9",
+        "sample": "phi"
+      },
+      "feature_names": {
+        "shape": [
+          21
+        ],
+        "dtype": "<U17",
+        "sample": "1"
+      },
+      "v": {
+        "shape": [],
+        "dtype": "float64",
+        "min": 5.5,
+        "max": 5.5,
+        "mean": 5.5,
+        "std": 0.0,
+        "has_nan": false,
+        "has_inf": false
+      },
+      "dt": {
+        "shape": [],
+        "dtype": "float64",
+        "min": 0.03333333333333333,
+        "max": 0.03333333333333333,
+        "mean": 0.03333333333333333,
+        "std": 0.0,
+        "has_nan": false,
+        "has_inf": false
+      }
+    }
+  },
+  "meijaard_sindy_v35.npz": {
+    "sha256": "1033e722d3f1767de3d7d5c66e1f7f343d918d792628454b6f7882b653372a78",
+    "sha256_prefix": "1033e722d3f1767d",
+    "size_bytes": 5192,
+    "arrays": {
+      "coefficients": {
+        "shape": [
+          21,
+          4
+        ],
+        "dtype": "float64",
+        "min": -0.2913180655390432,
+        "max": 0.5304120995110153,
+        "mean": 0.007949504570543695,
+        "std": 0.08362930979414465,
+        "has_nan": false,
+        "has_inf": false
+      },
+      "labels": {
+        "shape": [
+          21
+        ],
+        "dtype": "<U17",
+        "sample": "1"
+      },
+      "state_names": {
+        "shape": [
+          4
+        ],
+        "dtype": "<U9",
+        "sample": "phi"
+      },
+      "feature_names": {
+        "shape": [
+          21
+        ],
+        "dtype": "<U17",
+        "sample": "1"
+      },
+      "v": {
+        "shape": [],
+        "dtype": "float64",
+        "min": 3.5,
+        "max": 3.5,
+        "mean": 3.5,
+        "std": 0.0,
+        "has_nan": false,
+        "has_inf": false
+      },
+      "dt": {
+        "shape": [],
+        "dtype": "float64",
+        "min": 0.03333333333333333,
+        "max": 0.03333333333333333,
+        "mean": 0.03333333333333333,
+        "std": 0.0,
+        "has_nan": false,
+        "has_inf": false
+      }
+    }
+  },
+  "meijaard_sindy_v5.npz": {
+    "sha256": "867e7184eae35602d1b2476832911a06b0e224887a886763c345cf383b69266b",
+    "sha256_prefix": "867e7184eae35602",
+    "size_bytes": 5192,
+    "arrays": {
+      "coefficients": {
+        "shape": [
+          21,
+          4
+        ],
+        "dtype": "float64",
+        "min": -0.6883081687863815,
+        "max": 0.5058192848100469,
+        "mean": -0.005560482033536424,
+        "std": 0.1275942611418602,
+        "has_nan": false,
+        "has_inf": false
+      },
+      "labels": {
+        "shape": [
+          21
+        ],
+        "dtype": "<U17",
+        "sample": "1"
+      },
+      "state_names": {
+        "shape": [
+          4
+        ],
+        "dtype": "<U9",
+        "sample": "phi"
+      },
+      "feature_names": {
+        "shape": [
+          21
+        ],
+        "dtype": "<U17",
+        "sample": "1"
+      },
+      "v": {
+        "shape": [],
+        "dtype": "float64",
+        "min": 5.0,
+        "max": 5.0,
+        "mean": 5.0,
+        "std": 0.0,
+        "has_nan": false,
+        "has_inf": false
+      },
+      "dt": {
+        "shape": [],
+        "dtype": "float64",
+        "min": 0.03333333333333333,
+        "max": 0.03333333333333333,
+        "mean": 0.03333333333333333,
+        "std": 0.0,
+        "has_nan": false,
+        "has_inf": false
+      }
+    }
+  },
+  "sindy_full_model.npz": {
+    "sha256": "899caf26b9402beb7e609d907436b9be7086aafde878de186c1b2c29063a317d",
+    "sha256_prefix": "899caf26b9402beb",
+    "size_bytes": 1750,
+    "arrays": {
+      "coefficients": {
+        "shape": [
+          21,
+          4
+        ],
+        "dtype": "float64",
+        "min": -0.27787864685399377,
+        "max": 0.21539648090998548,
+        "mean": 0.005496486190733905,
+        "std": 0.052228926936896285,
+        "has_nan": false,
+        "has_inf": false
+      },
+      "threshold": {
+        "shape": [],
+        "dtype": "float64",
+        "min": 0.05,
+        "max": 0.05,
+        "mean": 0.05,
+        "std": 0.0,
+        "has_nan": false,
+        "has_inf": false
+      },
+      "state_std": {
+        "shape": [
+          4
+        ],
+        "dtype": "float64",
+        "min": 0.2478881700058539,
+        "max": 0.8513852518837642,
+        "mean": 0.536690991170721,
+        "std": 0.25398000422131806,
+        "has_nan": false,
+        "has_inf": false
+      },
+      "action_std": {
+        "shape": [],
+        "dtype": "float64",
+        "min": 1.0,
+        "max": 1.0,
+        "mean": 1.0,
+        "std": 0.0,
+        "has_nan": false,
+        "has_inf": false
+      }
+    }
+  },
+  "bicycle_data.npz": {
+    "sha256": "e324d5f63f2f2abce87a66a73f81c6fbb737888ac8c76ff108bc7b44deb941d4",
+    "sha256_prefix": "e324d5f63f2f2abc",
+    "size_bytes": 68648,
+    "arrays": {
+      "states": {
+        "shape": [
+          468,
+          8
+        ],
+        "dtype": "float64",
+        "min": -29.26468665953228,
+        "max": 27.60727632726503,
+        "mean": 0.49238931560312843,
+        "std": 3.216602415530533,
+        "has_nan": false,
+        "has_inf": false
+      },
+      "actions": {
+        "shape": [
+          468,
+          1
+        ],
+        "dtype": "float64",
+        "min": -10.0,
+        "max": 7.296472305820184,
+        "mean": -0.15577186221246145,
+        "std": 1.7279626017055627,
+        "has_nan": false,
+        "has_inf": false
+      },
+      "next_states": {
+        "shape": [
+          468,
+          8
+        ],
+        "dtype": "float64",
+        "min": -47.99735017469085,
+        "max": 48.00112994019004,
+        "mean": 0.5293534019972981,
+        "std": 6.826118476961585,
+        "has_nan": false,
+        "has_inf": false
+      },
+      "rewards": {
+        "shape": [
+          468
+        ],
+        "dtype": "float64",
+        "min": -1.9167176818720895,
+        "max": -0.002384377980297849,
+        "mean": -0.4184749863258909,
+        "std": 0.34714467834475526,
+        "has_nan": false,
+        "has_inf": false
+      },
+      "dt": {
+        "shape": [],
+        "dtype": "float64",
+        "min": 0.03333333333333333,
+        "max": 0.03333333333333333,
+        "mean": 0.03333333333333333,
+        "std": 0.0,
+        "has_nan": false,
+        "has_inf": false
+      }
+    }
+  },
+  "bicycle_data_improved.npz": {
+    "sha256": "d4990de3efed05f1de1c07a58f836d9c89a18e9bf10b36b7bf62d2c1c05adecf",
+    "sha256_prefix": "d4990de3efed05f1",
+    "size_bytes": 284298,
+    "arrays": {
+      "states": {
+        "shape": [
+          2083,
+          8
+        ],
+        "dtype": "float64",
+        "min": -12.659474757104707,
+        "max": 12.372944323590243,
+        "mean": 0.42756153556138765,
+        "std": 1.7923784962113285,
+        "has_nan": false,
+        "has_inf": false
+      },
+      "actions": {
+        "shape": [
+          2083,
+          1
+        ],
+        "dtype": "float64",
+        "min": -5.9782688473491294,
+        "max": 5.784947423949089,
+        "mean": 0.05082419633140984,
+        "std": 1.4100296554873886,
+        "has_nan": false,
+        "has_inf": false
+      },
+      "next_states": {
+        "shape": [
+          2083,
+          8
+        ],
+        "dtype": "float64",
+        "min": -19.99031411739999,
+        "max": 19.945521914493916,
+        "mean": 0.4215682082908114,
+        "std": 3.3327942777780883,
+        "has_nan": false,
+        "has_inf": false
+      },
+      "dt": {
+        "shape": [],
+        "dtype": "float64",
+        "min": 0.03333333333333333,
+        "max": 0.03333333333333333,
+        "mean": 0.03333333333333333,
+        "std": 0.0,
+        "has_nan": false,
+        "has_inf": false
+      }
+    }
+  },
+  "sindy_model.npz": {
+    "sha256": "35ce7967f48eb945826582356532e82ec9c53ee2474db272d13554ec2dc7d521",
+    "sha256_prefix": "35ce7967f48eb945",
+    "size_bytes": 9612,
+    "arrays": {
+      "coefficients": {
+        "shape": [
+          55,
+          8
+        ],
+        "dtype": "float64",
+        "min": -7.67270864449868,
+        "max": 10.95367395772187,
+        "mean": 0.0006736827860495706,
+        "std": 0.7305247030197975,
+        "has_nan": false,
+        "has_inf": false
+      },
+      "lib_labels": {
+        "shape": [
+          55
+        ],
+        "dtype": "<U19",
+        "sample": "1"
+      },
+      "threshold": {
+        "shape": [],
+        "dtype": "float64",
+        "min": 0.2,
+        "max": 0.2,
+        "mean": 0.2,
+        "std": 0.0,
+        "has_nan": false,
+        "has_inf": false
+      },
+      "feature_names": {
+        "shape": [
+          9
+        ],
+        "dtype": "<U9",
+        "sample": "ey"
+      },
+      "state_names": {
+        "shape": [
+          8
+        ],
+        "dtype": "<U9",
+        "sample": "ey"
+      }
+    }
+  }
+}

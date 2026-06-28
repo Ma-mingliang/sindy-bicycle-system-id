@@ -1,0 +1,311 @@
+{
+  "audit_date": "2026-06-25",
+  "method": "Direct code tracing through source files",
+  "confidence_levels": {
+    "CONFIRMED": "Verified by direct code reading and/or data file inspection",
+    "INFERRED": "Supported by indirect evidence but not directly verified",
+    "UNKNOWN": "Insufficient data to determine"
+  },
+
+  "results": {
+    "0.064": {
+      "source_script": "test_ensemble.py",
+      "source_function": "test_ensemble() -> train_ensemble() -> evaluation loop",
+      "source_file_path": "test_ensemble.py",
+      "source_line_range": "87-220",
+      "status": "CONFIRMED",
+
+      "evaluation_mode": {
+        "mode_letter": "C",
+        "mode_name": "Mode C style (tau from real state, model self-rolls)",
+        "confidence": "CONFIRMED",
+        "evidence": "Line 197: tau = tau_func(step, s_real); Line 200: s_ensemble = ensemble_predict_with_uncertainty(baseline, ensemble, s_ensemble, tau, ...)"
+      },
+
+      "action_source": {
+        "value": "Real state",
+        "confidence": "CONFIRMED",
+        "evidence": "tau = tau_func(step, s_real) where s_real is the real system state"
+      },
+
+      "error_metric": {
+        "type": "phi-only endpoint error",
+        "formula": "abs(s_ensemble[0] - s_real[0]) at step 500",
+        "state_channels": "phi only (index 0)",
+        "aggregation": "mean across 5 segments",
+        "confidence": "CONFIRMED",
+        "evidence": "Line 207: all_errors[step + 1].append(abs(s_ensemble[0] - s_real[0]))"
+      },
+
+      "unit": {
+        "value": "rad",
+        "confidence": "CONFIRMED",
+        "evidence": "phi is roll angle in radians (state index 0 of [phi, delta, phi_dot, delta_dot])"
+      },
+
+      "time_domain": {
+        "n_steps": 500,
+        "dt_per_step": "1/150 s (5 substeps of RK4)",
+        "total_time_seconds": "500 * (1/150) = 3.33s",
+        "confidence": "CONFIRMED",
+        "evidence": "Line 196: for step in range(500); eval_steps = [1,5,10,20,50,100,200,500]"
+      },
+
+      "training_config": {
+        "baseline": "GPStandard",
+        "gp_max_samples": 5000,
+        "gp_n_restarts": 2,
+        "gp_kernel": "ConstantKernel(1.0) * RBF(1.0)",
+        "gp_alpha": 1e-6,
+        "nn_count": 5,
+        "nn_architecture": "ResidualNet (128 hidden, SiLU)",
+        "dagger_rounds": 3,
+        "residual_scale": 0.3,
+        "n_epochs": 100,
+        "lr": 1e-3,
+        "lr_scheduler": "NONE",
+        "batch_size": 256,
+        "n_train": 30000,
+        "confidence": "CONFIRMED",
+        "evidence": "train_ensemble() function in test_ensemble.py, lines 87-141"
+      },
+
+      "seeds": {
+        "initial_state_seed": "NOT FIXED",
+        "nn_training_seeds": "i*42 for each ensemble member (fixed per member)",
+        "dagger_data_seed": "NOT FIXED (phi_init = np.random.uniform per segment)",
+        "confidence": "CONFIRMED",
+        "evidence": "Line 189: phi_init = np.random.uniform(-0.25, 0.25) with no preceding seed set"
+      },
+
+      "early_termination": {
+        "enabled": true,
+        "condition": "abs(s_real[0]) > math.pi / 3",
+        "confidence": "CONFIRMED",
+        "evidence": "Line 204: if abs(s_real[0]) > math.pi / 3: break"
+      },
+
+      "old_cache_used": false,
+      "old_cache_evidence": "N/A - fresh training each run",
+
+      "output_location": "stdout print only, no saved file",
+
+      "equivalent_model_name": "gp_ensemble_5_3 (but WITHOUT scheduler)",
+      "equivalent_model_note": "GPEEnsemble in eval_models.py uses use_scheduler=True by default, so the trained models are DIFFERENT from test_ensemble.py"
+    },
+
+    "0.066": {
+      "source_script": "test_ensemble_optimization.py",
+      "source_function": "test_optimization_params() -> config '7模型+5轮DAgger' -> train_optimized_ensemble()",
+      "source_file_path": "test_ensemble_optimization.py",
+      "source_line_range": "223-285",
+      "status": "CONFIRMED",
+
+      "evaluation_mode": {
+        "mode_letter": "C",
+        "mode_name": "Mode C style (tau from real state, model self-rolls)",
+        "confidence": "CONFIRMED",
+        "evidence": "Line 271: tau = tau_func(step, s_real); Line 273: s_ensemble = optimized_ensemble_predict(...)"
+      },
+
+      "action_source": {
+        "value": "Real state",
+        "confidence": "CONFIRMED",
+        "evidence": "tau = tau_func(step, s_real) where s_real is the real system state"
+      },
+
+      "error_metric": {
+        "type": "phi-only endpoint error",
+        "formula": "abs(s_ensemble[0] - s_real[0]) at step 499",
+        "state_channels": "phi only (index 0)",
+        "aggregation": "mean across 5 segments",
+        "confidence": "CONFIRMED",
+        "evidence": "Line 280: errors_500.append(abs(s_ensemble[0] - s_real[0]))"
+      },
+
+      "unit": {
+        "value": "rad",
+        "confidence": "CONFIRMED"
+      },
+
+      "time_domain": {
+        "n_steps": 500,
+        "confidence": "CONFIRMED",
+        "evidence": "Line 270: for step in range(500); Line 279: if step == 499"
+      },
+
+      "training_config": {
+        "baseline": "GPStandard",
+        "gp_max_samples": 5000,
+        "nn_count": 7,
+        "dagger_rounds": 5,
+        "residual_scale": 0.3,
+        "n_epochs": 100,
+        "lr": 1e-3,
+        "lr_scheduler": "NONE (use_scheduler=False in config)",
+        "n_train": 30000,
+        "confidence": "CONFIRMED",
+        "evidence": "Config dict at line 245: {'name': '7模型+5轮DAgger', 'n_models': 7, ..., 'use_scheduler': False, 'dagger_rounds': 5}"
+      },
+
+      "seeds": {
+        "initial_state_seed": "NOT FIXED",
+        "confidence": "CONFIRMED",
+        "evidence": "Line 265: phi_init = np.random.uniform(-0.25, 0.25) with no preceding seed set"
+      },
+
+      "early_termination": {
+        "enabled": true,
+        "condition": "abs(s_real[0]) > math.pi / 3",
+        "confidence": "CONFIRMED",
+        "evidence": "Line 277: if abs(s_real[0]) > math.pi / 3: break"
+      },
+
+      "old_cache_used": false,
+
+      "output_location": "stdout print only, results dict returned",
+
+      "relationship_to_0064": "Same evaluation code path, different training config (7 NN + 5 DAgger vs 5 NN + 3 DAgger)",
+      "header_quote": "在最佳结果(0.064)基础上尝试改进"
+    },
+
+    "0.252": {
+      "source_script": "continuation_stage/evaluate/run_full_evaluation_v2.py",
+      "source_function": "main() -> run_mode_b_fixed() -> compute_all_metrics()",
+      "source_file_path": "continuation_stage/evaluate/run_full_evaluation_v2.py",
+      "result_file": "continuation_stage/results/full_evaluation_v2.json",
+      "status": "CONFIRMED",
+
+      "evaluation_mode": {
+        "mode_letter": "B",
+        "mode_name": "Mode B (fixed action open-loop)",
+        "confidence": "CONFIRMED",
+        "evidence": "Line 199: r = run_mode_b_fixed(model, s0, ref, horizon, mc.real_step)"
+      },
+
+      "action_source": {
+        "value": "Frozen from reference trajectory",
+        "confidence": "CONFIRMED",
+        "evidence": "eval_modes_v2.py line 53: actions = reference['actions'] (pre-generated by real system)"
+      },
+
+      "error_metric": {
+        "type": "Full-trajectory MAE (all 4 states)",
+        "formula": "mean(|s_model - s_real|) over all 4 state channels and all valid time steps",
+        "state_channels": "phi, delta, phi_dot, delta_dot (all 4)",
+        "aggregation": "per-seed MAE, then mean across 5 seeds",
+        "confidence": "CONFIRMED",
+        "evidence": "eval_metrics.py line 74: 'mae': float(np.mean(abs_err_valid)) where abs_errors has shape (n+1, 4)"
+      },
+
+      "unit": {
+        "value": "Mixed: rad (phi, delta) + rad/s (phi_dot, delta_dot)",
+        "confidence": "CONFIRMED",
+        "evidence": "No unit normalization in compute_all_metrics; state channels have different physical units"
+      },
+
+      "time_domain": {
+        "n_steps": 500,
+        "confidence": "CONFIRMED",
+        "evidence": "horizons includes 500; key_results_summary shows 500-step column"
+      },
+
+      "training_config": {
+        "model_class": "GPEEnsemble",
+        "baseline": "GPStandard(max_samples=5000)",
+        "gp_n_restarts": 2,
+        "nn_count": 7,
+        "nn_architecture": "ResidualNet (128 hidden, SiLU)",
+        "dagger_rounds": 5,
+        "residual_scale": 0.3,
+        "n_epochs": 100,
+        "lr": 1e-3,
+        "lr_scheduler": "CosineAnnealingLR(T_max=100)",
+        "batch_size": 256,
+        "n_train": 30000,
+        "confidence": "CONFIRMED",
+        "evidence": "run_full_evaluation_v2.py lines 142-148: GPEEnsemble(..., use_scheduler=True)"
+      },
+
+      "seeds": {
+        "value": [42, 43, 44, 45, 46],
+        "initial_state_seed": "FIXED per seed (RandomState(seed))",
+        "nn_training_seeds": "i*42 for each ensemble member (fixed per member)",
+        "dagger_data_seed": "NOT FIXED (phi_init = np.random.uniform per segment inside _collect_dagger_data)",
+        "confidence": "CONFIRMED",
+        "evidence": "run_full_evaluation_v2.py line 171: rng = np.random.RandomState(seed); line 172: phi_init = rng.uniform(-0.25, 0.25)"
+      },
+
+      "early_termination": {
+        "enabled": true,
+        "condition": "abs(s_model) > 100 or isnan (in run_mode_b_fixed); abs(s_real) > pi/3 or abs > 100 (in reference generation)",
+        "confidence": "CONFIRMED",
+        "evidence": "eval_modes_v2.py line 78: if np.any(np.isnan(s_model)) or np.any(np.abs(s_model) > 100)"
+      },
+
+      "old_cache_used": false,
+
+      "per_seed_values": {
+        "seed_42": 0.350003,
+        "seed_43": 0.047898,
+        "seed_44": 0.375250,
+        "seed_45": 0.216319,
+        "seed_46": 0.269986,
+        "mean": 0.251891,
+        "std": 0.116661,
+        "confidence": "CONFIRMED",
+        "evidence": "Direct extraction from full_evaluation_v2.json"
+      },
+
+      "output_location": "continuation_stage/results/full_evaluation_v2.json",
+
+      "equivalent_model_name": "gp_ensemble_7_5"
+    }
+  },
+
+  "comparability_analysis": {
+    "0064_vs_0066": {
+      "comparable": "PARTIALLY",
+      "same_eval_code": true,
+      "same_metric": true,
+      "same_mode": true,
+      "same_unit": true,
+      "different_training": "5 NN + 3 DAgger vs 7 NN + 5 DAgger (both WITHOUT scheduler)",
+      "different_seeds": "Both unseeded, so results vary across runs",
+      "note": "Same evaluation path, different training configs. Both unseeded so neither is reproducible."
+    },
+    "0064_vs_0252": {
+      "comparable": false,
+      "reasons": [
+        "Different evaluation mode: Mode C style vs Mode B",
+        "Different metric: phi-only endpoint error vs full-trajectory 4-state MAE",
+        "Different unit: rad only vs mixed (rad + rad/s)",
+        "Different training pipeline: no scheduler vs CosineAnnealingLR scheduler",
+        "Different seeds: unseeded vs 5 fixed seeds",
+        "Different aggregation: 5 unseeded segments vs 5 seeded evaluations"
+      ]
+    },
+    "0066_vs_0252": {
+      "comparable": false,
+      "reasons": [
+        "Same reasons as 0064_vs_0252",
+        "Additionally: 7 NN + 5 DAgger (no scheduler) vs 7 NN + 5 DAgger (with scheduler) - different trained models"
+      ]
+    }
+  },
+
+  "old_results_bug": {
+    "description": "evaluate/run_ensemble_evaluation.py generates ensemble_evaluation_results.json where Mode B == Mode C for ALL entries",
+    "root_cause": "evaluate/eval_modes.py run_mode_b() and run_mode_c() produce identical action sequences because both compute tau from the same real trajectory",
+    "confirmed_by": "Direct comparison of all MAE values in ensemble_evaluation_results.json shows zero difference between Mode B and Mode C",
+    "fixed_in": "continuation_stage/evaluate/eval_modes_v2.py run_mode_b_fixed() uses pre-generated reference trajectory"
+  },
+
+  "recommendations": [
+    "0.064/0.066 and 0.252 measure fundamentally different things and must NOT be directly compared",
+    "0.252 (Mode B full-trajectory MAE) is the more rigorous and comparable metric",
+    "0.064/0.066 (phi-only endpoint error) is an optimistic metric that ignores 3 of 4 state channels",
+    "All future evaluations should use fixed seeds for reproducibility",
+    "The LR scheduler difference means 0.064/0.066 and 0.252 use different trained models"
+  ]
+}

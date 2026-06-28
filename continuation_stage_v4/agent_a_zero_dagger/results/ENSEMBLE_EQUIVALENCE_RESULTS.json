@@ -1,0 +1,19 @@
+{
+  "pointwise_test": {
+    "n_samples": 1000,
+    "max_abs_difference_zero_vs_baseline": 0.0,
+    "mean_difference_zero_vs_baseline": 0.0,
+    "threshold": 1e-10,
+    "passed": true,
+    "nn_contribution_max": 0.0018538666401015647,
+    "nn_contribution_mean": 0.0003229705379997596
+  },
+  "rollout_test": {
+    "n_steps": 1000,
+    "baseline_vs_zero_max_diff": 0.0,
+    "baseline_vs_ensemble_max_diff": 111.5671685988402,
+    "threshold": 1e-10,
+    "passed": true
+  },
+  "overall_passed": true
+}

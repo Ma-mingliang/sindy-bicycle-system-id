@@ -1,0 +1,281 @@
+# 可复现世界模型评估配置
+# 生成时间: 2026-06-24
+# 所有实验必须从此配置文件读取参数，禁止硬编码
+
+# ============================================================
+# 环境信息
+# ============================================================
+environment:
+  python_version: "3.9.23"
+  numpy_version: "1.23.5"
+  scipy_version: "1.10.1"
+  sklearn_version: "1.6.1"
+  pytorch_version: "2.7.1+cu128"
+  cuda_available: true
+  gpu: "NVIDIA GeForce RTX 5060 Laptop GPU"
+  platform: "Windows 11"
+
+# ============================================================
+# 数据文件
+# ============================================================
+data:
+  training_data:
+    file: "meijaard_openloop_data_v35.npz"
+    sha256_prefix: "e15415f311a399ad"
+    samples: 29478
+    state_dim: 4
+    action_dim: 1
+
+  sindy_4d_model:
+    file: "meijaard_sindy_v35.npz"
+    sha256_prefix: "1033e722d3f1767d"
+    coefficients_shape: [21, 4]
+
+  sindy_full_model:
+    file: "sindy_full_model.npz"
+    sha256_prefix: "899caf26b9402beb"
+    coefficients_shape: [21, 4]
+
+# ============================================================
+# 训练数据生成
+# ============================================================
+training_data_generation:
+  n_samples: 30000
+  seed: 42
+  state_ranges:
+    phi: [-0.5, 0.5]       # rad
+    delta: [-0.3, 0.3]     # rad
+    phi_dot: [-2.0, 2.0]   # rad/s
+    delta_dot: [-1.0, 1.0] # rad/s
+  action_range: [-50, 50]  # N·m
+
+# ============================================================
+# 归一化 (纯 std 缩放，无均值减法)
+# ============================================================
+normalization:
+  type: "std_only_no_mean_subtraction"
+  formula: "s_norm = s / std"
+  # 这些值从 generate_training_data(30000, seed=42) 计算
+  state_std: [0.28791831, 0.17332272, 1.15369545, 0.57764881]
+  action_std: 28.8675
+  delta_std: [0.03848921, 0.06584907, 0.14852729, 3.63324725]
+
+# ============================================================
+# GP 配置
+# ============================================================
+gp:
+  kernel: "ConstantKernel(1.0) * RBF(length_scale=1.0)"
+  max_samples: 5000
+  gp_sampling_seed: 42  # 注意: 当前代码使用 np.random.choice 无固定 seed
+  n_gps: 4
+  ard: false
+  input_dim: 5
+  output_dim: 4
+  optimizer: "lbfgs"
+  n_restarts_optimizer: 2
+  alpha: 1.0e-6
+  max_iter: 1000  # 增加以解决收敛问题
+  kernel_bounds:
+    constant_value: [1.0e-5, 1.0e5]  # 从 100000.0 降低上界
+    length_scale: [1.0e-5, 1.0e5]
+
+  # GP-B4 稀疏 GP
+  sparse:
+    n_components: 500
+    kernel: "RBF(length_scale=1.0)"
+
+# ============================================================
+# NN 集成配置
+# ============================================================
+ensemble:
+  # 标准配置
+  standard:
+    n_models: 5
+    dagger_rounds: 3
+    residual_scale: 0.3
+
+  # 优化配置
+  optimized:
+    n_models: 7
+    dagger_rounds: 5
+    residual_scale: 0.3
+
+  # NN 架构
+  architecture:
+    type: "ResidualNet"
+    hidden: 128
+    n_layers: 2
+    activation: "SiLU"
+    input_dim: 5
+    output_dim: 4
+
+  # 训练参数
+  training:
+    n_epochs: 100
+    batch_size: 256
+    learning_rate: 1.0e-3
+    optimizer: "Adam"
+    use_scheduler: true
+    scheduler: "CosineAnnealingLR"
+
+  # NN 初始化种子
+  nn_init_seed_base: 42  # 每个模型使用 i * 42
+
+  # DAgger 参数
+  dagger:
+    n_segments_per_round: 3
+    n_steps_per_segment: 500
+    tau_func_seed_offset: 100  # make_tau_func(100 + seg_i, 500)
+    phi_init_range: [-0.25, 0.25]  # 注意: 当前无固定 seed
+    safety_limit: "pi/3"  # abs(phi) > pi/3 时截断
+
+# ============================================================
+# 评估配置
+# ============================================================
+evaluation:
+  # 评估模式
+  modes:
+    A: "Teacher forcing: predict from real state"
+    B: "Fixed action sequence open-loop"
+    C: "Hybrid: tau from real, state from model (CURRENT)"
+    D: "Full model closed-loop: tau from model state"
+
+  # 评估种子
+  seeds: [42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71]
+  n_seeds: 30
+
+  # 评估时域 (步数)
+  horizons: [1, 5, 10, 20, 50, 100, 200, 500, 1000]
+  horizon_seconds: [0.033, 0.167, 0.333, 0.667, 1.667, 3.333, 6.667, 16.667, 33.333]
+
+  # 每个 seed 的轨迹段数
+  n_segments: 5
+
+  # 最大步数
+  max_steps: 1000
+
+  # 控制频率
+  control_freq_hz: 30
+  dt: 0.03333333333333333
+
+  # LQR 控制器
+  lqr:
+    Q: [1000.0, 100.0, 10.0, 1.0]
+    R: 0.2
+    K_lqr: [-103.92, -34.20, 38.04, 3.70]  # 从代码计算
+
+  # 扰动
+  disturbance:
+    range: [-0.5, 0.5]  # N·m
+    seed_offset: 42  # RandomState(42 + seg_idx)
+
+  # 目标
+  target:
+    mean: 0.0
+    std: 0.15
+    clip: ["-pi/12", "pi/12"]
+
+  # 安全阈值
+  safety:
+    phi_limit: "pi/3"  # 60 度
+    state_limit: 100.0  # 数值爆炸保护
+
+  # 评价指标
+  metrics:
+    - "MAE"
+    - "RMSE"
+    - "max_absolute_error"
+    - "endpoint_error"
+    - "median_absolute_error"
+    - "p95_error"
+    - "normalized_by_training_std"
+    - "first_exceed_1sigma"
+    - "first_exceed_2sigma"
+    - "first_exceed_3sigma"
+    - "control_torque_MAE"
+    - "control_torque_max_error"
+    - "instability_rate"
+    - "fall_rate"
+    - "mean_survival_steps"
+    - "min_survival_steps"
+    - "steady_state_error"
+    - "settling_time"
+    - "ensemble_disagreement"
+    - "uncertainty_error_correlation"
+
+  # 评价状态
+  states: ["phi", "delta", "phi_dot", "delta_dot"]
+  state_units: ["rad", "rad", "rad/s", "rad/s"]
+  state_degrees: [true, true, false, false]  # 是否转换为度显示
+
+# ============================================================
+# 模型比较列表
+# ============================================================
+models:
+  - name: "real_dynamics"
+    description: "真实非线性动力学 (参考)"
+    type: "reference"
+
+  - name: "linearized_model"
+    description: "线性化物理模型"
+    type: "linearized"
+
+  - name: "gp_standard"
+    description: "标准 GP"
+    type: "gp"
+    config: "standard"
+
+  - name: "gp_b4_sparse"
+    description: "GP-B4 稀疏 GP"
+    type: "gp_sparse"
+    config: "sparse"
+
+  - name: "sindy_4d"
+    description: "SINDy 4D 模型"
+    type: "sindy"
+    model_file: "meijaard_sindy_v35.npz"
+
+  - name: "gp_ensemble_5_0"
+    description: "GP+Ensemble, 5模型, 0轮DAgger"
+    type: "ensemble"
+    n_models: 5
+    dagger_rounds: 0
+
+  - name: "gp_ensemble_5_3"
+    description: "GP+Ensemble, 5模型, 3轮DAgger"
+    type: "ensemble"
+    n_models: 5
+    dagger_rounds: 3
+
+  - name: "gp_ensemble_7_5"
+    description: "GP+Ensemble, 7模型, 5轮DAgger"
+    type: "ensemble"
+    n_models: 7
+    dagger_rounds: 5
+
+# ============================================================
+# 输出配置
+# ============================================================
+output:
+  results_dir: "results"
+  reports_dir: "reports"
+  plots_dir: "results/plots"
+
+  # 结果文件
+  files:
+    reproducible_results: "results/reproducible_evaluation_results.json"
+    per_seed_results: "results/per_seed_results.csv"
+    per_horizon_results: "results/per_horizon_results.csv"
+    model_comparison: "results/model_comparison.csv"
+    failure_cases: "results/failure_cases.csv"
+    environment_manifest: "results/environment_manifest.json"
+
+  # 图表
+  plots:
+    - "error_vs_time"
+    - "state_trajectories"
+    - "uncertainty_curves"
+    - "distribution_coverage"
+    - "reliability_diagram"
+    - "error_vs_uncertainty"
+    - "ood_score_vs_survival"

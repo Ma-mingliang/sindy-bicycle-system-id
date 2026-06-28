@@ -1,0 +1,263 @@
+{
+  "audit_date": "2026-06-25",
+  "description": "Corrected Mode B results with divergence detection",
+  "note": "500=1000 same MAE means model diverged before step 500",
+  "models": {
+    "real_dynamics": {
+      "10_step": {
+        "mae_mean": 0.0,
+        "mae_std": 0.0,
+        "n_seeds": 5,
+        "diverged_before_next": false
+      },
+      "50_step": {
+        "mae_mean": 0.0,
+        "mae_std": 0.0,
+        "n_seeds": 5,
+        "diverged_before_next": true
+      },
+      "100_step": {
+        "mae_mean": 0.0,
+        "mae_std": 0.0,
+        "n_seeds": 5,
+        "diverged_before_next": true
+      },
+      "500_step": {
+        "mae_mean": 0.0,
+        "mae_std": 0.0,
+        "n_seeds": 5,
+        "diverged_before_next": true
+      },
+      "1000_step": {
+        "mae_mean": 0.0,
+        "mae_std": 0.0,
+        "n_seeds": 5,
+        "diverged_before_next": true
+      }
+    },
+    "linearized_model": {
+      "10_step": {
+        "mae_mean": 0.093202,
+        "mae_std": 0.066206,
+        "n_seeds": 5,
+        "diverged_before_next": false
+      },
+      "50_step": {
+        "mae_mean": 0.119916,
+        "mae_std": 0.045287,
+        "n_seeds": 5,
+        "diverged_before_next": false
+      },
+      "100_step": {
+        "mae_mean": 0.464232,
+        "mae_std": 0.279326,
+        "n_seeds": 5,
+        "diverged_before_next": false
+      },
+      "500_step": {
+        "mae_mean": 6.101379,
+        "mae_std": 0.76946,
+        "n_seeds": 5,
+        "diverged_before_next": false
+      },
+      "1000_step": {
+        "mae_mean": 6.101379,
+        "mae_std": 0.76946,
+        "n_seeds": 5,
+        "diverged_before_next": true
+      }
+    },
+    "sindy_4d": {
+      "10_step": {
+        "mae_mean": 0.019069,
+        "mae_std": 0.007017,
+        "n_seeds": 5,
+        "diverged_before_next": false
+      },
+      "50_step": {
+        "mae_mean": 0.051535,
+        "mae_std": 0.016872,
+        "n_seeds": 5,
+        "diverged_before_next": false
+      },
+      "100_step": {
+        "mae_mean": 0.362926,
+        "mae_std": 0.104953,
+        "n_seeds": 5,
+        "diverged_before_next": false
+      },
+      "500_step": {
+        "mae_mean": 6.692107,
+        "mae_std": 2.023302,
+        "n_seeds": 5,
+        "diverged_before_next": false
+      },
+      "1000_step": {
+        "mae_mean": 6.692107,
+        "mae_std": 2.023302,
+        "n_seeds": 5,
+        "diverged_before_next": true
+      }
+    },
+    "gp_standard": {
+      "10_step": {
+        "mae_mean": 3.7e-05,
+        "mae_std": 1.3e-05,
+        "n_seeds": 5,
+        "diverged_before_next": false
+      },
+      "50_step": {
+        "mae_mean": 0.000298,
+        "mae_std": 0.000137,
+        "n_seeds": 5,
+        "diverged_before_next": true
+      },
+      "100_step": {
+        "mae_mean": 0.002114,
+        "mae_std": 0.00088,
+        "n_seeds": 5,
+        "diverged_before_next": false
+      },
+      "500_step": {
+        "mae_mean": 12.149083,
+        "mae_std": 0.411681,
+        "n_seeds": 5,
+        "diverged_before_next": false
+      },
+      "1000_step": {
+        "mae_mean": 17.384819,
+        "mae_std": 0.443308,
+        "n_seeds": 5,
+        "diverged_before_next": false
+      }
+    },
+    "gp_b4_sparse": {
+      "10_step": {
+        "mae_mean": 0.1807,
+        "mae_std": 0.358694,
+        "n_seeds": 5,
+        "diverged_before_next": false
+      },
+      "50_step": {
+        "mae_mean": 0.777231,
+        "mae_std": 1.541762,
+        "n_seeds": 5,
+        "diverged_before_next": false
+      },
+      "100_step": {
+        "mae_mean": 1.521927,
+        "mae_std": 2.959391,
+        "n_seeds": 5,
+        "diverged_before_next": false
+      },
+      "500_step": {
+        "mae_mean": 8.617381,
+        "mae_std": 2.357466,
+        "n_seeds": 5,
+        "diverged_before_next": false
+      },
+      "1000_step": {
+        "mae_mean": 8.617381,
+        "mae_std": 2.357466,
+        "n_seeds": 5,
+        "diverged_before_next": true
+      }
+    },
+    "gp_ensemble_5_0": {
+      "10_step": {
+        "mae_mean": 0.0,
+        "mae_std": 0.0,
+        "n_seeds": 5,
+        "diverged_before_next": false
+      },
+      "50_step": {
+        "mae_mean": 0.0,
+        "mae_std": 0.0,
+        "n_seeds": 5,
+        "diverged_before_next": true
+      },
+      "100_step": {
+        "mae_mean": 0.0,
+        "mae_std": 0.0,
+        "n_seeds": 5,
+        "diverged_before_next": true
+      },
+      "500_step": {
+        "mae_mean": 0.0,
+        "mae_std": 0.0,
+        "n_seeds": 5,
+        "diverged_before_next": true
+      },
+      "1000_step": {
+        "mae_mean": 0.0,
+        "mae_std": 0.0,
+        "n_seeds": 5,
+        "diverged_before_next": true
+      }
+    },
+    "gp_ensemble_5_3": {
+      "10_step": {
+        "mae_mean": 0.081631,
+        "mae_std": 0.089766,
+        "n_seeds": 5,
+        "diverged_before_next": false
+      },
+      "50_step": {
+        "mae_mean": 0.2584,
+        "mae_std": 0.078454,
+        "n_seeds": 5,
+        "diverged_before_next": false
+      },
+      "100_step": {
+        "mae_mean": 0.285896,
+        "mae_std": 0.049053,
+        "n_seeds": 5,
+        "diverged_before_next": false
+      },
+      "500_step": {
+        "mae_mean": 0.308533,
+        "mae_std": 0.059644,
+        "n_seeds": 5,
+        "diverged_before_next": false
+      },
+      "1000_step": {
+        "mae_mean": 0.312768,
+        "mae_std": 0.063874,
+        "n_seeds": 5,
+        "diverged_before_next": false
+      }
+    },
+    "gp_ensemble_7_5": {
+      "10_step": {
+        "mae_mean": 0.09126,
+        "mae_std": 0.056159,
+        "n_seeds": 5,
+        "diverged_before_next": false
+      },
+      "50_step": {
+        "mae_mean": 0.204947,
+        "mae_std": 0.11578,
+        "n_seeds": 5,
+        "diverged_before_next": false
+      },
+      "100_step": {
+        "mae_mean": 0.222373,
+        "mae_std": 0.107686,
+        "n_seeds": 5,
+        "diverged_before_next": false
+      },
+      "500_step": {
+        "mae_mean": 0.251891,
+        "mae_std": 0.116661,
+        "n_seeds": 5,
+        "diverged_before_next": false
+      },
+      "1000_step": {
+        "mae_mean": 0.257251,
+        "mae_std": 0.122235,
+        "n_seeds": 5,
+        "diverged_before_next": false
+      }
+    }
+  }
+}

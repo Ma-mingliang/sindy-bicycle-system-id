@@ -1,0 +1,36 @@
+{
+  "statistical_audit": [
+    {
+      "run": 0,
+      "seed": 42,
+      "final_phi_error": 0.14764429611837954
+    },
+    {
+      "run": 1,
+      "seed": 43,
+      "final_phi_error": 0.14764429611837954
+    },
+    {
+      "run": 2,
+      "seed": 44,
+      "final_phi_error": 0.14764429611837954
+    },
+    {
+      "run": 3,
+      "seed": 45,
+      "final_phi_error": 0.14764429611837954
+    },
+    {
+      "run": 4,
+      "seed": 46,
+      "final_phi_error": 0.14764429611837954
+    }
+  ],
+  "evaluation_modes_defined": {
+    "mode_a": "Teacher forcing: predict from real state",
+    "mode_b": "Fixed action sequence open-loop",
+    "mode_c": "Hybrid: tau from real, state from model (CURRENT)",
+    "mode_d": "Full model closed-loop: tau from model state"
+  },
+  "current_evaluation": "Mode C (Hybrid)"
+}

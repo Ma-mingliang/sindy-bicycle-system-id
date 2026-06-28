@@ -1,0 +1,460 @@
+{
+  "B1_mode_b_correctness": {
+    "status": "CONFIRMED",
+    "evidence": [
+      "Static analysis: zero tau_func in run_mode_b_fixed",
+      "actions = reference[\"actions\"] at line 53 (read-only)",
+      "SHA256 hash identical across all models",
+      "Determinism test: atol=1e-15"
+    ],
+    "files_reviewed": [
+      "continuation_stage/evaluate/eval_modes_v2.py",
+      "continuation_stage/evaluate/run_full_evaluation_v2.py",
+      "continuation_stage_v2/tests/MODE_B_IMPLEMENTATION_PROOF.md"
+    ]
+  },
+  "B2_mode_b_vs_c_distinction": {
+    "status": "CONFIRMED",
+    "protocol_difference": {
+      "mode_b": "actions pre-generated and frozen before evaluation, no tau_func in eval loop",
+      "mode_c": "tau_func called online each step from real state, actions computed during eval"
+    },
+    "numerical_equivalence_explanation": "tau_func is deterministic and real trajectory is identical in both modes, so actions are numerically identical. This is expected, not a bug.",
+    "differentiation_method": "Call timing and code path analysis, not numerical output"
+  },
+  "B3_divergence_handling": {
+    "status": "BUG_FOUND",
+    "bug": "survival_steps always equals requested horizon, not actual survival steps",
+    "bug_location": "continuation_stage/evaluate/eval_modes_v2.py, run_mode_b_fixed, line 87",
+    "bug_code": "survival_steps = n_valid  # should be updated after break",
+    "padding_method": "NaN fill after divergence (correct)",
+    "metric_computation": "NaN filtering in compute_all_metrics (correct)",
+    "per_model_divergence": {
+      "linearized_model": {
+        "seed_42_h_500": {
+          "divergence_step": 79,
+          "first_exceed_3sigma": [
+            101,
+            79,
+            127,
+            96
+          ]
+        },
+        "seed_42_h_1000": {
+          "divergence_step": 79,
+          "first_exceed_3sigma": [
+            101,
+            79,
+            127,
+            96
+          ]
+        },
+        "seed_43_h_500": {
+          "divergence_step": 56,
+          "first_exceed_3sigma": [
+            111,
+            56,
+            126,
+            83
+          ]
+        },
+        "seed_43_h_1000": {
+          "divergence_step": 56,
+          "first_exceed_3sigma": [
+            111,
+            56,
+            126,
+            83
+          ]
+        },
+        "seed_44_h_500": {
+          "divergence_step": 78,
+          "first_exceed_3sigma": [
+            97,
+            78,
+            114,
+            92
+          ]
+        },
+        "seed_44_h_1000": {
+          "divergence_step": 78,
+          "first_exceed_3sigma": [
+            97,
+            78,
+            114,
+            92
+          ]
+        },
+        "seed_45_h_500": {
+          "divergence_step": 55,
+          "first_exceed_3sigma": [
+            80,
+            55,
+            100,
+            75
+          ]
+        },
+        "seed_45_h_1000": {
+          "divergence_step": 55,
+          "first_exceed_3sigma": [
+            80,
+            55,
+            100,
+            75
+          ]
+        },
+        "seed_46_h_500": {
+          "divergence_step": 62,
+          "first_exceed_3sigma": [
+            111,
+            62,
+            127,
+            107
+          ]
+        },
+        "seed_46_h_1000": {
+          "divergence_step": 62,
+          "first_exceed_3sigma": [
+            111,
+            62,
+            127,
+            107
+          ]
+        }
+      },
+      "sindy_4d": {
+        "seed_42_h_500": {
+          "divergence_step": 94,
+          "first_exceed_3sigma": [
+            101,
+            97,
+            119,
+            94
+          ]
+        },
+        "seed_42_h_1000": {
+          "divergence_step": 94,
+          "first_exceed_3sigma": [
+            101,
+            97,
+            119,
+            94
+          ]
+        },
+        "seed_43_h_500": {
+          "divergence_step": 76,
+          "first_exceed_3sigma": [
+            99,
+            76,
+            97,
+            95
+          ]
+        },
+        "seed_43_h_1000": {
+          "divergence_step": 76,
+          "first_exceed_3sigma": [
+            99,
+            76,
+            97,
+            95
+          ]
+        },
+        "seed_44_h_500": {
+          "divergence_step": 87,
+          "first_exceed_3sigma": [
+            91,
+            95,
+            97,
+            87
+          ]
+        },
+        "seed_44_h_1000": {
+          "divergence_step": 87,
+          "first_exceed_3sigma": [
+            91,
+            95,
+            97,
+            87
+          ]
+        },
+        "seed_45_h_500": {
+          "divergence_step": 76,
+          "first_exceed_3sigma": [
+            83,
+            79,
+            101,
+            76
+          ]
+        },
+        "seed_45_h_1000": {
+          "divergence_step": 76,
+          "first_exceed_3sigma": [
+            83,
+            79,
+            101,
+            76
+          ]
+        },
+        "seed_46_h_500": {
+          "divergence_step": 95,
+          "first_exceed_3sigma": [
+            99,
+            103,
+            103,
+            95
+          ]
+        },
+        "seed_46_h_1000": {
+          "divergence_step": 95,
+          "first_exceed_3sigma": [
+            99,
+            103,
+            103,
+            95
+          ]
+        }
+      },
+      "gp_standard": {},
+      "gp_b4_sparse": {
+        "seed_42_h_500": {
+          "divergence_step": 122,
+          "first_exceed_3sigma": [
+            156,
+            122
+          ]
+        },
+        "seed_42_h_1000": {
+          "divergence_step": 122,
+          "first_exceed_3sigma": [
+            156,
+            122
+          ]
+        },
+        "seed_43_h_500": {
+          "divergence_step": 145,
+          "first_exceed_3sigma": [
+            145,
+            273,
+            230,
+            160
+          ]
+        },
+        "seed_43_h_1000": {
+          "divergence_step": 145,
+          "first_exceed_3sigma": [
+            145,
+            273,
+            230,
+            160
+          ]
+        },
+        "seed_44_h_500": {
+          "divergence_step": 4,
+          "first_exceed_3sigma": [
+            53,
+            4
+          ]
+        },
+        "seed_44_h_1000": {
+          "divergence_step": 4,
+          "first_exceed_3sigma": [
+            53,
+            4
+          ]
+        },
+        "seed_45_h_500": {
+          "divergence_step": 122,
+          "first_exceed_3sigma": [
+            122,
+            124
+          ]
+        },
+        "seed_45_h_1000": {
+          "divergence_step": 122,
+          "first_exceed_3sigma": [
+            122,
+            124
+          ]
+        },
+        "seed_46_h_500": {
+          "divergence_step": 132,
+          "first_exceed_3sigma": [
+            136,
+            140,
+            225,
+            132
+          ]
+        },
+        "seed_46_h_1000": {
+          "divergence_step": 132,
+          "first_exceed_3sigma": [
+            136,
+            140,
+            225,
+            132
+          ]
+        }
+      },
+      "gp_ensemble_5_0": {
+        "seed_42_h_10": {
+          "divergence_step": -1,
+          "first_exceed_3sigma": []
+        },
+        "seed_42_h_50": {
+          "divergence_step": -1,
+          "first_exceed_3sigma": []
+        },
+        "seed_42_h_100": {
+          "divergence_step": -1,
+          "first_exceed_3sigma": []
+        },
+        "seed_42_h_500": {
+          "divergence_step": -1,
+          "first_exceed_3sigma": []
+        },
+        "seed_42_h_1000": {
+          "divergence_step": -1,
+          "first_exceed_3sigma": []
+        },
+        "seed_43_h_10": {
+          "divergence_step": -1,
+          "first_exceed_3sigma": []
+        },
+        "seed_43_h_50": {
+          "divergence_step": -1,
+          "first_exceed_3sigma": []
+        },
+        "seed_43_h_100": {
+          "divergence_step": -1,
+          "first_exceed_3sigma": []
+        },
+        "seed_43_h_500": {
+          "divergence_step": -1,
+          "first_exceed_3sigma": []
+        },
+        "seed_43_h_1000": {
+          "divergence_step": -1,
+          "first_exceed_3sigma": []
+        },
+        "seed_44_h_10": {
+          "divergence_step": -1,
+          "first_exceed_3sigma": []
+        },
+        "seed_44_h_50": {
+          "divergence_step": -1,
+          "first_exceed_3sigma": []
+        },
+        "seed_44_h_100": {
+          "divergence_step": -1,
+          "first_exceed_3sigma": []
+        },
+        "seed_44_h_500": {
+          "divergence_step": -1,
+          "first_exceed_3sigma": []
+        },
+        "seed_44_h_1000": {
+          "divergence_step": -1,
+          "first_exceed_3sigma": []
+        },
+        "seed_45_h_10": {
+          "divergence_step": -1,
+          "first_exceed_3sigma": []
+        },
+        "seed_45_h_50": {
+          "divergence_step": -1,
+          "first_exceed_3sigma": []
+        },
+        "seed_45_h_100": {
+          "divergence_step": -1,
+          "first_exceed_3sigma": []
+        },
+        "seed_45_h_500": {
+          "divergence_step": -1,
+          "first_exceed_3sigma": []
+        },
+        "seed_45_h_1000": {
+          "divergence_step": -1,
+          "first_exceed_3sigma": []
+        },
+        "seed_46_h_10": {
+          "divergence_step": -1,
+          "first_exceed_3sigma": []
+        },
+        "seed_46_h_50": {
+          "divergence_step": -1,
+          "first_exceed_3sigma": []
+        },
+        "seed_46_h_100": {
+          "divergence_step": -1,
+          "first_exceed_3sigma": []
+        },
+        "seed_46_h_500": {
+          "divergence_step": -1,
+          "first_exceed_3sigma": []
+        },
+        "seed_46_h_1000": {
+          "divergence_step": -1,
+          "first_exceed_3sigma": []
+        }
+      },
+      "gp_ensemble_5_3": {},
+      "gp_ensemble_7_5": {}
+    }
+  },
+  "B4_metric_units": {
+    "status": "CONFIRMED_ISSUE",
+    "issue": "Overall MAE mixes rad and rad/s units (physically meaningless)",
+    "per_state_units": {
+      "phi": "rad",
+      "delta": "rad",
+      "phi_dot": "rad/s",
+      "delta_dot": "rad/s"
+    },
+    "normalized_metrics_available": true,
+    "nmae_definition": "mean(|e_i| / sigma_i) across 4 states, dimensionless",
+    "nrmse_definition": "RMSE / sqrt(mean(sigma_i^2)), dimensionless"
+  },
+  "B5_0252_horizon_trace": {
+    "status": "CONTRADICTION_FOUND",
+    "actual_value": 0.251891,
+    "actual_horizon": 500,
+    "actual_model": "gp_ensemble_7_5",
+    "actual_mode": "B",
+    "actual_metric": "full-trajectory MAE (4 states)",
+    "actual_seeds": "42-46 (5 seeds)",
+    "wrong_claims": [
+      {
+        "file": "continuation_stage_v2/reports/FINAL_HANDOVER_V3.md",
+        "line": 78,
+        "claimed": "0.252 at step 100",
+        "correction": "0.252 at step 500"
+      },
+      {
+        "file": "continuation_stage_v2/audit/HISTORICAL_0064_0066_CODE_TRACE.md",
+        "line": 13,
+        "claimed": "0.252 at step 100",
+        "correction": "0.252 at step 500"
+      },
+      {
+        "file": "continuation_stage_v2/audit/HISTORICAL_RESULT_FACTS.json",
+        "field": "0.252.steps",
+        "claimed": 100,
+        "correction": 500
+      }
+    ],
+    "correct_claims": [
+      {
+        "file": "continuation_stage_v2/reports/FINAL_HANDOVER_V3.md",
+        "line": 134,
+        "description": "Table correctly shows 0.252 under 500-step column"
+      }
+    ]
+  },
+  "overall_status": {
+    "B1_mode_b_correctness": "CONFIRMED",
+    "B2_mode_b_vs_c": "CONFIRMED",
+    "B3_divergence_handling": "BUG_IN_SURVIVAL_STEPS",
+    "B4_metric_units": "ISSUE_IDENTIFIED",
+    "B5_0252_trace": "CONTRADICTION_RESOLVED"
+  }
+}

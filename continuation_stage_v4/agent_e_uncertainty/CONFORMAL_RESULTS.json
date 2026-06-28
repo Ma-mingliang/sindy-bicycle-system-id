@@ -1,0 +1,126 @@
+{
+  "calibration_params": {
+    "per_state": {
+      "phi": {
+        "quantile_factor": 9.801275995394967,
+        "conformal_coverage": 0.9512,
+        "coverage_at_z95": 0.1544,
+        "coverage_at_z90": 0.128,
+        "coverage_at_z68": 0.0664,
+        "n_cal_samples": 1250
+      },
+      "delta": {
+        "quantile_factor": 3.767632578343276,
+        "conformal_coverage": 0.9512,
+        "coverage_at_z95": 0.4768,
+        "coverage_at_z90": 0.3336,
+        "coverage_at_z68": 0.1752,
+        "n_cal_samples": 1250
+      },
+      "phi_dot": {
+        "quantile_factor": 4.669594394341383,
+        "conformal_coverage": 0.9512,
+        "coverage_at_z95": 0.4304,
+        "coverage_at_z90": 0.3568,
+        "coverage_at_z68": 0.2192,
+        "n_cal_samples": 1250
+      },
+      "delta_dot": {
+        "quantile_factor": 3.0523290927029563,
+        "conformal_coverage": 0.9512,
+        "coverage_at_z95": 0.8872,
+        "coverage_at_z90": 0.84,
+        "coverage_at_z68": 0.6128,
+        "n_cal_samples": 1250
+      }
+    },
+    "method": "conformal",
+    "target_coverage": 0.95,
+    "overall_quantile_factor": 6.717620669463836,
+    "overall_conformal_coverage": 0.9502
+  },
+  "test": {
+    "overall": {
+      "pearson_r": 0.6053192533508949,
+      "spearman_r": 0.7017965565518621,
+      "coverage_68": 0.946,
+      "coverage_90": 0.9938,
+      "coverage_95": 0.9968,
+      "avg_width_95": 0.522290380048588,
+      "nll": -1.4055806889596019,
+      "ece": 0.6654000000000001,
+      "mean_error": 0.04951586895288861,
+      "mean_uncertainty": 0.13323979016154072
+    },
+    "per_state": {
+      "phi": {
+        "pearson_r": 0.5658328858178354,
+        "pearson_p": 1.0456344576797026e-106,
+        "spearman_r": 0.6200375813360521,
+        "spearman_p": 1.1550227597001367e-133,
+        "coverage_68": 0.9432,
+        "coverage_90": 0.9976,
+        "coverage_95": 0.9984,
+        "avg_width_68": 0.23099474308577256,
+        "avg_width_90": 0.3820700176311199,
+        "avg_width_95": 0.45526450612962144,
+        "nll": -1.1784392061716273,
+        "ece": 0.6554400000000001,
+        "mean_error": 0.05510520005719833,
+        "mean_uncertainty": 0.11614103874374473,
+        "n_valid": 1250
+      },
+      "delta": {
+        "pearson_r": 0.8572873743240859,
+        "pearson_p": 0.0,
+        "spearman_r": 0.8189237379351924,
+        "spearman_p": 2.952317634549518e-303,
+        "coverage_68": 0.9608,
+        "coverage_90": 0.9952,
+        "coverage_95": 0.9984,
+        "avg_width_68": 0.05731682698195417,
+        "avg_width_90": 0.09480320115953271,
+        "avg_width_95": 0.11296498171461426,
+        "nll": -2.585309552640796,
+        "ece": 0.624,
+        "mean_error": 0.015153325388458629,
+        "mean_uncertainty": 0.028818126916021834,
+        "n_valid": 1250
+      },
+      "phi_dot": {
+        "pearson_r": 0.6852855826953992,
+        "pearson_p": 4.5891542529566105e-174,
+        "spearman_r": 0.6235398171774831,
+        "spearman_p": 1.367416155176554e-135,
+        "coverage_68": 0.9376,
+        "coverage_90": 0.9984,
+        "coverage_95": 1.0,
+        "avg_width_68": 0.14505987976944978,
+        "avg_width_90": 0.23993200053259314,
+        "avg_width_95": 0.2858966123654975,
+        "nll": -1.655329523976419,
+        "ece": 0.6366400000000001,
+        "mean_error": 0.03677919065320804,
+        "mean_uncertainty": 0.07293414945902411,
+        "n_valid": 1250
+      },
+      "delta_dot": {
+        "pearson_r": 0.22751284554795054,
+        "pearson_p": 3.86362787690218e-16,
+        "spearman_r": 0.20623198606847112,
+        "spearman_p": 1.7928317908472137e-13,
+        "coverage_68": 0.9424,
+        "coverage_90": 0.984,
+        "coverage_95": 0.9904,
+        "avg_width_68": 0.6266394276296829,
+        "avg_width_90": 1.0364743974884605,
+        "avg_width_95": 1.2350354199846187,
+        "nll": -0.2032444730495653,
+        "ece": 0.7455200000000001,
+        "mean_error": 0.09102575971268949,
+        "mean_uncertainty": 0.3150658455273721,
+        "n_valid": 1250
+      }
+    }
+  }
+}

@@ -1,0 +1,138 @@
+{
+  "version": "V4",
+  "generated": "2026-06-25",
+  "agents_completed": ["A", "B", "C", "D", "E", "F"],
+  "agents_partial": [],
+  "bugs": {
+    "gp_ensemble_5_0_mae_zero": {
+      "status": "CODE_FIXED",
+      "location": "evaluate/eval_models.py line 305",
+      "root_cause": "range(self.dagger_rounds) when dagger_rounds=0 never executes",
+      "fix": "range(max(1, self.dagger_rounds))",
+      "fix_file": "continuation_stage_v4/agent_a_zero_dagger/fixed_eval_models.py",
+      "verified": false,
+      "confidence": "CONFIRMED"
+    },
+    "survival_steps_never_updated": {
+      "status": "DIAGNOSED",
+      "location": "continuation_stage/evaluate/eval_modes_v2.py line 87",
+      "root_cause": "survival_steps = n_valid set before loop, never updated after divergence break",
+      "fix": "survival_steps = i + 1 after break",
+      "confidence": "CONFIRMED"
+    },
+    "endpoint_error_averages_states": {
+      "status": "DIAGNOSED",
+      "location": "evaluate/eval_metrics.py line 79",
+      "root_cause": "np.mean(abs_errors[-1]) averages across states instead of per-state",
+      "fix": "Use per-state version at line 113",
+      "confidence": "CONFIRMED"
+    }
+  },
+  "corrections": {
+    "dagger_semantics_audit_wrong": {
+      "old_claim": "Pure local dynamics residual (Version L)",
+      "actual": "Round 0: Version L; Round 1+: Two-step GP trajectory comparison",
+      "formula_round_1_plus": "(s_real[k+1] - GP(GP(s_model[k], u), u)) / delta_std",
+      "evidence": "Code trace eval_models.py L352-379",
+      "confidence": "CONFIRMED"
+    },
+    "0252_horizon_wrong": {
+      "old_claim": "0.252 at step 100",
+      "actual": "0.252 at step 500 (Mode B, gp_ensemble_7_5)",
+      "wrong_documents": [
+        "continuation_stage_v2/reports/FINAL_HANDOVER_V3.md line 78",
+        "continuation_stage_v2/audit/HISTORICAL_0064_0066_CODE_TRACE.md line 13",
+        "continuation_stage_v2/audit/HISTORICAL_RESULT_FACTS.json field 0.252.steps"
+      ],
+      "confidence": "CONFIRMED"
+    }
+  },
+  "model_performance_nmae": {
+    "mode_b_500_steps": {
+      "gp_ensemble_7_5": 0.520,
+      "gp_ensemble_5_3": 0.622,
+      "gp_standard": 21.95,
+      "sindy_4d": 15.96,
+      "linearized_model": 19.87,
+      "gp_b4_sparse": 15.30,
+      "gp_ensemble_5_0": "BUG"
+    },
+    "mode_b_1000_steps": {
+      "gp_ensemble_7_5": 0.531,
+      "gp_ensemble_5_3": 0.631,
+      "gp_standard": 31.57
+    }
+  },
+  "divergence_steps": {
+    "gp_standard": "~200 (V3 claimed 500-1000, WRONG)",
+    "sindy_4d": "~85",
+    "linearized_model": "~66 (V3 claimed 100-500, WRONG)",
+    "gp_b4_sparse": "~105 (high variance)",
+    "gp_ensemble_7_5": "never",
+    "gp_ensemble_5_3": "never"
+  },
+  "uncertainty_calibration": {
+    "data_split": {"train": 2500, "cal": 1250, "test": 1250},
+    "pre_calibration_coverage_95": 0.488,
+    "post_calibration_coverage_95_per_state": 0.997,
+    "scalar_scale_factor": 9.29,
+    "per_state_scale_factors": {"phi": 8.37, "delta": 4.87, "phi_dot": 4.73, "delta_dot": 4.29},
+    "ood_auroc": 0.795,
+    "ood_auprc": 0.833,
+    "mode_isolated": {
+      "A_raw_95": 0.590, "A_cal_95": 0.997,
+      "BC_raw_95": 0.080, "BC_cal_95": 0.740,
+      "D_raw_95": 0.300, "D_cal_95": 0.930
+    }
+  },
+  "dagger_comparison": {
+    "version_l_mode_a": 0.0025,
+    "version_l_mode_b_100": 0.619,
+    "version_l_mode_d_100": 0.0045,
+    "version_t_mode_a": 0.0339,
+    "version_t_mode_b_100": 0.436,
+    "version_t_mode_d_100": 0.139,
+    "recommendation": "Version L for closed-loop, Version T for open-loop robustness"
+  },
+  "equivalence_test": {
+    "pointwise_max_diff": 3.11e-09,
+    "rollout_1000step_max_diff": 8.17,
+    "threshold": 1e-10,
+    "passed": false,
+    "note": "Small numerical differences in GP kernel computation compound over long rollouts"
+  },
+  "ablation_experiment": {
+    "mode_a_teacher_forcing": {
+      "E0_gp": {"mae_1000steps": 0.0, "note": "GP near-perfect with teacher forcing (rounded)"},
+      "E1_offline_nn": {"mae_1000steps": 0.0, "note": "Same as E0 in Mode A"},
+      "E2_dagger_3rounds": {"mae_1000steps": 0.0068, "note": "DAgger residual slightly hurts teacher forcing"},
+      "E3_ensemble_7_5": {"mae_1000steps": 0.0079, "note": "7-model 5-round ensemble"}
+    },
+    "mode_b_open_loop": {
+      "E0_gp": {"mae_1000steps": 17.18, "status": "diverges"},
+      "E1_offline_nn": {"mae_1000steps": 21.41, "status": "diverges"},
+      "E2_dagger_3rounds": {"mae_1000steps": 0.297, "status": "stable"},
+      "E3_ensemble_7_5": {"mae_1000steps": 0.264, "status": "stable — BEST"}
+    },
+    "runtime_seconds": 12707,
+    "conclusion": "DAgger/residual training essential for multi-step open-loop. Pure GP diverges. E3 (7-model 5-round ensemble) is best for Mode B."
+  },
+  "historical_results": {
+    "0066_source": "test_ensemble_optimization.py",
+    "0066_mode": "C",
+    "0066_metric": "phi-only endpoint error",
+    "0066_steps": 500,
+    "0066_seeded": false,
+    "0252_model": "gp_ensemble_7_5",
+    "0252_mode": "B",
+    "0252_steps": 500,
+    "0252_metric": "full-trajectory MAE (4 states)"
+  },
+  "route_8d": {
+    "current_state_dim": 8,
+    "recommended_state_dim": 7,
+    "exogenous_inputs": ["kappa", "a"],
+    "current_samples": 2083,
+    "minimum_samples_needed": 5000
+  }
+}

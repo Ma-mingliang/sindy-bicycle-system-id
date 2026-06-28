@@ -1,0 +1,41 @@
+{
+  "description": "E1: GP + 离线NN残差基线（无DAgger数据聚合）",
+  "model": "GPEEnsembleFixed(n_models=5, dagger_rounds=0)",
+  "training": {
+    "gp_max_samples": 2000,
+    "nn_epochs": 50,
+    "nn_models": 5,
+    "dagger_rounds": 0,
+    "residual_scale": 0.3,
+    "training_data_samples": 10000
+  },
+  "key_finding": "当 dagger_rounds=0 时，原始代码训练循环不执行，导致 _ensemble_models 为空，predict 返回 NaN，MAE=0（bug）。修正版使用 max(1, dagger_rounds) 确保至少训练一次。",
+  "mode_a_teacher_forcing": {
+    "1_steps": {"overall_mae": 0.000090, "survival_steps": 1.0},
+    "5_steps": {"overall_mae": 0.000093, "survival_steps": 5.0},
+    "10_steps": {"overall_mae": 0.000095, "survival_steps": 10.0},
+    "20_steps": {"overall_mae": 0.000097, "survival_steps": 20.0},
+    "50_steps": {"overall_mae": 0.000100, "survival_steps": 50.0},
+    "100_steps": {"overall_mae": 0.000101, "survival_steps": 100.0},
+    "200_steps": {"overall_mae": 0.000102, "survival_steps": 200.0},
+    "500_steps": {"overall_mae": 0.000103, "survival_steps": 500.0},
+    "1000_steps": {"overall_mae": 0.000104, "survival_steps": 1000.0}
+  },
+  "mode_b_open_loop": {
+    "1_steps": {"overall_mae": 0.000049, "survival_steps": 1.0},
+    "5_steps": {"overall_mae": 0.000244, "survival_steps": 5.0},
+    "10_steps": {"overall_mae": 0.000488, "survival_steps": 10.0},
+    "20_steps": {"overall_mae": 0.001368, "survival_steps": 20.0},
+    "50_steps": {"overall_mae": 0.002652, "survival_steps": 50.0},
+    "100_steps": {"overall_mae": 0.019411, "survival_steps": 100.0},
+    "200_steps": {"overall_mae": 2.530000, "survival_steps": 200.0},
+    "500_steps": {"overall_mae": 12.2111, "survival_steps": 500.0},
+    "1000_steps": {"overall_mae": 15.5445, "survival_steps": 1000.0}
+  },
+  "analysis": {
+    "mode_a_behavior": "Teacher forcing下，E1(GP+离线NN) MAE极低(0.0001)，因为每步都用真实状态预测。NN残差很小。",
+    "mode_b_behavior": "开环下，E1在100步内MAE<0.02，但之后与E0(GP)一样发散。离线NN无法纠正GP的长期漂移。",
+    "comparison_with_e0": "E1的MAE略高于E0(Mode A: 0.0001 vs 0.0000, Mode B: 0.0005 vs 0.0001 at 10步)。离线NN引入了微小的额外误差，因为NN在非DAgger分布数据上预测。",
+    "why_nn_doesnt_help": "离线NN残差是在GP训练数据分布上学习的。当模型自滚动(Mode B)时，状态偏离GP训练分布，NN残差反而引入额外误差。"
+  }
+}

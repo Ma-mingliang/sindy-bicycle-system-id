@@ -1,0 +1,7 @@
+metric,value
+auroc,0.794984
+auprc,0.8332969490356097
+id_mean_unc,0.034469578189114475
+ood_mean_unc,0.053437551750605036
+n_id,500
+n_ood,500

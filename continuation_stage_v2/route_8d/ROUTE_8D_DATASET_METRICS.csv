@@ -1,0 +1,3 @@
+dataset_file,n_samples,state_dim,action_dim,dt_seconds,sampling_rate_hz,controller_type,scenario_straight_count,scenario_curved_count,scenario_sharp_count,speed_range_ms,curvature_range_1m,fall_threshold_rad,numerical_guard,state_names,normalization_ey,normalization_epsi,normalization_v,normalization_theta,normalization_theta_dot,normalization_k,normalization_delta,normalization_delta_dot
+bicycle_data.npz,468,8,1,0.0333,30,PD_balance_plus_random,~156,~156,~156,2.0-6.0,-0.3-0.3,1.0,50,"[ey,epsi,v,theta,theta_dot,k,delta,delta_dot]",10.0,1.57,5.0,1.57,10.0,8.0,0.785,3.0
+bicycle_data_improved.npz,2083,8,1,0.0333,30,PD_balance_plus_random,unknown,unknown,unknown,2.0-6.0,-0.3-0.3,1.0,50,"[ey,epsi,v,theta,theta_dot,k,delta,delta_dot]",10.0,1.57,5.0,1.57,10.0,8.0,0.785,3.0

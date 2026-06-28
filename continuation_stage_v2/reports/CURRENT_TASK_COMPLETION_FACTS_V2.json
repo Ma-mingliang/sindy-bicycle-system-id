@@ -1,0 +1,145 @@
+{
+  "task_name": "自行车世界模型系统辨识与评估 (continuation_stage)",
+  "task_goal": "完成交接清单 P0-P8",
+  "review_time": "2026-06-25",
+  "completed_items": [
+    {
+      "id": "P0",
+      "name": "当前任务完成审查",
+      "status": "COMPLETE",
+      "output": "任务清单已建立"
+    },
+    {
+      "id": "P1",
+      "name": "Mode B 正确性验证",
+      "status": "COMPLETE",
+      "output": "eval_modes_v2.py",
+      "verification": "0.00e+00 差异"
+    },
+    {
+      "id": "P2",
+      "name": "GP+NN+DAgger 消融实验",
+      "status": "PARTIAL",
+      "output": "full_evaluation_v2.json",
+      "issue": "gp_ensemble_5_0 MAE=0 异常"
+    },
+    {
+      "id": "P3",
+      "name": "结果冲突分析",
+      "status": "COMPLETE",
+      "output": "RESULT_CONFLICT_ANALYSIS.md"
+    },
+    {
+      "id": "P4",
+      "name": "DAgger 专项分析",
+      "status": "PARTIAL",
+      "output": "DAGGER_ORACLE_TRANSFER_ANALYSIS.md",
+      "issue": "可能是轨迹同步残差而非标准 DAgger"
+    },
+    {
+      "id": "P5",
+      "name": "物理残差 GP 根因诊断",
+      "status": "COMPLETE",
+      "output": "PHYSICS_RESIDUAL_GP_ROOT_CAUSE.md"
+    },
+    {
+      "id": "P6",
+      "name": "不确定性校准",
+      "status": "CODE_ONLY",
+      "output": "uncertainty_calibration.py",
+      "issue": "脚本已创建，实验未执行"
+    },
+    {
+      "id": "P7",
+      "name": "修正模型时域",
+      "status": "COMPLETE",
+      "output": "CORRECTED_MODEL_HORIZON_RECOMMENDATION.md"
+    },
+    {
+      "id": "P8",
+      "name": "最终交接报告",
+      "status": "FAILED",
+      "output": "FINAL_HANDOVER_REPORT.md",
+      "issue": "错误声称全部完成"
+    }
+  ],
+  "failed_items": [
+    {
+      "id": "P6_experiment",
+      "name": "不确定性校准实验",
+      "status": "NOT_STARTED",
+      "reason": "只有脚本，未执行实验"
+    },
+    {
+      "id": "P7_8d",
+      "name": "8维路线审计",
+      "status": "NOT_STARTED",
+      "reason": "未进行专项交接"
+    }
+  ],
+  "known_issues": [
+    {
+      "id": "ISSUE_1",
+      "name": "gp_ensemble_5_0 MAE=0",
+      "severity": "HIGH",
+      "description": "DAgger=0 时 NN 集成未训练，结果异常"
+    },
+    {
+      "id": "ISSUE_2",
+      "name": "500步=1000步相同",
+      "severity": "MEDIUM",
+      "description": "发散后状态补齐导致指标相同"
+    },
+    {
+      "id": "ISSUE_3",
+      "name": "指标单位混用",
+      "severity": "MEDIUM",
+      "description": "总体 MAE 混合 rad 和 rad/s"
+    },
+    {
+      "id": "ISSUE_4",
+      "name": "历史 0.066 未追踪",
+      "severity": "MEDIUM",
+      "description": "未通过旧代码直接证明评估模式"
+    },
+    {
+      "id": "ISSUE_5",
+      "name": "DAgger 语义不清",
+      "severity": "MEDIUM",
+      "description": "可能是轨迹同步残差而非标准 DAgger"
+    }
+  ],
+  "new_files": [
+    "continuation_stage/evaluate/eval_modes_v2.py",
+    "continuation_stage/evaluate/run_full_evaluation_v2.py",
+    "continuation_stage/analyze/uncertainty_calibration.py",
+    "continuation_stage/analyze/extract_key_results.py",
+    "continuation_stage/analyze/update_horizon_recommendation.py",
+    "continuation_stage/reports/RESULT_CONFLICT_ANALYSIS.md",
+    "continuation_stage/reports/DAGGER_ORACLE_TRANSFER_ANALYSIS.md",
+    "continuation_stage/reports/PHYSICS_RESIDUAL_GP_ROOT_CAUSE.md",
+    "continuation_stage/reports/UNCERTAINTY_CALIBRATION_STATUS.md",
+    "continuation_stage/reports/CORRECTED_MODEL_HORIZON_RECOMMENDATION.md",
+    "continuation_stage/reports/FINAL_HANDOVER_REPORT.md",
+    "continuation_stage/results/full_evaluation_v2.json",
+    "continuation_stage/results/key_results_summary.md"
+  ],
+  "modified_files": [],
+  "self_check_results": {
+    "mode_b_correctness": "PASS",
+    "evaluation_v2_complete": "PASS",
+    "gp_ensemble_5_0": "FAIL",
+    "uncertainty_calibration": "NOT_EXECUTED",
+    "route_8d": "NOT_STARTED"
+  },
+  "usable_results": [
+    "full_evaluation_v2.json",
+    "eval_modes_v2.py",
+    "run_full_evaluation_v2.py",
+    "uncertainty_calibration.py"
+  ],
+  "unusable_results": [
+    "gp_ensemble_5_0 的所有结果",
+    "最终交接报告中的全部完成声明"
+  ]
+}

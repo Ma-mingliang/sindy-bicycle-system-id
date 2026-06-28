@@ -1,0 +1,9 @@
+segment,phase,phi_mean_shift_sigma,phi_max_shift_sigma,delta_mean_shift_sigma,delta_max_shift_sigma,phi_dot_mean_shift_sigma,phi_dot_max_shift_sigma,delta_dot_mean_shift_sigma,delta_dot_max_shift_sigma,n_steps
+0,training,0.87,0.87,1.40,1.40,0.00,0.00,0.02,2.32,500
+1,training,1.02,1.02,1.63,1.63,0.00,0.00,0.03,1.85,500
+2,training,0.64,0.64,1.04,1.04,0.02,0.02,0.02,7.04,500
+0,evaluation,0.23,0.82,0.37,2.56,0.01,0.48,0.01,7.27,500
+1,evaluation,0.37,0.80,0.59,1.74,0.00,0.19,0.01,4.39,500
+2,evaluation,1.22,1.27,1.94,2.54,0.02,0.69,0.04,8.00,500
+3,evaluation,0.46,0.47,0.74,0.81,0.00,0.04,0.02,0.77,500
+4,evaluation,0.19,0.78,0.31,2.42,0.02,0.45,0.00,6.96,500

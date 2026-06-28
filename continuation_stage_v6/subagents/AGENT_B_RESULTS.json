@@ -1,0 +1,203 @@
+{
+  "agent": "B",
+  "task": "RDE-L / RDE-T / RDE-M Label Independence Verification",
+  "verdict": "CONFIRMED",
+  "verdict_detail": "All three RDE variants use different training labels and produce different predictions.",
+  "formula_verification": {
+    "rde_l_formula": {
+      "description": "Local residual at oracle state: (F(s_i,u_i) - GP(s_i,u_i)) / delta_std",
+      "uses_oracle_state": true,
+      "uses_model_state": false,
+      "n_samples": 200,
+      "label_mean": [
+        -2.8459090681520672e-05,
+        5.120076370975775e-06,
+        -2.4609978089327573e-06,
+        4.685596113468787e-06
+      ],
+      "label_std": [
+        0.0004231347928352386,
+        7.799999773904826e-05,
+        3.454444176543846e-05,
+        7.547315529989045e-05
+      ]
+    },
+    "rde_t_formula": {
+      "description": "Trajectory sync: (real_delta - GP(model_state, u)) / delta_std",
+      "uses_oracle_state": false,
+      "uses_model_state_for_gp": true,
+      "uses_real_delta": true,
+      "n_samples": 200,
+      "label_mean": [
+        1.865468994972607,
+        -0.25651792702322523,
+        0.6493349693964339,
+        0.07956081212732782
+      ],
+      "label_std": [
+        5.558744354878697,
+        2.086808643676377,
+        2.130911638697678,
+        0.2881935991360341
+      ],
+      "s_model_drift": 2.623419806084831
+    },
+    "rde_m_formula": {
+      "description": "DAgger local residual at model state: (real_delta - GP(model_state, u)) / delta_std",
+      "uses_oracle_state": false,
+      "uses_model_state_for_gp": true,
+      "uses_real_delta": true,
+      "n_samples": 200,
+      "label_mean": [
+        0.0987914231540036,
+        -1.7014024995531156,
+        -0.326592010670433,
+        -0.21174216216754652
+      ],
+      "label_std": [
+        0.42253763470579847,
+        6.552644662963128,
+        2.782119549544517,
+        0.7587058837075082
+      ]
+    },
+    "rde_t_vs_rde_m_offline": {
+      "name_a": "RDE-T",
+      "name_b": "RDE-M",
+      "n_samples": 200,
+      "correlation": -0.11153883374459746,
+      "max_abs_diff": 33.33329700859297,
+      "mean_abs_diff": 1.9909355829413327,
+      "identical": false
+    }
+  },
+  "label_comparisons": {
+    "rde_l_vs_rde_t": {
+      "name_a": "RDE-L",
+      "name_b": "RDE-T",
+      "n_samples": 200,
+      "correlation": 0.039349938258797776,
+      "max_abs_diff": 17.779569135779003,
+      "mean_abs_diff": 1.2076406426050412,
+      "identical": false
+    },
+    "rde_l_vs_rde_m": {
+      "name_a": "RDE-L",
+      "name_b": "RDE-M",
+      "n_samples": 200,
+      "correlation": 0.003379601046960689,
+      "max_abs_diff": 32.9050071057504,
+      "mean_abs_diff": 0.849476602345253,
+      "identical": false
+    },
+    "rde_t_vs_rde_m": {
+      "name_a": "RDE-T",
+      "name_b": "RDE-M",
+      "n_samples": 200,
+      "correlation": -0.11153883374459746,
+      "max_abs_diff": 33.33329700859297,
+      "mean_abs_diff": 1.9909355829413327,
+      "identical": false
+    }
+  },
+  "prediction_results": {
+    "prediction_comparisons": {
+      "rde_l_vs_rde_t": {
+        "name_a": "RDE-L_pred",
+        "name_b": "RDE-T_pred",
+        "n_samples": 100,
+        "correlation": 0.9994433708892841,
+        "max_abs_diff": 0.12618285881724978,
+        "mean_abs_diff": 0.0224733933360336,
+        "identical": false
+      },
+      "rde_l_vs_rde_m": {
+        "name_a": "RDE-L_pred",
+        "name_b": "RDE-M_pred",
+        "n_samples": 100,
+        "correlation": 0.9996619346660419,
+        "max_abs_diff": 0.11137139749337188,
+        "mean_abs_diff": 0.016776718335829444,
+        "identical": false
+      },
+      "rde_t_vs_rde_m": {
+        "name_a": "RDE-T_pred",
+        "name_b": "RDE-M_pred",
+        "n_samples": 100,
+        "correlation": 0.9999436307073777,
+        "max_abs_diff": 0.05202580029377035,
+        "mean_abs_diff": 0.0063827690018182425,
+        "identical": false
+      }
+    },
+    "uncertainty_comparisons": {
+      "rde_l_vs_rde_t": {
+        "name_a": "RDE-L_unc",
+        "name_b": "RDE-T_unc",
+        "n_samples": 100,
+        "correlation": 0.628415773577816,
+        "max_abs_diff": 0.0431730644752523,
+        "mean_abs_diff": 0.004646125466234756,
+        "identical": false
+      },
+      "rde_l_vs_rde_m": {
+        "name_a": "RDE-L_unc",
+        "name_b": "RDE-M_unc",
+        "n_samples": 100,
+        "correlation": 0.6640940112784162,
+        "max_abs_diff": 0.0398877623860487,
+        "mean_abs_diff": 0.004537473290610836,
+        "identical": false
+      },
+      "rde_t_vs_rde_m": {
+        "name_a": "RDE-T_unc",
+        "name_b": "RDE-M_unc",
+        "n_samples": 100,
+        "correlation": 0.8801621861754679,
+        "max_abs_diff": 0.01290429202418183,
+        "mean_abs_diff": 0.001337226626495151,
+        "identical": false
+      }
+    },
+    "sample_predictions": {
+      "test_state_0": [
+        -0.20840175905920677,
+        -0.07905735611699152,
+        -0.875927170570876,
+        -0.040139658391031174
+      ],
+      "test_action_0": -27.79822348768999,
+      "rde_l_pred_0": [
+        -0.2362200667511982,
+        -0.14703321973776692,
+        -0.7915967216054348,
+        -3.789578676961581
+      ],
+      "rde_t_pred_0": [
+        -0.23691190874561724,
+        -0.14521252970846613,
+        -0.79500458364575,
+        -3.8686293009626276
+      ],
+      "rde_m_pred_0": [
+        -0.2369136910890658,
+        -0.14609853335203746,
+        -0.7923082588506645,
+        -3.8354364070102593
+      ]
+    },
+    "train_times": {
+      "rde_l": 23.037877559661865,
+      "rde_t": 15.670380353927612,
+      "rde_m": 16.240126371383667
+    }
+  },
+  "checks": {
+    "labels_different": true,
+    "predictions_different": true,
+    "rde_l_uses_oracle_state": true,
+    "rde_t_uses_model_state_for_gp": true,
+    "rde_m_uses_model_state_for_gp": true
+  },
+  "elapsed_seconds": 71.24717545509338
+}

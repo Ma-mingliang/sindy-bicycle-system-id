@@ -1,0 +1,393 @@
+{
+  "agent": "G",
+  "task": "Independent comprehensive review of V8 7D bicycle world model",
+  "review_sections": {
+    "1_data_quality": {
+      "source": "Agent A",
+      "assessment": "ACCEPTABLE_WITH_CONCERNS",
+      "summary": "Data is clean (no NaN/Inf) but has structural issues that may affect model training and evaluation.",
+      "positive_findings": [
+        "150,000 samples, 8D obs with kappa correctly identified as constant-zero and dropped to 7D",
+        "No NaN or Inf values in any array",
+        "Action distribution is near-uniform (kurtosis=-1.2, skewness=0.006), good for GP training",
+        "Train/test split is 106214/43786 (71%/29%), episodes not split across boundary"
+      ],
+      "concerns": [
+        "Episode count discrepancy: declared 148 episodes but only 59 actual episodes from done flags. The metadata may refer to sub-episodes before merging. This does not affect training but should be documented.",
+        "89 continuity errors found at segment boundaries (max diff ~1.03). These occur at regular ~1500-2000 step intervals, suggesting data collection segment boundaries. Models may learn incorrect transitions at these points.",
+        "Speed (v) has extremely low variance (std=0.013, range 0.54-0.66). This makes v trivially easy to predict (all models achieve NMAE < 1e-5) and inflates overall NMAE metrics by contribution averaging.",
+        "State e_psi has median=0 with symmetric range [-1,1], suggesting heavy concentration at zero. Same for theta (median=-1), delta (median=-1), delta_dot (median=-1). These concentrated distributions may bias GP models.",
+        "Train/test actual ratio is 0.708, not the declared 0.75. The split is sequential (not shuffled by episode), which is correct for time-series but means test set may have different dynamics than train."
+      ],
+      "impact_on_results": "The low-variance v dimension makes all models appear better than they are on average. The continuity errors at segment boundaries may explain some of the multi-step divergence patterns."
+    },
+    "2_interface_correctness": {
+      "source": "Agent B",
+      "assessment": "PASS",
+      "summary": "All 10 interface tests pass. All 6 baseline models produce correct (7,) predictions.",
+      "details": {
+        "total_tests": 10,
+        "passed": 10,
+        "all_models_predict_7d": true,
+        "uncertainty_available": ["e1_offline_nn", "rde_local", "rde_trajectory", "rde_hybrid"],
+        "no_uncertainty": ["gp", "sindy"],
+        "model_names_unique": true
+      },
+      "note": "GP and SINDy do not provide uncertainty estimates, which limits their use for risk-aware planning."
+    },
+    "3_single_step_accuracy": {
+      "source": "Agent C (3000 samples) + Agent H (10000 samples)",
+      "assessment": "MULTIPLE_INCONSISTENCIES_FOUND",
+      "critical_issue": "Agent C and Agent H report very different NMAE values for the same GP model. Agent C GP NMAE=0.0321 vs Agent H GP NMAE=0.00166. This 20x discrepancy suggests different evaluation protocols (different random seeds, data subsets, or normalization). Agent H's GP results showing e_y NMAE=0.0 and e_psi NMAE=0.0 are suspicious and may indicate data leakage or evaluation on training data.",
+      "agent_c_results_3000_samples": {
+        "gp": {"nmae": 0.03211, "train_time_s": 16.0, "note": "Uses 2000 train samples, 3000 eval samples"},
+        "e1": {"nmae": 0.03093, "train_time_s": 218.4},
+        "rde_l": {"nmae": 0.03095, "train_time_s": 190.7},
+        "rde_t": {"nmae": 0.09863, "train_time_s": 216.0},
+        "rde_m": {"nmae": "NaN", "train_time_s": 242.7, "note": "Diverged: DAgger training produced numerically unstable model"},
+        "sindy": {"nmae": 0.04011, "train_time_s": 0.23, "note": "Fastest training by far"}
+      },
+      "agent_h_results_10000_samples": {
+        "gp": {"nmae": 0.00166, "train_time_s": 218.5, "suspicious": "e_y=0.0, e_psi=0.0 NMAE is implausibly perfect"},
+        "gp_ensemble_5": {"nmae": 0.00180, "train_time_s": 1383.8, "note": "WORSE than single GP, ensemble adds cost without benefit"},
+        "gp_ensemble_7": {"nmae": 0.00174, "train_time_s": 2674.6, "note": "Marginally better than ensemble-5 but 2x cost"},
+        "adaptive_residual": {"nmae": 0.00748, "train_time_s": 904.9},
+        "e1": {"nmae": 0.00998, "train_time_s": 685.4},
+        "rde_l": {"nmae": 0.00998, "train_time_s": 759.1, "critical": "IDENTICAL to E1 - likely a bug where same model is used for both"},
+        "neural_ode": {"nmae": 0.02769, "train_time_s": 144.2},
+        "neural_ode_multistep": {"nmae": 0.03602, "train_time_s": 308.6}
+      },
+      "per_state_analysis_agent_c": {
+        "e_y": {"gp": 0.0836, "e1": 0.0906, "sindy": 0.1344, "hardest_state": true},
+        "e_psi": {"gp": 0.1240, "e1": 0.1138, "sindy": 0.1310, "hardest_state": true},
+        "v": {"gp": 1.55e-6, "e1": 4.29e-5, "sindy": 1.51e-6, "trivial_state": true},
+        "theta": {"gp": 0.000247, "e1": 0.000130, "sindy": 0.001278},
+        "theta_dot": {"gp": 0.01213, "e1": 0.01110, "sindy": 0.006297},
+        "delta": {"gp": 0.000497, "e1": 0.000295, "sindy": 0.002671},
+        "delta_dot": {"gp": 0.004249, "e1": 0.000544, "sindy": 0.005141}
+      }
+    },
+    "4_multi_step_rollout": {
+      "source": "Agent E (baselines) + Agent H (extended)",
+      "assessment": "NEURAL_ODE_DOMINATES_LONG_HORIZON",
+      "note": "Agent E uses 5 segments x 200 steps; Agent H uses 3 segments x 200 steps. Different segment counts may affect variance estimates.",
+      "comparison_table": {
+        "header": ["Method", "H=1", "H=5", "H=10", "H=20", "H=50", "H=100"],
+        "rows": [
+          {"method": "GP", "h1": 0.0131, "h5": 0.0427, "h10": 0.0890, "h20": 0.1895, "h50": 1.3273, "h100": 1.9800, "source": "H"},
+          {"method": "GP_Ens_5", "h1": 0.0131, "h5": 0.0426, "h10": 0.0886, "h20": 0.1640, "h50": 0.5073, "h100": 0.6318, "source": "H"},
+          {"method": "GP_Ens_7", "h1": 0.0130, "h5": 0.0426, "h10": 0.0887, "h20": 0.1641, "h50": 0.5665, "h100": 0.7238, "source": "H"},
+          {"method": "Adapt_Resid", "h1": 0.0098, "h5": 0.0301, "h10": 0.0656, "h20": 0.2867, "h50": 1.0072, "h100": 1.2833, "source": "H"},
+          {"method": "E1", "h1": 0.0093, "h5": 0.0316, "h10": 0.0693, "h20": 0.1702, "h50": 1.1690, "h100": 3.0328, "source": "H"},
+          {"method": "RDE_L", "h1": 0.0093, "h5": 0.0316, "h10": 0.0693, "h20": 0.1702, "h50": 1.1690, "h100": 3.0328, "source": "H", "critical": "IDENTICAL to E1"},
+          {"method": "Neural_ODE", "h1": 0.0030, "h5": 0.0106, "h10": 0.0237, "h20": 0.1195, "h50": 0.3012, "h100": 0.4071, "source": "H"},
+          {"method": "Neural_ODE_MS", "h1": 0.0041, "h5": 0.0229, "h10": 0.0557, "h20": 0.2015, "h50": 0.5481, "h100": 0.7335, "source": "H"}
+        ]
+      },
+      "short_horizon_H1_to_H10": {
+        "best": "Neural ODE (H=1: 0.003, H=5: 0.011, H=10: 0.024)",
+        "second": "Neural ODE MultiStep",
+        "third": "Adaptive Residual",
+        "observation": "Neural ODE is 3-4x better than GP-based methods at short horizons"
+      },
+      "medium_horizon_H10_to_H50": {
+        "best": "Neural ODE (H=20: 0.120, H=50: 0.301)",
+        "second": "GP Ensemble 5 (H=50: 0.507)",
+        "observation": "GP Ensemble shows significant improvement over single GP at medium horizons. Neural ODE maintains best stability."
+      },
+      "long_horizon_H50_to_H100": {
+        "best": "Neural ODE (H=100: 0.407)",
+        "second": "GP Ensemble 5 (H=100: 0.632)",
+        "third": "GP Ensemble 7 (H=100: 0.724)",
+        "observation": "E1/RDE-L diverge severely at H=100 (NMAE=3.03). Single GP diverges (NMAE=1.98). Neural ODE is 5x better than single GP."
+      },
+      "divergence_analysis": {
+        "gp_H100": "NMAE=1.98 (DIVERGED, e_psi saturates at 1.0, delta_dot explodes)",
+        "e1_H100": "NMAE=3.03 (WORST divergence, residual NN compounds errors)",
+        "neural_ode_H100": "NMAE=0.407 (STABLE, continuous dynamics prevent discrete error accumulation)",
+        "gp_ensemble_5_H100": "NMAE=0.632 (moderate stability, ensemble averaging helps)"
+      }
+    },
+    "5_uncertainty_calibration": {
+      "source": "Agent D",
+      "assessment": "POOR_CALIBRATION_BROKEN_OOD",
+      "model_evaluated": "E1 (GP + offline NN residual), 5-model ensemble",
+      "calibration_metrics": {
+        "pearson_overall": 0.413,
+        "optimal_scalar_scale": 50.99,
+        "target_coverage": 0.95,
+        "ece_overall": 0.163,
+        "macd": 0.980,
+        "interpretation": "Uncertainties are ~51x too small. After scaling by 51x, coverage reaches 95%. ECE of 0.163 indicates poor calibration (ideal=0). Pearson r=0.413 shows moderate correlation between uncertainty and error, meaning the uncertainty direction is somewhat informative but magnitude is wrong."
+      },
+      "per_state_calibration": {
+        "best_calibrated": {"state": "delta", "ece": 0.063, "pearson_r": 0.661},
+        "worst_calibrated": {"state": "theta_dot", "ece": 0.393, "pearson_r": 0.674},
+        "v_noteworthy": {"state": "v", "ece": 0.328, "pearson_r": 0.021, "note": "Near-zero correlation - uncertainty is uninformative for speed"}
+      },
+      "ood_detection_broken": {
+        "ood_fraction": 1.0,
+        "problem": "ALL 43786 test samples are classified as OOD (any |s_i| > 2*std_i). This makes AUROC/AUPRC meaningless. The OOD definition is too aggressive for normalized states.",
+        "impact": "OOD detection capability is unvalidated. Cannot assess model reliability on out-of-distribution inputs."
+      }
+    },
+    "6_mpc_planning": {
+      "source": "Agent F",
+      "assessment": "NOT_USABLE_FOR_PLANNING",
+      "summary": "Model predictions do not reliably rank candidate trajectories, making MPPI-style planning ineffective.",
+      "key_metrics": {
+        "spearman_rho_mean": 0.006,
+        "kendall_tau_mean": 0.003,
+        "top_k_overlap": 0.08,
+        "interpretation": "Near-zero ranking correlation means the model cannot distinguish good trajectories from bad ones. The top-8% overlap means only 1 in 10 top trajectories are correct."
+      },
+      "cost_prediction": {
+        "gp_cost_mean": 728,
+        "nn_cost_mean": 589,
+        "relative_error": 0.33,
+        "actual_trajectory_mean_relative_error": 0.50,
+        "cost_correlation": 0.708,
+        "interpretation": "Cost predictions have 33-50% error. The model systematically underestimates costs. Cost correlation of 0.71 is moderate but insufficient for planning."
+      },
+      "root_cause": "Multi-step prediction errors compound rapidly. At H=10, NMAE is already 0.09 (Agent E) / 0.089 (Agent H), and by H=20 it reaches 0.19-0.33. The model cannot accurately predict long-term consequences of actions."
+    },
+    "7_extended_methods_assessment": {
+      "source": "Agent H",
+      "assessment": "NEURAL_ODE_BEST,ENSEMBLES_HELP,MOST_OTHERS_MARGINAL",
+      "gp_ensemble": {
+        "finding": "Ensembles provide significant multi-step improvement but NOT single-step improvement",
+        "single_step": "GP Ensemble 5 NMAE=0.00180 is WORSE than single GP NMAE=0.00166",
+        "multi_step_H50": "GP Ensemble 5 NMAE=0.507 is 2.6x BETTER than single GP NMAE=1.327",
+        "multi_step_H100": "GP Ensemble 5 NMAE=0.632 is 3.1x BETTER than single GP NMAE=1.980",
+        "cost": "1384s train time (6.3x single GP), 2675s for ensemble-7 (12.3x)",
+        "verdict": "Ensembles are worth it for multi-step applications (H>=20) despite higher train cost"
+      },
+      "adaptive_residual": {
+        "finding": "Mixed results - best single-step among residual methods but poor multi-step",
+        "single_step": "NMAE=0.00748, better than E1/RDE-L but worse than GP",
+        "multi_step_H10": "NMAE=0.0656, competitive with E1",
+        "multi_step_H50": "NMAE=1.007, similar to GP",
+        "verdict": "Marginal improvement over simpler methods"
+      },
+      "neural_ode": {
+        "finding": "Clear winner for multi-step stability despite worse single-step accuracy",
+        "single_step": "NMAE=0.0277, 16.7x worse than GP",
+        "multi_step_H10": "NMAE=0.0237, 3.8x BETTER than GP",
+        "multi_step_H50": "NMAE=0.301, 4.4x BETTER than GP",
+        "multi_step_H100": "NMAE=0.407, 4.9x BETTER than GP",
+        "train_time": "144s (fast, comparable to GP)",
+        "verdict": "Best method for any application requiring multi-step prediction (H>=5)"
+      },
+      "neural_ode_multistep": {
+        "finding": "Multi-step training hurts single-step but helps medium horizons",
+        "single_step": "NMAE=0.0360, worse than standard Neural ODE",
+        "multi_step_H10": "NMAE=0.0557, 2.4x worse than standard Neural ODE",
+        "multi_step_H50": "NMAE=0.548, 1.8x worse than standard Neural ODE",
+        "verdict": "Standard Neural ODE is better at all horizons. Multi-step training objective does not help."
+      }
+    },
+    "8_gp_sample_size_analysis": {
+      "source": "Agent H + task context",
+      "assessment": "DIMINISHING_RETURNS",
+      "comparison": {
+        "gp_2000": {"nmae": 0.00166, "train_time_s": 218},
+        "gp_5000": {"nmae": 0.00147, "train_time_s": 1294},
+        "nmae_improvement_pct": 11.4,
+        "time_ratio": 5.9,
+        "cost_per_nmae_reduction": "5.9x time for 11.4% NMAE improvement"
+      },
+      "analysis": "Going from 2000 to 5000 GP samples costs 6x more training time for only 11.4% NMAE improvement (0.00166 to 0.00147). This is a poor return on investment. The GP model with 2000 samples is already near-optimal for single-step prediction. The bottleneck is not training data quantity but model expressiveness.",
+      "recommendation": "Use GP with 2000 samples for single-step applications. The 5000-sample GP is not worth the cost unless single-step accuracy is the sole critical metric."
+    },
+    "9_cross_agent_inconsistencies": {
+      "critical_issues": [
+        {
+          "issue": "E1 and RDE-L produce IDENTICAL results in Agent H",
+          "evidence": "Agent H single-step: E1 NMAE=0.009979, RDE-L NMAE=0.009979. Multi-step: identical at ALL horizons (H=1 through H=100).",
+          "likely_cause": "Either (a) RDE-L with dagger_rounds_L=0 is literally the same model as E1, or (b) a bug causes the same model object to be used for both names.",
+          "severity": "HIGH - invalidates E1/RDE-L comparison"
+        },
+        {
+          "issue": "Agent H GP reports NMAE=0.0 for e_y and e_psi",
+          "evidence": "Agent H single-step GP: e_y mae=0.0, rmse=0.0, nmae=0.0; e_psi same.",
+          "likely_cause": "Data leakage (evaluating on training data), or the evaluation subset happens to contain only states where GP predicts perfectly.",
+          "severity": "HIGH - inflates GP apparent accuracy"
+        },
+        {
+          "issue": "Agent C and Agent H NMAE values differ by ~20x for same GP model",
+          "evidence": "Agent C GP NMAE=0.0321 (3000 samples) vs Agent H GP NMAE=0.00166 (10000 samples).",
+          "likely_cause": "Different evaluation protocols: different random seeds, different data normalization, or Agent H evaluates on an easier subset.",
+          "severity": "MEDIUM - makes cross-agent comparison unreliable"
+        },
+        {
+          "issue": "RDE-M (hybrid DAgger) completely failed",
+          "evidence": "Agent C: all metrics are NaN, note says 'DAgger training produced numerically unstable model'.",
+          "likely_cause": "DAgger with dagger_rounds_M=2 causes training instability, likely due to distribution shift amplification.",
+          "severity": "MEDIUM - one of six baseline models is non-functional"
+        },
+        {
+          "issue": "OOD detection is completely broken",
+          "evidence": "Agent D: ood_fraction=1.0 (all 43786 test samples classified as OOD).",
+          "likely_cause": "OOD definition 'any |s_i| > 2*std_i' is too aggressive for normalized states with std~0.5.",
+          "severity": "MEDIUM - model reliability assessment is impossible"
+        }
+      ]
+    }
+  },
+  "rankings": {
+    "single_step": [
+      {"method": "GP (2000 samples)", "nmae": 0.00166, "train_time_s": 218, "note": "Best single-step per Agent H, but e_y/e_psi=0.0 is suspicious"},
+      {"method": "GP Ensemble 7", "nmae": 0.00174, "train_time_s": 2675, "note": "Marginal improvement over single GP"},
+      {"method": "GP Ensemble 5", "nmae": 0.00180, "train_time_s": 1384, "note": "Worse than single GP"},
+      {"method": "Adaptive Residual GP", "nmae": 0.00748, "train_time_s": 905, "note": "Best non-GP method"},
+      {"method": "E1 (GP+offline NN)", "nmae": 0.00998, "train_time_s": 685, "note": "Identical to RDE-L"},
+      {"method": "RDE-L (local residual)", "nmae": 0.00998, "train_time_s": 759, "note": "Identical to E1 - bug suspected"},
+      {"method": "Neural ODE", "nmae": 0.02769, "train_time_s": 144, "note": "Worst single-step but fastest after SINDy"},
+      {"method": "Neural ODE MultiStep", "nmae": 0.03602, "train_time_s": 309},
+      {"method": "SINDy", "nmae": 0.04011, "train_time_s": 0.23, "note": "Fastest training, interpretable"},
+      {"method": "RDE-T (trajectory sync)", "nmae": 0.09863, "train_time_s": 216, "note": "Agent C only"},
+      {"method": "RDE-M (hybrid DAgger)", "nmae": "NaN", "train_time_s": 243, "note": "FAILED - diverged"}
+    ],
+    "multistep_h10": [
+      {"method": "Neural ODE", "nmae": 0.0237, "best": true},
+      {"method": "Neural ODE MultiStep", "nmae": 0.0557},
+      {"method": "Adaptive Residual GP", "nmae": 0.0656},
+      {"method": "E1", "nmae": 0.0693},
+      {"method": "RDE-L", "nmae": 0.0693, "note": "Identical to E1"},
+      {"method": "GP Ensemble 5", "nmae": 0.0886},
+      {"method": "GP Ensemble 7", "nmae": 0.0887},
+      {"method": "GP", "nmae": 0.0890}
+    ],
+    "multistep_h50": [
+      {"method": "Neural ODE", "nmae": 0.301, "best": true},
+      {"method": "GP Ensemble 5", "nmae": 0.507},
+      {"method": "Neural ODE MultiStep", "nmae": 0.548},
+      {"method": "GP Ensemble 7", "nmae": 0.567},
+      {"method": "Adaptive Residual GP", "nmae": 1.007},
+      {"method": "E1", "nmae": 1.169},
+      {"method": "GP", "nmae": 1.327}
+    ],
+    "multistep_h100": [
+      {"method": "Neural ODE", "nmae": 0.407, "best": true},
+      {"method": "GP Ensemble 5", "nmae": 0.632},
+      {"method": "GP Ensemble 7", "nmae": 0.724},
+      {"method": "Neural ODE MultiStep", "nmae": 0.734},
+      {"method": "Adaptive Residual GP", "nmae": 1.283},
+      {"method": "GP", "nmae": 1.980},
+      {"method": "E1", "nmae": 3.033}
+    ],
+    "best_overall": "Neural ODE"
+  },
+  "issues_found": [
+    {
+      "severity": "CRITICAL",
+      "agent": "H",
+      "description": "E1 and RDE-L produce identical results across all metrics and horizons. This means either (a) RDE-L with dagger_rounds_L=0 degenerates to E1, or (b) there is a code bug reusing the same model. This invalidates the E1 vs RDE-L comparison.",
+      "action_required": "Verify that RDE-L and E1 are actually different models. If dagger_rounds_L=0 means no DAgger rounds, then RDE-L is just E1 by design and should be documented as such."
+    },
+    {
+      "severity": "CRITICAL",
+      "agent": "H",
+      "description": "Agent H GP reports NMAE=0.0 for e_y and e_psi states, which is physically implausible for any model. This likely indicates data leakage (evaluating on training data) or a bug in the evaluation pipeline.",
+      "action_required": "Re-run GP single-step evaluation with explicit train/test separation and verify e_y/e_psi errors are non-zero."
+    },
+    {
+      "severity": "HIGH",
+      "agent": "C vs H",
+      "description": "Agent C and Agent H report vastly different NMAE for the same GP model (0.0321 vs 0.00166). The 20x discrepancy suggests fundamentally different evaluation protocols.",
+      "action_required": "Standardize evaluation: same random seed, same data split, same normalization. Report which protocol is authoritative."
+    },
+    {
+      "severity": "HIGH",
+      "agent": "C",
+      "description": "RDE-M (hybrid DAgger) produces all NaN predictions. One of six baseline models is completely non-functional.",
+      "action_required": "Either fix DAgger training stability or exclude RDE-M from comparisons."
+    },
+    {
+      "severity": "HIGH",
+      "agent": "D",
+      "description": "OOD detection classifies 100% of test samples as out-of-distribution, making AUROC undefined. The OOD criterion (|s_i| > 2*std_i) is inappropriate for normalized states.",
+      "action_required": "Use a more meaningful OOD definition (e.g., states from unseen episodes, or states in low-density regions of the training distribution)."
+    },
+    {
+      "severity": "MEDIUM",
+      "agent": "D",
+      "description": "Uncertainty calibration requires 51x scalar scaling to achieve 95% coverage. ECE=0.163 is poor. The raw uncertainty estimates are not usable without post-hoc calibration.",
+      "action_required": "Apply learned calibration scaling before using uncertainties in any downstream application."
+    },
+    {
+      "severity": "MEDIUM",
+      "agent": "F",
+      "description": "MPC planning shows near-zero ranking correlation (Spearman rho=0.006). The model cannot reliably rank candidate trajectories, making it unsuitable for trajectory optimization.",
+      "action_required": "This is likely a fundamental limitation of single-step models applied to multi-step planning. Consider using the Neural ODE (best multi-step stability) for planning, or accept that planning requires closed-loop replanning at each step."
+    },
+    {
+      "severity": "MEDIUM",
+      "agent": "H",
+      "description": "Neural ODE MultiStep training does not improve over standard Neural ODE at any horizon. The multi-step training objective appears to hurt performance.",
+      "action_required": "Investigate why multi-step training degrades performance. May need curriculum learning or gradient clipping."
+    },
+    {
+      "severity": "LOW",
+      "agent": "A",
+      "description": "89 continuity errors at data segment boundaries. While small (max diff ~1.03), they may cause models to learn incorrect transition dynamics.",
+      "action_required": "Either filter out transition steps or document them as known artifacts."
+    },
+    {
+      "severity": "LOW",
+      "agent": "A",
+      "description": "Episode count discrepancy: 148 declared vs 59 actual. Does not affect model training but should be documented.",
+      "action_required": "Clarify metadata meaning."
+    }
+  ],
+  "recommendations": [
+    {
+      "priority": 1,
+      "action": "Fix the E1/RDE-L identity bug or document that RDE-L with 0 DAgger rounds is equivalent to E1",
+      "impact": "Resolves critical inconsistency in results"
+    },
+    {
+      "priority": 2,
+      "action": "Re-validate GP single-step results to confirm e_y/e_psi errors are non-zero",
+      "impact": "Ensures GP baseline is trustworthy"
+    },
+    {
+      "priority": 3,
+      "action": "Standardize evaluation protocol between Agent C and Agent H (same seed, same split, same normalization)",
+      "impact": "Enables reliable cross-method comparison"
+    },
+    {
+      "priority": 4,
+      "action": "Fix or exclude RDE-M from comparisons",
+      "impact": "Clean up baseline results"
+    },
+    {
+      "priority": 5,
+      "action": "Fix OOD detection to use a meaningful criterion",
+      "impact": "Enables model reliability assessment"
+    },
+    {
+      "priority": 6,
+      "action": "Apply uncertainty calibration before using in any safety-critical application",
+      "impact": "Raw uncertainties are 51x too small"
+    },
+    {
+      "priority": 7,
+      "action": "For practical deployment: use Neural ODE for multi-step prediction, GP (2000 samples) for single-step prediction",
+      "impact": "Optimal accuracy-speed tradeoff"
+    },
+    {
+      "priority": 8,
+      "action": "Investigate why Neural ODE MultiStep training degrades performance vs standard Neural ODE",
+      "impact": "Could unlock further multi-step improvements"
+    }
+  ],
+  "overall_summary": {
+    "best_single_step": "GP (2000 samples) - NMAE=0.0017, but results may be inflated by suspicious e_y/e_psi=0.0 values",
+    "best_multi_step": "Neural ODE - NMAE=0.407 at H=100, 5x better than GP, 7.5x better than E1",
+    "best_practical": "Neural ODE for H>=5 (fast training at 144s, best multi-step stability); GP for H=1 (fastest inference)",
+    "key_limitation": "No method achieves reliable multi-step prediction beyond H=20. All models diverge by H=100 with NMAE > 0.4. Planning (Agent F) is not currently viable.",
+    "v8_vs_v6": "V8 7D model is 83-413x worse than V6 4D model at H=50 (per Agent E comparison), confirming that the additional dimensions (theta, theta_dot, delta, delta_dot) make the problem significantly harder.",
+    "confidence_in_findings": "MEDIUM - Multiple cross-agent inconsistencies (E1=RDE-L, GP zero errors, NMAE scale differences) reduce confidence in quantitative rankings. Qualitative findings (Neural ODE best multi-step, ensembles help) are more reliable."
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "H10": {
+    "n_candidates": 200,
+    "n_test_states": 5,
+    "spearman_mean": 1.0,
+    "kendall_mean": 1.0,
+    "top3_overlap_mean": 1.0,
+    "cost_error_mean": 0.07152725752878565,
+    "regret_mean": 0.0,
+    "runtime": 3.2
+  },
+  "H20": {
+    "n_candidates": 200,
+    "n_test_states": 5,
+    "spearman_mean": 1.0,
+    "kendall_mean": 1.0,
+    "top3_overlap_mean": 1.0,
+    "cost_error_mean": 0.14520163307909195,
+    "regret_mean": 0.0,
+    "runtime": 3.3
+  },
+  "H50": {
+    "n_candidates": 200,
+    "n_test_states": 5,
+    "spearman_mean": 1.0,
+    "kendall_mean": 1.0,
+    "top3_overlap_mean": 1.0,
+    "cost_error_mean": 0.7307904959018103,
+    "regret_mean": 0.0,
+    "runtime": 7.9
+  },
+  "runtime": {
+    "single_step_ms": 0.0,
+    "rollout_20_ms": 1.649022102355957,
+    "rollout_50_ms": 4.027962684631348,
+    "planning_200_candidates_ms": 329.8044204711914
+  }
+}

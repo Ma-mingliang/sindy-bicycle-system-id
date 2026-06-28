@@ -1,0 +1,142 @@
+{
+  "1000_col0": {
+    "max_samples": 1000,
+    "output_col": 0,
+    "convergence_warnings": 0,
+    "warning_messages": [],
+    "kernel": "29.3**2 * RBF(length_scale=59.5)",
+    "training_time": 35.65751123428345
+  },
+  "1000_col1": {
+    "max_samples": 1000,
+    "output_col": 1,
+    "convergence_warnings": 1,
+    "warning_messages": [
+      "lbfgs failed to converge (status=2):\nABNORMAL_TERMINATION_IN_LNSRCH.\n\nIncrease the number of iterations (max_iter) or scale the data as shown in:\n    https://scikit-learn.org/stable/modules/preprocessing.html"
+    ],
+    "kernel": "21.2**2 * RBF(length_scale=33.1)",
+    "training_time": 65.46653699874878
+  },
+  "1000_col2": {
+    "max_samples": 1000,
+    "output_col": 2,
+    "convergence_warnings": 1,
+    "warning_messages": [
+      "lbfgs failed to converge (status=2):\nABNORMAL_TERMINATION_IN_LNSRCH.\n\nIncrease the number of iterations (max_iter) or scale the data as shown in:\n    https://scikit-learn.org/stable/modules/preprocessing.html"
+    ],
+    "kernel": "102**2 * RBF(length_scale=35.3)",
+    "training_time": 60.90920639038086
+  },
+  "1000_col3": {
+    "max_samples": 1000,
+    "output_col": 3,
+    "convergence_warnings": 0,
+    "warning_messages": [],
+    "kernel": "21.2**2 * RBF(length_scale=32.8)",
+    "training_time": 36.31528115272522
+  },
+  "2000_col0": {
+    "max_samples": 2000,
+    "output_col": 0,
+    "convergence_warnings": 1,
+    "warning_messages": [
+      "lbfgs failed to converge (status=2):\nABNORMAL_TERMINATION_IN_LNSRCH.\n\nIncrease the number of iterations (max_iter) or scale the data as shown in:\n    https://scikit-learn.org/stable/modules/preprocessing.html"
+    ],
+    "kernel": "28.6**2 * RBF(length_scale=53.9)",
+    "training_time": 217.3270926475525
+  },
+  "2000_col1": {
+    "max_samples": 2000,
+    "output_col": 1,
+    "convergence_warnings": 1,
+    "warning_messages": [
+      "lbfgs failed to converge (status=2):\nABNORMAL_TERMINATION_IN_LNSRCH.\n\nIncrease the number of iterations (max_iter) or scale the data as shown in:\n    https://scikit-learn.org/stable/modules/preprocessing.html"
+    ],
+    "kernel": "24.2**2 * RBF(length_scale=35)",
+    "training_time": 169.5415654182434
+  },
+  "2000_col2": {
+    "max_samples": 2000,
+    "output_col": 2,
+    "convergence_warnings": 1,
+    "warning_messages": [
+      "lbfgs failed to converge (status=2):\nABNORMAL_TERMINATION_IN_LNSRCH.\n\nIncrease the number of iterations (max_iter) or scale the data as shown in:\n    https://scikit-learn.org/stable/modules/preprocessing.html"
+    ],
+    "kernel": "316**2 * RBF(length_scale=51.4)",
+    "training_time": 180.52425169944763
+  },
+  "2000_col3": {
+    "max_samples": 2000,
+    "output_col": 3,
+    "convergence_warnings": 0,
+    "warning_messages": [],
+    "kernel": "24.4**2 * RBF(length_scale=34.8)",
+    "training_time": 153.4438714981079
+  },
+  "3000_col0": {
+    "max_samples": 3000,
+    "output_col": 0,
+    "convergence_warnings": 0,
+    "warning_messages": [],
+    "kernel": "28.8**2 * RBF(length_scale=53.2)",
+    "training_time": 221.10331654548645
+  },
+  "3000_col1": {
+    "max_samples": 3000,
+    "output_col": 1,
+    "convergence_warnings": 0,
+    "warning_messages": [],
+    "kernel": "26.9**2 * RBF(length_scale=36.6)",
+    "training_time": 96.52745938301086
+  },
+  "3000_col2": {
+    "max_samples": 3000,
+    "output_col": 2,
+    "convergence_warnings": 0,
+    "warning_messages": [],
+    "kernel": "316**2 * RBF(length_scale=52)",
+    "training_time": 174.343679189682
+  },
+  "3000_col3": {
+    "max_samples": 3000,
+    "output_col": 3,
+    "convergence_warnings": 0,
+    "warning_messages": [],
+    "kernel": "27.2**2 * RBF(length_scale=36.4)",
+    "training_time": 218.3018298149109
+  },
+  "5000_col0": {
+    "max_samples": 5000,
+    "output_col": 0,
+    "convergence_warnings": 1,
+    "warning_messages": [
+      "lbfgs failed to converge (status=2):\nABNORMAL_TERMINATION_IN_LNSRCH.\n\nIncrease the number of iterations (max_iter) or scale the data as shown in:\n    https://scikit-learn.org/stable/modules/preprocessing.html"
+    ],
+    "kernel": "29.2**2 * RBF(length_scale=53.1)",
+    "training_time": 1248.3995106220245
+  },
+  "5000_col1": {
+    "max_samples": 5000,
+    "output_col": 1,
+    "convergence_warnings": 0,
+    "warning_messages": [],
+    "kernel": "31.6**2 * RBF(length_scale=39)",
+    "training_time": 371.60013341903687
+  },
+  "5000_col2": {
+    "max_samples": 5000,
+    "output_col": 2,
+    "convergence_warnings": 0,
+    "warning_messages": [],
+    "kernel": "316**2 * RBF(length_scale=52.7)",
+    "training_time": 226.5047640800476
+  },
+  "5000_col3": {
+    "max_samples": 5000,
+    "output_col": 3,
+    "convergence_warnings": 0,
+    "warning_messages": [],
+    "kernel": "32.1**2 * RBF(length_scale=38.9)",
+    "training_time": 260.44045424461365
+  }
+}
