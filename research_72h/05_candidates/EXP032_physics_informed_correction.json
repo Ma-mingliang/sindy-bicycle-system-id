@@ -1,0 +1,27 @@
+{
+  "timestamp": "2026-06-29T03:46:05.213114",
+  "run_id": "20260628_175824_neural_ode_144h",
+  "experiment": "physics_informed_correction",
+  "physics_weights": [
+    0.0,
+    0.3,
+    0.5,
+    0.7
+  ],
+  "correction_strength": 0.1,
+  "results": {
+    "0.0": {
+      "primary": 0.42692081386180103
+    },
+    "0.3": {
+      "primary": 0.596480490031912
+    },
+    "0.5": {
+      "primary": 0.5214582393216697
+    },
+    "0.7": {
+      "primary": 0.4022021495531966
+    }
+  },
+  "best_physics": 0.7
+}
