@@ -1,0 +1,73 @@
+============================================================
+V9 Fixed + Long Curriculum Training
+============================================================
+
+1. Loading data...
+
+============================================================
+Training: long_curriculum_50
+============================================================
+Training v9 Long Curriculum model (seed=43)...
+  Config: hidden=128, depth=4
+  Curriculum: [1, 5, 10, 20, 50]
+  Epoch 50/300: loss=863.101668, val_loss=576.635867, rollout=1, time=32.8s
+  Epoch 100/300: loss=522.485397, val_loss=407.833604, rollout=1, time=65.4s
+  Epoch 150/300: loss=355.692228, val_loss=307.959969, rollout=5, time=149.5s
+  Epoch 200/300: loss=313.834552, val_loss=254.280371, rollout=10, time=280.3s
+  Epoch 250/300: loss=597.484091, val_loss=476.342676, rollout=20, time=505.1s
+  Epoch 300/300: loss=5380.150981, val_loss=5406.182764, rollout=50, time=1016.3s
+Training completed in 1016.3s
+
+Evaluating long_curriculum_50...
+
+Results for long_curriculum_50:
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0646       100.00%     
+H=10      0.3153       100.00%     
+H=50      0.5667       100.00%     
+H=100     0.6481       100.00%     
+H=200     0.7582       100.00%     
+H=500     0.8089       20.00%      
+Model saved to: D:/系统辨识作业/sindy_bicycle/research_72h/07_models/long_curriculum_50_seed43.pt
+
+============================================================
+Training: long_curriculum_100
+============================================================
+Training v9 Long Curriculum model (seed=43)...
+  Config: hidden=128, depth=4
+  Curriculum: [1, 5, 10, 20, 50, 100]
+  Epoch 50/400: loss=1055.632916, val_loss=668.016570, rollout=1, time=33.6s
+  Epoch 100/400: loss=702.529211, val_loss=510.804845, rollout=1, time=66.4s
+  Epoch 150/400: loss=460.213328, val_loss=366.184636, rollout=5, time=132.5s
+  Epoch 200/400: loss=387.117511, val_loss=334.498567, rollout=10, time=241.5s
+  Epoch 250/400: loss=397.789846, val_loss=309.313449, rollout=20, time=410.7s
+  Epoch 300/400: loss=5207.883960, val_loss=4809.234497, rollout=50, time=708.1s
+  Epoch 350/400: loss=4222.844177, val_loss=3964.499182, rollout=100, time=1285.1s
+  Epoch 400/400: loss=4380.042146, val_loss=4047.272607, rollout=100, time=2234.0s
+Training completed in 2234.0s
+
+Evaluating long_curriculum_100...
+
+Results for long_curriculum_100:
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0310       100.00%     
+H=10      0.1385       100.00%     
+H=50      0.4932       100.00%     
+H=100     1.2502       80.00%      
+H=200     1.8734       80.00%      
+H=500     2.6182       80.00%      
+Model saved to: D:/系统辨识作业/sindy_bicycle/research_72h/07_models/long_curriculum_100_seed43.pt
+
+============================================================
+SUMMARY: Long Curriculum Results
+============================================================
+
+Config                    H=1        H=10       H=50       H=100      H=200      H=500     
+-------------------------------------------------------------------------------------
+v9 baseline               0.0051     0.0628     0.4557     0.5064     0.4737     0.5529     
+long_curriculum_50        0.0646     0.3153     0.5667     0.6481     0.7582     0.8089     
+long_curriculum_100       0.0310     0.1385     0.4932     1.2502     1.8734     2.6182     
+
+Results saved to: D:/系统辨识作业/sindy_bicycle/research_72h/05_candidates/EXP007_long_curriculum.json
