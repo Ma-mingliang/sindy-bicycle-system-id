@@ -1,0 +1,94 @@
+D:\系统辨识作业\sindy_bicycle\research_72h\05_candidates\ensemble_ood_robust.py:286: UserWarning: Creating a tensor from a list of numpy.ndarrays is extremely slow. Please consider converting the list to a single numpy.ndarray with numpy.array() before converting to a tensor. (Triggered internally at C:\actions-runner\_work\pytorch\pytorch\pytorch\torch\csrc\utils\tensor_new.cpp:256.)
+  a_norm = torch.FloatTensor([actions[step] / action_std]).unsqueeze(0)
+============================================================
+Ensemble OOD Robust Model
+============================================================
+
+1. Loading data...
+
+2. Building state corrector...
+  Built nearest-neighbor corrector with 101404 training samples
+
+============================================================
+Testing ensemble size: 1
+============================================================
+
+  Training model 1/1 (seed=42)...
+
+Generating OOD scenarios...
+
+Evaluating ensemble on OOD scenarios...
+
+Average OOD results for ensemble_size=1:
+Horizon    Avg NMAE    
+----------------------
+H=1       nan         
+H=10      nan         
+H=50      nan         
+H=100     nan         
+H=200     nan         
+H=500     nan         
+
+============================================================
+Testing ensemble size: 3
+============================================================
+
+  Training model 1/3 (seed=42)...
+
+  Training model 2/3 (seed=43)...
+
+  Training model 3/3 (seed=44)...
+
+Generating OOD scenarios...
+
+Evaluating ensemble on OOD scenarios...
+
+Average OOD results for ensemble_size=3:
+Horizon    Avg NMAE    
+----------------------
+H=1       nan         
+H=10      nan         
+H=50      nan         
+H=100     nan         
+H=200     nan         
+H=500     nan         
+
+============================================================
+Testing ensemble size: 5
+============================================================
+
+  Training model 1/5 (seed=42)...
+
+  Training model 2/5 (seed=43)...
+
+  Training model 3/5 (seed=44)...
+
+  Training model 4/5 (seed=45)...
+
+  Training model 5/5 (seed=46)...
+
+Generating OOD scenarios...
+
+Evaluating ensemble on OOD scenarios...
+
+Average OOD results for ensemble_size=5:
+Horizon    Avg NMAE    
+----------------------
+H=1       nan         
+H=10      nan         
+H=50      nan         
+H=100     nan         
+H=200     nan         
+H=500     nan         
+
+============================================================
+SUMMARY: Ensemble OOD Robust Results
+============================================================
+
+Ensemble     H=50       H=100      H=200      H=500     
+----------------------------------------------------
+1            nan        nan        nan        nan       
+3            nan        nan        nan        nan       
+5            nan        nan        nan        nan       
+
+Results saved to: D:/系统辨识作业/sindy_bicycle/research_72h/05_candidates/EXP037_ensemble_ood_robust.json

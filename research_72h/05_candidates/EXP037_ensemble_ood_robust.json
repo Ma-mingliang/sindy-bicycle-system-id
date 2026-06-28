@@ -1,0 +1,44 @@
+{
+  "timestamp": "2026-06-29T06:21:13.033334",
+  "run_id": "20260628_175824_neural_ode_144h",
+  "experiment": "ensemble_ood_robust",
+  "ensemble_sizes": [
+    1,
+    3,
+    5
+  ],
+  "correction_strength": 0.1,
+  "physics_weight": 0.7,
+  "results": {
+    "1": {
+      "avg_ood_nmae": {
+        "1": NaN,
+        "10": NaN,
+        "50": NaN,
+        "100": NaN,
+        "200": NaN,
+        "500": NaN
+      }
+    },
+    "3": {
+      "avg_ood_nmae": {
+        "1": NaN,
+        "10": NaN,
+        "50": NaN,
+        "100": NaN,
+        "200": NaN,
+        "500": NaN
+      }
+    },
+    "5": {
+      "avg_ood_nmae": {
+        "1": NaN,
+        "10": NaN,
+        "50": NaN,
+        "100": NaN,
+        "200": NaN,
+        "500": NaN
+      }
+    }
+  }
+}
