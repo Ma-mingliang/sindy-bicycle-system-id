@@ -1,0 +1,26 @@
+{
+  "timestamp": "2026-06-29T04:33:52.409363",
+  "run_id": "20260628_175824_neural_ode_144h",
+  "experiment": "physics_correction_ablation",
+  "configs": [
+    "no_correction",
+    "nn_only",
+    "physics_only",
+    "combined"
+  ],
+  "results": {
+    "no_correction": {
+      "primary": 1.0232153742597205
+    },
+    "nn_only": {
+      "primary": 0.5439045777167187
+    },
+    "physics_only": {
+      "primary": 0.8672056784970863
+    },
+    "combined": {
+      "primary": 0.3728098838280666
+    }
+  },
+  "best_config": "combined"
+}
