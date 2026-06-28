@@ -1,0 +1,103 @@
+============================================================
+V9 Neural ODE Training - BUG FIXED VERSION
+============================================================
+
+Fixes applied:
+  CRITICAL-1: Multi-step rollout now uses contiguous windows
+  CRITICAL-2: Consistency loss computed in physical space
+  HIGH-3: Added validation-based early stopping
+
+1. Loading data...
+   State std: [0.2418309  0.53697425 0.01317691 0.57323855 0.19395858 0.57547545
+ 0.5695523 ]
+   Action std: 0.057628314942121506
+   Delta std: [8.2609691e-02 1.9240507e-01 4.3849901e-05 5.1134978e-03 3.4055726e-03
+ 5.8840080e-03 1.3500465e-02]
+   Train episodes: 43
+   Test episodes: 15
+
+============================================================
+Training with seed=42
+============================================================
+Training v9 FIXED model (seed=42)...
+  Epoch 50/200: loss=1020.200504, val_loss=610.657413, rollout=1, time=54.7s
+  Epoch 100/200: loss=726.341538, val_loss=513.305582, rollout=5, time=129.2s
+  Epoch 150/200: loss=582.550179, val_loss=449.873991, rollout=10, time=238.1s
+  Epoch 200/200: loss=581.065119, val_loss=436.764877, rollout=20, time=406.5s
+Training completed in 406.5s
+
+Evaluating seed=42...
+
+Results for seed=42:
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0255       100.00%     
+H=10      0.0648       100.00%     
+H=50      0.1854       100.00%     
+H=100     0.4407       100.00%     
+H=200     0.9967       100.00%     
+H=500     1.3837       60.00%      
+Model saved to: D:/系统辨识作业/sindy_bicycle/research_72h/07_models/v9_fixed_seed42.pt
+
+============================================================
+Training with seed=43
+============================================================
+Training v9 FIXED model (seed=43)...
+  Epoch 50/200: loss=1001.987243, val_loss=637.614139, rollout=1, time=64.1s
+  Epoch 100/200: loss=731.175075, val_loss=503.167924, rollout=5, time=139.8s
+  Epoch 150/200: loss=576.175229, val_loss=458.054337, rollout=10, time=250.3s
+  Epoch 200/200: loss=597.050202, val_loss=384.794133, rollout=20, time=418.7s
+Training completed in 418.7s
+
+Evaluating seed=43...
+
+Results for seed=43:
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0242       100.00%     
+H=10      0.0569       100.00%     
+H=50      0.1560       100.00%     
+H=100     0.5628       100.00%     
+H=200     1.2195       100.00%     
+H=500     1.9854       40.00%      
+Model saved to: D:/系统辨识作业/sindy_bicycle/research_72h/07_models/v9_fixed_seed43.pt
+
+============================================================
+Training with seed=44
+============================================================
+Training v9 FIXED model (seed=44)...
+  Epoch 50/200: loss=1009.769063, val_loss=681.002457, rollout=1, time=62.1s
+  Epoch 100/200: loss=738.758150, val_loss=479.869043, rollout=5, time=136.8s
+  Epoch 150/200: loss=615.148673, val_loss=452.240398, rollout=10, time=246.5s
+  Epoch 200/200: loss=618.568290, val_loss=442.629235, rollout=20, time=414.7s
+Training completed in 414.7s
+
+Evaluating seed=44...
+
+Results for seed=44:
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0241       100.00%     
+H=10      0.0546       100.00%     
+H=50      0.2346       100.00%     
+H=100     0.5738       100.00%     
+H=200     0.9334       100.00%     
+H=500     1.2603       100.00%     
+Model saved to: D:/系统辨识作业/sindy_bicycle/research_72h/07_models/v9_fixed_seed44.pt
+
+============================================================
+SUMMARY
+============================================================
+
+Seed     H=1        H=10       H=50       H=100      H=200      H=500     
+--------------------------------------------------------------------
+42       0.0255     0.0648     0.1854     0.4407     0.9967     1.3837     
+43       0.0242     0.0569     0.1560     0.5628     1.2195     1.9854     
+44       0.0241     0.0546     0.2346     0.5738     0.9334     1.2603     
+
+PrimaryLongHorizonScore (mean of H=100,200,500):
+  Seed 42: 0.9404
+  Seed 43: 1.2559
+  Seed 44: 0.9225
+
+Results saved to: D:/系统辨识作业/sindy_bicycle/research_72h/01_baseline/V9_FIXED_REPRODUCTION_RESULTS.json

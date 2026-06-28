@@ -1,0 +1,41 @@
+============================================================
+Quick Screen: History Window (3-step)
+============================================================
+
+1. Loading data...
+
+2. Training History Window model...
+Training History Window model (seed=43, history=3)...
+  Epoch 50/200: loss=1107.533862, val_loss=643.839128, time=29.3s
+  Epoch 100/200: loss=666.401112, val_loss=494.527766, time=58.0s
+  Epoch 150/200: loss=526.822401, val_loss=427.193394, time=86.4s
+  Epoch 200/200: loss=527.249093, val_loss=390.781981, time=115.7s
+Training completed in 115.7s
+
+3. Evaluating...
+
+============================================================
+RESULTS: History Window (3-step)
+============================================================
+
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0296       100.00%     
+H=10      0.0662       100.00%     
+H=50      0.2257       100.00%     
+H=100     0.5040       100.00%     
+H=200     0.9987       100.00%     
+H=500     1.1573       20.00%      
+
+Comparison with v9 baseline:
+Horizon    v9 NMAE      History Win  Improvement 
+----------------------------------------------
+H=1       0.0051       0.0296       -480.3      %
+H=10      0.0628       0.0662       -5.4        %
+H=50      0.4557       0.2257       50.5        %
+H=100     0.5064       0.5040       0.5         %
+H=200     0.4737       0.9987       -110.8      %
+H=500     0.5529       1.1573       -109.3      %
+
+Results saved to: D:/系统辨识作业/sindy_bicycle/research_72h/05_candidates/EXP005_history_window.json
+Model saved to: D:/系统辨识作业/sindy_bicycle/research_72h/07_models/history_window_seed43.pt

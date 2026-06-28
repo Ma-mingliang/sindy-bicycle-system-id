@@ -1,0 +1,41 @@
+============================================================
+Quick Screen: Direct Delta vs Neural ODE
+============================================================
+
+1. Loading data...
+
+2. Training Direct Delta model...
+Training Direct Delta model (seed=43)...
+  Epoch 50/200: loss=0.413874, val_loss=0.367933, time=22.9s
+  Epoch 100/200: loss=0.333160, val_loss=0.322383, time=48.8s
+  Epoch 150/200: loss=0.291198, val_loss=0.285183, time=76.6s
+  Epoch 200/200: loss=0.292483, val_loss=0.254680, time=105.4s
+Training completed in 105.4s
+
+3. Evaluating...
+
+============================================================
+RESULTS: Direct Delta
+============================================================
+
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0233       100.00%     
+H=10      0.0483       100.00%     
+H=50      0.2044       100.00%     
+H=100     0.5409       60.00%      
+H=200     0.8505       20.00%      
+H=500     0.8935       20.00%      
+
+Comparison with v9 baseline:
+Horizon    v9 NMAE      Direct Delta Improvement 
+----------------------------------------------
+H=1       0.0051       0.0233       -357.2      %
+H=10      0.0628       0.0483       23.1        %
+H=50      0.4557       0.2044       55.1        %
+H=100     0.5064       0.5409       -6.8        %
+H=200     0.4737       0.8505       -79.6       %
+H=500     0.5529       0.8935       -61.6       %
+
+Results saved to: D:/系统辨识作业/sindy_bicycle/research_72h/05_candidates/EXP004_direct_delta.json
+Model saved to: D:/系统辨识作业/sindy_bicycle/research_72h/07_models/direct_delta_seed43.pt
