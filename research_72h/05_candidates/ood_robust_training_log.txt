@@ -1,0 +1,127 @@
+D:\系统辨识作业\sindy_bicycle\research_72h\05_candidates\ood_robust_training.py:321: UserWarning: Creating a tensor from a list of numpy.ndarrays is extremely slow. Please consider converting the list to a single numpy.ndarray with numpy.array() before converting to a tensor. (Triggered internally at C:\actions-runner\_work\pytorch\pytorch\pytorch\torch\csrc\utils\tensor_new.cpp:256.)
+  a_norm = torch.FloatTensor([actions[step] / action_std]).unsqueeze(0)
+============================================================
+OOD Robust Training
+============================================================
+
+1. Loading data...
+
+2. Building state corrector...
+  Built nearest-neighbor corrector with 101404 training samples
+
+============================================================
+Testing: no_ood_augmentation
+============================================================
+Training OOD robust model (seed=42)...
+  ood_noise_scale: 0.0
+  ood_prob: 0.0
+  Epoch 50/200: loss=282.445959, time=110.1s
+  Epoch 100/200: loss=226.760316, time=220.2s
+  Epoch 150/200: loss=205.533607, time=329.5s
+  Epoch 200/200: loss=199.382034, time=439.5s
+Training completed in 439.5s
+
+Generating OOD scenarios...
+
+Evaluating on OOD scenarios...
+
+Average OOD results for no_ood_augmentation:
+Horizon    Avg NMAE    
+----------------------
+H=1       nan         
+H=10      nan         
+H=50      nan         
+H=100     nan         
+H=200     nan         
+H=500     nan         
+
+============================================================
+Testing: mild_ood_augmentation
+============================================================
+Training OOD robust model (seed=42)...
+  ood_noise_scale: 0.05
+  ood_prob: 0.2
+  Epoch 50/200: loss=309.001841, time=110.5s
+  Epoch 100/200: loss=263.650457, time=220.4s
+  Epoch 150/200: loss=245.767508, time=330.7s
+  Epoch 200/200: loss=241.209606, time=441.3s
+Training completed in 441.3s
+
+Generating OOD scenarios...
+
+Evaluating on OOD scenarios...
+
+Average OOD results for mild_ood_augmentation:
+Horizon    Avg NMAE    
+----------------------
+H=1       nan         
+H=10      nan         
+H=50      nan         
+H=100     nan         
+H=200     nan         
+H=500     nan         
+
+============================================================
+Testing: moderate_ood_augmentation
+============================================================
+Training OOD robust model (seed=42)...
+  ood_noise_scale: 0.1
+  ood_prob: 0.3
+  Epoch 50/200: loss=336.964507, time=110.4s
+  Epoch 100/200: loss=301.793439, time=220.3s
+  Epoch 150/200: loss=284.535702, time=330.4s
+  Epoch 200/200: loss=281.014539, time=440.2s
+Training completed in 440.2s
+
+Generating OOD scenarios...
+
+Evaluating on OOD scenarios...
+
+Average OOD results for moderate_ood_augmentation:
+Horizon    Avg NMAE    
+----------------------
+H=1       nan         
+H=10      nan         
+H=50      nan         
+H=100     nan         
+H=200     nan         
+H=500     nan         
+
+============================================================
+Testing: aggressive_ood_augmentation
+============================================================
+Training OOD robust model (seed=42)...
+  ood_noise_scale: 0.2
+  ood_prob: 0.5
+  Epoch 50/200: loss=407.287652, time=110.1s
+  Epoch 100/200: loss=368.729485, time=220.5s
+  Epoch 150/200: loss=356.362510, time=330.9s
+  Epoch 200/200: loss=353.848112, time=441.4s
+Training completed in 441.4s
+
+Generating OOD scenarios...
+
+Evaluating on OOD scenarios...
+
+Average OOD results for aggressive_ood_augmentation:
+Horizon    Avg NMAE    
+----------------------
+H=1       nan         
+H=10      nan         
+H=50      nan         
+H=100     nan         
+H=200     nan         
+H=500     nan         
+
+============================================================
+SUMMARY: OOD Robust Training Results
+============================================================
+
+Config                         H=50       H=100      H=200      H=500     
+----------------------------------------------------------------------
+no_ood_augmentation            nan        nan        nan        nan       
+mild_ood_augmentation          nan        nan        nan        nan       
+moderate_ood_augmentation      nan        nan        nan        nan       
+aggressive_ood_augmentation    nan        nan        nan        nan       
+
+Results saved to: D:/系统辨识作业/sindy_bicycle/research_72h/05_candidates/EXP036_ood_robust_training.json

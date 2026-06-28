@@ -1,0 +1,53 @@
+{
+  "timestamp": "2026-06-29T05:13:53.070799",
+  "run_id": "20260628_175824_neural_ode_144h",
+  "experiment": "ood_robust_training",
+  "configs": [
+    "no_ood_augmentation",
+    "mild_ood_augmentation",
+    "moderate_ood_augmentation",
+    "aggressive_ood_augmentation"
+  ],
+  "results": {
+    "no_ood_augmentation": {
+      "avg_ood_nmae": {
+        "1": NaN,
+        "10": NaN,
+        "50": NaN,
+        "100": NaN,
+        "200": NaN,
+        "500": NaN
+      }
+    },
+    "mild_ood_augmentation": {
+      "avg_ood_nmae": {
+        "1": NaN,
+        "10": NaN,
+        "50": NaN,
+        "100": NaN,
+        "200": NaN,
+        "500": NaN
+      }
+    },
+    "moderate_ood_augmentation": {
+      "avg_ood_nmae": {
+        "1": NaN,
+        "10": NaN,
+        "50": NaN,
+        "100": NaN,
+        "200": NaN,
+        "500": NaN
+      }
+    },
+    "aggressive_ood_augmentation": {
+      "avg_ood_nmae": {
+        "1": NaN,
+        "10": NaN,
+        "50": NaN,
+        "100": NaN,
+        "200": NaN,
+        "500": NaN
+      }
+    }
+  }
+}
