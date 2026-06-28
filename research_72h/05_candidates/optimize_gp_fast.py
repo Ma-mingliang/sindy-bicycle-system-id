@@ -1,6 +1,6 @@
-"""GP Multi-Seed Validation.
+"""Fast GP Hyperparameter Optimization.
 
-Trains and evaluates GP models with multiple seeds for statistical validation.
+Reduced samples and restarts for faster iteration.
 """
 import sys
 import json
@@ -86,8 +86,8 @@ def load_data(seed=42):
     }
 
 
-def train_gp_model(data, kernel, n_samples=1500, seed=42):
-    """Train GP model."""
+def train_gp_model(data, kernel_config, n_samples=1000, seed=42):
+    """Train GP model with specified kernel configuration."""
     np.random.seed(seed)
 
     state_std = data['state_std']
@@ -105,20 +105,21 @@ def train_gp_model(data, kernel, n_samples=1500, seed=42):
 
     gps = []
     for i in range(STATE_DIM):
-        print(f"  Training GP for {STATE_NAMES_7D[i]}...")
+        print(f"  Training GP for {STATE_NAMES_7D[i]}...", flush=True)
         gp = GaussianProcessRegressor(
-            kernel=kernel,
+            kernel=kernel_config,
             n_restarts_optimizer=1,
             random_state=seed,
             alpha=1e-6
         )
         gp.fit(X, Y[:, i])
+        print(f"    Done. Kernel: {gp.kernel_}", flush=True)
         gps.append(gp)
 
     return gps
 
 
-def evaluate_gp(gps, data, state_std, action_std, delta_std, horizons, n_segments=5, seed=42):
+def evaluate_gp(gps, data, state_std, action_std, delta_std, horizons, n_segments=3, seed=42):
     """Evaluate GP model."""
     dt = 1.0 / 30.0
     episodes = data['episodes']
@@ -128,7 +129,7 @@ def evaluate_gp(gps, data, state_std, action_std, delta_std, horizons, n_segment
     segments = []
     for ep_idx in test_eps:
         ep = episodes[ep_idx]
-        if ep['length'] >= 1100:
+        if ep['length'] >= 600:
             segments.append(ep)
     segments = segments[:n_segments]
 
@@ -194,102 +195,115 @@ def evaluate_gp(gps, data, state_std, action_std, delta_std, horizons, n_segment
 
 
 def main():
-    print("=" * 60)
-    print("GP Multi-Seed Validation")
-    print("=" * 60)
+    print("=" * 60, flush=True)
+    print("Fast GP Hyperparameter Optimization", flush=True)
+    print("=" * 60, flush=True)
 
-    kernel = ConstantKernel(1.0) * RBF(length_scale=1.0)
+    kernel_configs = {
+        'rbf_default': ConstantKernel(1.0) * RBF(length_scale=1.0),
+        'rbf_short': ConstantKernel(1.0) * RBF(length_scale=0.1),
+        'rbf_long': ConstantKernel(1.0) * RBF(length_scale=10.0),
+        'matern_15': ConstantKernel(1.0) * Matern(length_scale=1.0, nu=1.5),
+        'matern_25': ConstantKernel(1.0) * Matern(length_scale=1.0, nu=2.5),
+        'rbf_noise': ConstantKernel(1.0) * RBF(length_scale=1.0) + WhiteKernel(noise_level=0.01),
+    }
 
-    print("\n1. Loading data...")
+    print("\n1. Loading data...", flush=True)
     data = load_data(seed=42)
 
-    seeds = [42, 43, 44, 45, 46]
     horizons = [1, 10, 50, 100, 200, 500]
     all_results = {}
 
-    for seed in seeds:
-        print(f"\n{'='*60}")
-        print(f"Training GP with seed={seed}")
-        print(f"{'='*60}")
+    for name, kernel in kernel_configs.items():
+        print(f"\n{'='*60}", flush=True)
+        print(f"Testing kernel: {name}", flush=True)
+        print(f"{'='*60}", flush=True)
 
         start_time = time.time()
-        gps = train_gp_model(data, kernel, n_samples=1500, seed=seed)
+        gps = train_gp_model(data, kernel, n_samples=1000, seed=42)
         train_time = time.time() - start_time
 
-        print(f"\nEvaluating seed={seed}...")
+        print(f"\nEvaluating {name}...", flush=True)
         results = evaluate_gp(gps, data, data['state_std'], data['action_std'], data['delta_std'], horizons)
 
-        print(f"\nResults for seed={seed}:")
-        print(f"{'Horizon':<10} {'NMAE':<12} {'Survival':<12}")
-        print("-" * 34)
+        print(f"\nResults for {name}:", flush=True)
+        print(f"{'Horizon':<10} {'NMAE':<12} {'Survival':<12}", flush=True)
+        print("-" * 34, flush=True)
         for h in horizons:
             r = results[h]
-            print(f"H={h:<7} {r['nmae_mean']:<12.4f} {r['survival_rate']:<12.2%}")
+            print(f"H={h:<7} {r['nmae_mean']:<12.4f} {r['survival_rate']:<12.2%}", flush=True)
 
         primary = np.mean([results[100]['nmae_mean'], results[200]['nmae_mean'], results[500]['nmae_mean']])
-        print(f"\nPrimaryLongHorizonScore: {primary:.4f}")
+        print(f"\nPrimaryLongHorizonScore: {primary:.4f}", flush=True)
+        print(f"Training time: {train_time:.1f}s", flush=True)
 
-        all_results[seed] = {
+        all_results[name] = {
             'results': results,
             'primary': primary,
             'train_time': train_time,
         }
 
     # Summary
-    print("\n" + "=" * 60)
-    print("SUMMARY: GP Multi-Seed Results")
-    print("=" * 60)
+    print("\n" + "=" * 60, flush=True)
+    print("SUMMARY: GP Kernel Comparison", flush=True)
+    print("=" * 60, flush=True)
 
-    print(f"\n{'Seed':<8} {'H=1':<10} {'H=10':<10} {'H=50':<10} {'H=100':<10} {'H=200':<10} {'H=500':<10} {'Primary':<10}")
-    print("-" * 78)
+    print(f"\n{'Kernel':<20} {'H=1':<10} {'H=10':<10} {'H=50':<10} {'H=100':<10} {'H=200':<10} {'H=500':<10} {'Primary':<10} {'Time(s)':<10}", flush=True)
+    print("-" * 100, flush=True)
 
-    for seed in seeds:
-        r = all_results[seed]['results']
-        primary = all_results[seed]['primary']
-        print(f"{seed:<8} {r[1]['nmae_mean']:<10.4f} {r[10]['nmae_mean']:<10.4f} {r[50]['nmae_mean']:<10.4f} "
-              f"{r[100]['nmae_mean']:<10.4f} {r[200]['nmae_mean']:<10.4f} {r[500]['nmae_mean']:<10.4f} {primary:<10.4f}")
+    for name, data_dict in all_results.items():
+        r = data_dict['results']
+        primary = data_dict['primary']
+        train_time = data_dict['train_time']
+        print(f"{name:<20} {r[1]['nmae_mean']:<10.4f} {r[10]['nmae_mean']:<10.4f} {r[50]['nmae_mean']:<10.4f} "
+              f"{r[100]['nmae_mean']:<10.4f} {r[200]['nmae_mean']:<10.4f} {r[500]['nmae_mean']:<10.4f} {primary:<10.4f} {train_time:<10.1f}", flush=True)
 
-    # Compute statistics
-    primaries = [all_results[seed]['primary'] for seed in seeds]
-    print(f"\nPrimary Statistics:")
-    print(f"  Mean: {np.mean(primaries):.4f}")
-    print(f"  Std: {np.std(primaries):.4f}")
-    print(f"  Min: {np.min(primaries):.4f}")
-    print(f"  Max: {np.max(primaries):.4f}")
+    best_kernel = min(all_results.keys(), key=lambda k: all_results[k]['primary'])
+    print(f"\nBest kernel: {best_kernel} (Primary = {all_results[best_kernel]['primary']:.4f})", flush=True)
 
-    # Compare with v9 baseline
-    print(f"\nComparison with v9 baseline:")
-    print(f"{'Horizon':<10} {'v9 NMAE':<12} {'GP Mean':<12} {'GP Std':<12} {'Improvement':<12}")
-    print("-" * 58)
+    # v9 baseline comparison
+    print(f"\nComparison with v9 baseline:", flush=True)
+    print(f"{'Horizon':<10} {'v9 NMAE':<12} {'Best GP':<12} {'Improvement':<12}", flush=True)
+    print("-" * 46, flush=True)
     v9_nmae = {1: 0.0051, 10: 0.0628, 50: 0.4557, 100: 0.5064, 200: 0.4737, 500: 0.5529}
+    best_results = all_results[best_kernel]['results']
     for h in horizons:
         v9_val = v9_nmae.get(h, float('nan'))
-        gp_vals = [all_results[seed]['results'][h]['nmae_mean'] for seed in seeds]
-        gp_mean = np.mean(gp_vals)
-        gp_std = np.std(gp_vals)
-        if v9_val > 0 and not np.isnan(gp_mean):
-            improvement = (v9_val - gp_mean) / v9_val * 100
-            print(f"H={h:<7} {v9_val:<12.4f} {gp_mean:<12.4f} {gp_std:<12.4f} {improvement:<12.1f}%")
+        gp_val = best_results[h]['nmae_mean']
+        if v9_val > 0 and not np.isnan(gp_val):
+            improvement = (v9_val - gp_val) / v9_val * 100
+            print(f"H={h:<7} {v9_val:<12.4f} {gp_val:<12.4f} {improvement:<12.1f}%", flush=True)
+
+    # Per-state analysis for best kernel
+    print(f"\nPer-state NMAE for best kernel ({best_kernel}):", flush=True)
+    print(f"{'State':<12} " + " ".join([f"H={h:<6}" for h in [100, 200, 500]]), flush=True)
+    print("-" * 50, flush=True)
+    for name in STATE_NAMES_7D:
+        vals = [f"{best_results[h]['per_state_nmae'][name]['mean']:.4f}" for h in [100, 200, 500]]
+        print(f"{name:<12} " + " ".join([f"{v:<10}" for v in vals]), flush=True)
 
     # Save results
     output = {
         'timestamp': datetime.now().isoformat(),
         'run_id': '20260628_175824_neural_ode_72h',
-        'experiment': 'gp_multi_seed',
-        'seeds': seeds,
-        'results': {str(seed): {'primary': all_results[seed]['primary']} for seed in seeds},
-        'statistics': {
-            'mean': float(np.mean(primaries)),
-            'std': float(np.std(primaries)),
-            'min': float(np.min(primaries)),
-            'max': float(np.max(primaries)),
-        },
+        'experiment': 'gp_optimization_fast',
+        'kernel_configs': list(kernel_configs.keys()),
+        'results': {},
+        'best_kernel': best_kernel,
     }
 
-    output_path = 'D:/系统辨识作业/sindy_bicycle/research_72h/05_candidates/EXP011_gp_multi_seed.json'
+    for k, v in all_results.items():
+        output['results'][k] = {
+            'primary': v['primary'],
+            'train_time': v['train_time'],
+            'per_horizon': {str(h): v['results'][h]['nmae_mean'] for h in horizons},
+            'survival': {str(h): v['results'][h]['survival_rate'] for h in horizons},
+        }
+
+    output_path = 'D:/系统辨识作业/sindy_bicycle/research_72h/05_candidates/EXP010_gp_optimization.json'
     with open(output_path, 'w') as f:
         json.dump(output, f, indent=2, default=str)
-    print(f"\nResults saved to: {output_path}")
+    print(f"\nResults saved to: {output_path}", flush=True)
 
 
 if __name__ == '__main__':

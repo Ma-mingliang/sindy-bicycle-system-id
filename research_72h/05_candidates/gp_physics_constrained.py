@@ -2,21 +2,20 @@
 
 Three approaches to integrate known physics into GP prediction:
 
-1. Post-prediction physics correction (Alpha blending):
+1. Alpha-blended GP + Physics:
    - GP predicts all 7 state deltas
-   - Physics model computes e_y_dot and e_psi_dot from known kinematics
-   - Blend GP and physics using alpha parameter
+   - Physics computes e_y_dot, e_psi_dot, theta_dot, delta_dot from known formulas
+   - Blend: final = alpha * physics + (1-alpha) * GP
 
-2. Physics-augmented features:
-   - Add physics-derived features to GP input (v*sin(e_psi), -v*delta/L)
-   - GP learns residuals on top of physics priors
+2. Residual GP:
+   - GP learns: residual = actual_delta - physics_delta
+   - Prediction: output = physics_delta + GP_residual
 
-3. Physics residual GP:
-   - GP predicts (delta - physics_delta) instead of raw delta
-   - At prediction time: output = physics_delta + GP_residual
+3. Standard GP (baseline):
+   - Pure GP prediction without physics
 
 Known physics relationships:
-  e_y_dot  = v * sin(e_psi)           [exact kinematics]
+  e_y_dot   = v * sin(e_psi)          [exact kinematics]
   e_psi_dot = -v * delta / L          [exact kinematics, L=wheelbase]
   theta_dot = d(theta)/dt             [definition]
   delta_dot = d(delta)/dt             [definition]
@@ -25,10 +24,13 @@ Known physics relationships:
 import sys
 import json
 import time
+import warnings
 import numpy as np
 from datetime import datetime
 from sklearn.gaussian_process import GaussianProcessRegressor
-from sklearn.gaussian_process.kernels import RBF, Matern, WhiteKernel, ConstantKernel
+from sklearn.gaussian_process.kernels import RBF, WhiteKernel, ConstantKernel
+
+warnings.filterwarnings('ignore')
 
 sys.path.insert(0, 'D:/系统辨识作业/sindy_bicycle')
 
@@ -38,12 +40,10 @@ sys.path.insert(0, 'D:/系统辨识作业/sindy_bicycle')
 
 STATE_NAMES_7D = ['e_y', 'e_psi', 'v', 'theta', 'theta_dot', 'delta', 'delta_dot']
 STATE_DIM = 7
-ACTION_DIM = 1
 IDX_7D_FROM_8D = [0, 1, 2, 3, 4, 6, 7]
 
-# Physical parameters
-WHEELBASE = 1.0   # m (matches path_tracking_env.py)
-DT = 1.0 / 30.0   # simulation timestep
+WHEELBASE = 1.0   # m
+DT = 1.0 / 30.0
 
 PHYSICAL_LIMITS = {
     'e_y': 5.0, 'e_psi': np.pi, 'v': 5.0,
@@ -51,75 +51,47 @@ PHYSICAL_LIMITS = {
     'delta': np.pi/2, 'delta_dot': 10.0,
 }
 
-# Index mapping for readability
-IDX_EY = 0
-IDX_EPSI = 1
-IDX_V = 2
-IDX_THETA = 3
-IDX_THETA_DOT = 4
-IDX_DELTA = 5
-IDX_DELTA_DOT = 6
+IDX_EY, IDX_EPSI, IDX_V = 0, 1, 2
+IDX_THETA, IDX_THETA_DOT = 3, 4
+IDX_DELTA, IDX_DELTA_DOT = 5, 6
 
 
 # ============================================================
 # Physics Model
 # ============================================================
 
-def compute_physics_deltas(state, action):
+def compute_physics_deltas(state):
     """Compute physics-based state deltas from known kinematics.
 
     Args:
-        state: (7,) array [e_y, e_psi, v, theta, theta_dot, delta, delta_dot]
-        action: scalar steering torque
-
+        state: (7,) [e_y, e_psi, v, theta, theta_dot, delta, delta_dot]
     Returns:
-        physics_delta: (7,) array of predicted state changes per timestep
+        physics_delta: (7,) predicted state change per timestep
     """
-    e_y = state[IDX_EY]
     e_psi = state[IDX_EPSI]
     v = state[IDX_V]
-    theta = state[IDX_THETA]
     theta_dot = state[IDX_THETA_DOT]
     delta = state[IDX_DELTA]
     delta_dot = state[IDX_DELTA_DOT]
 
-    physics_delta = np.zeros(7)
-
-    # e_y_dot = v * sin(e_psi) [exact kinematics]
-    physics_delta[IDX_EY] = v * np.sin(e_psi) * DT
-
-    # e_psi_dot = -v * delta / L [exact kinematics]
-    physics_delta[IDX_EPSI] = -v * delta / WHEELBASE * DT
-
-    # v: no exact physics model (involves drag, acceleration)
-    # Leave as 0 -- GP will learn this
-    physics_delta[IDX_V] = 0.0
-
-    # theta_dot = d(theta)/dt [definition]
-    # Use current theta_dot as the derivative
-    physics_delta[IDX_THETA] = theta_dot * DT
-
-    # theta_ddot: complex dynamics (gravity, steering coupling)
-    # Leave as 0 -- GP will learn this
-    physics_delta[IDX_THETA_DOT] = 0.0
-
-    # delta_dot = d(delta)/dt [definition]
-    physics_delta[IDX_DELTA] = delta_dot * DT
-
-    # delta_ddot: complex dynamics (spring, damping, control)
-    # Leave as 0 -- GP will learn this
-    physics_delta[IDX_DELTA_DOT] = 0.0
-
-    return physics_delta
+    d = np.zeros(7)
+    d[IDX_EY]    = v * np.sin(e_psi) * DT            # e_y_dot = v*sin(e_psi)
+    d[IDX_EPSI]  = -v * delta / WHEELBASE * DT        # e_psi_dot = -v*delta/L
+    d[IDX_V]     = 0.0                                  # no exact model
+    d[IDX_THETA] = theta_dot * DT                       # theta_dot = d(theta)/dt
+    d[IDX_THETA_DOT] = 0.0                              # no exact model
+    d[IDX_DELTA] = delta_dot * DT                       # delta_dot = d(delta)/dt
+    d[IDX_DELTA_DOT] = 0.0                              # no exact model
+    return d
 
 
-def compute_physics_deltas_batch(states, actions):
+def compute_physics_deltas_batch(states):
     """Batch version of physics delta computation."""
     n = len(states)
-    physics_deltas = np.zeros((n, 7))
+    out = np.zeros((n, 7))
     for i in range(n):
-        physics_deltas[i] = compute_physics_deltas(states[i], actions[i])
-    return physics_deltas
+        out[i] = compute_physics_deltas(states[i])
+    return out
 
 
 # ============================================================
@@ -127,7 +99,6 @@ def compute_physics_deltas_batch(states, actions):
 # ============================================================
 
 def load_data(seed=42):
-    """Load and split episode data."""
     data = np.load('D:/系统辨识作业/sindy_bicycle/data/stage2_dataset_150k.npz', allow_pickle=True)
     obs = data['obs'][:, IDX_7D_FROM_8D]
     next_obs = data['next_obs'][:, IDX_7D_FROM_8D]
@@ -181,16 +152,10 @@ def load_data(seed=42):
     }
 
 
-# ============================================================
-# Survival Check
-# ============================================================
-
 def check_survival(state):
-    """Check if state is within physical limits."""
     for i, name in enumerate(STATE_NAMES_7D):
-        if name in PHYSICAL_LIMITS:
-            if abs(state[i]) > PHYSICAL_LIMITS[name]:
-                return False
+        if name in PHYSICAL_LIMITS and abs(state[i]) > PHYSICAL_LIMITS[name]:
+            return False
     return not (np.any(np.isnan(state)) or np.any(np.isinf(state)))
 
 
@@ -198,196 +163,80 @@ def check_survival(state):
 # GP Training
 # ============================================================
 
-def train_standard_gps(data, kernel, n_samples=5000, seed=42):
-    """Train standard GP models (one per state dimension)."""
-    np.random.seed(seed)
-    state_std = data['state_std']
-    action_std = data['action_std']
-    delta_std = data['delta_std']
-
-    n_total = len(data['train_obs'])
-    indices = np.random.choice(n_total, min(n_samples, n_total), replace=False)
-
-    X = np.hstack([
-        data['train_obs'][indices] / state_std,
-        data['train_action'][indices].reshape(-1, 1) / action_std
-    ])
-    Y = data['train_deltas'][indices] / delta_std
-
+def train_gps(X, Y, kernel, seed=42, label=""):
+    """Train 7 independent GPs (one per state dim)."""
     gps = []
     for i in range(STATE_DIM):
         gp = GaussianProcessRegressor(
-            kernel=kernel,
-            n_restarts_optimizer=3,
-            random_state=seed,
-            alpha=1e-6
+            kernel=kernel, n_restarts_optimizer=0,
+            random_state=seed, alpha=1e-6
         )
         gp.fit(X, Y[:, i])
         gps.append(gp)
-
     return gps
 
 
-def train_physics_augmented_gps(data, kernel, n_samples=5000, seed=42):
-    """Train GP with physics-augmented features.
-
-    Adds 2 physics-derived features to the input:
-      - v * sin(e_psi)  (physics prediction for e_y_dot)
-      - -v * delta / L  (physics prediction for e_psi_dot)
-
-    This gives the GP explicit knowledge of the physics relationships.
-    """
-    np.random.seed(seed)
+def prepare_standard_data(data, indices):
+    """Prepare normalized (state, action) -> delta for standard GP."""
     state_std = data['state_std']
     action_std = data['action_std']
     delta_std = data['delta_std']
-
-    n_total = len(data['train_obs'])
-    indices = np.random.choice(n_total, min(n_samples, n_total), replace=False)
 
     obs = data['train_obs'][indices]
     acts = data['train_action'][indices]
+    deltas = data['train_deltas'][indices]
 
-    # Compute physics features
-    phys_feat1 = (obs[:, IDX_V] * np.sin(obs[:, IDX_EPSI])).reshape(-1, 1)
-    phys_feat2 = (-obs[:, IDX_V] * obs[:, IDX_DELTA] / WHEELBASE).reshape(-1, 1)
-
-    # Normalize physics features
-    phys_std1 = np.std(phys_feat1)
-    phys_std1 = phys_std1 if phys_std1 > 1e-10 else 1.0
-    phys_std2 = np.std(phys_feat2)
-    phys_std2 = phys_std2 if phys_std2 > 1e-10 else 1.0
-
-    X = np.hstack([
-        obs / state_std,
-        acts.reshape(-1, 1) / action_std,
-        phys_feat1 / phys_std1,
-        phys_feat2 / phys_std2,
-    ])
-    Y = data['train_deltas'][indices] / delta_std
-
-    gps = []
-    for i in range(STATE_DIM):
-        gp = GaussianProcessRegressor(
-            kernel=kernel,
-            n_restarts_optimizer=3,
-            random_state=seed,
-            alpha=1e-6
-        )
-        gp.fit(X, Y[:, i])
-        gps.append(gp)
-
-    phys_params = {'phys_std1': phys_std1, 'phys_std2': phys_std2}
-    return gps, phys_params
+    X = np.hstack([obs / state_std, acts.reshape(-1, 1) / action_std])
+    Y = deltas / delta_std
+    return X, Y
 
 
-def train_residual_gps(data, kernel, n_samples=5000, seed=42):
-    """Train GP on physics residuals.
-
-    GP learns: residual = actual_delta - physics_delta
-    At prediction: output = physics_delta + GP_residual
-
-    For dimensions with no physics model (v, theta_dot, delta_dot),
-    GP learns the full delta directly.
-    """
-    np.random.seed(seed)
+def prepare_residual_data(data, indices):
+    """Prepare (state, action) -> (actual_delta - physics_delta) for residual GP."""
     state_std = data['state_std']
     action_std = data['action_std']
     delta_std = data['delta_std']
-
-    n_total = len(data['train_obs'])
-    indices = np.random.choice(n_total, min(n_samples, n_total), replace=False)
 
     obs = data['train_obs'][indices]
     acts = data['train_action'][indices]
     actual_deltas = data['train_deltas'][indices]
 
-    # Compute physics deltas for all training samples
-    physics_deltas = compute_physics_deltas_batch(obs, acts)
-
-    # Residual = actual - physics
+    physics_deltas = compute_physics_deltas_batch(obs)
     residual_deltas = actual_deltas - physics_deltas
 
     X = np.hstack([obs / state_std, acts.reshape(-1, 1) / action_std])
     Y = residual_deltas / delta_std
-
-    gps = []
-    for i in range(STATE_DIM):
-        gp = GaussianProcessRegressor(
-            kernel=kernel,
-            n_restarts_optimizer=3,
-            random_state=seed,
-            alpha=1e-6
-        )
-        gp.fit(X, Y[:, i])
-        gps.append(gp)
-
-    return gps
+    return X, Y
 
 
 # ============================================================
-# GP Prediction with Physics Constraints
+# Prediction Functions
 # ============================================================
 
 def predict_standard(gps, state, action, state_std, action_std, delta_std):
-    """Standard GP prediction."""
     x = np.hstack([state / state_std, [action / action_std]]).reshape(1, -1)
     delta_pred = np.array([gp.predict(x)[0] for gp in gps])
     return delta_pred * delta_std * DT
 
 
-def predict_physics_blended(gps, state, action, state_std, action_std, delta_std,
-                            alpha=0.5):
-    """Alpha-blended GP + Physics prediction.
-
-    For constrained dimensions (e_y, e_psi, theta, delta):
-      final = alpha * physics + (1-alpha) * gp
-
-    For unconstrained dimensions (v, theta_dot, delta_dot):
-      final = gp (no physics model available)
-
-    Args:
-        alpha: blending weight for physics (0=GP only, 1=physics only)
-    """
+def predict_blended(gps, state, action, state_std, action_std, delta_std, alpha):
+    """Alpha-blended: alpha * physics + (1-alpha) * GP for constrained dims."""
     x = np.hstack([state / state_std, [action / action_std]]).reshape(1, -1)
     gp_delta = np.array([gp.predict(x)[0] for gp in gps]) * delta_std * DT
+    physics_delta = compute_physics_deltas(state)
 
-    physics_delta = compute_physics_deltas(state, action)
-
-    final_delta = gp_delta.copy()
-
-    # Blend constrained dimensions
+    out = gp_delta.copy()
     for dim in [IDX_EY, IDX_EPSI, IDX_THETA, IDX_DELTA]:
-        final_delta[dim] = alpha * physics_delta[dim] + (1 - alpha) * gp_delta[dim]
-
-    return final_delta
-
-
-def predict_physics_augmented(gps, state, action, state_std, action_std, delta_std,
-                               phys_params):
-    """GP prediction with physics-augmented features."""
-    phys_feat1 = state[IDX_V] * np.sin(state[IDX_EPSI])
-    phys_feat2 = -state[IDX_V] * state[IDX_DELTA] / WHEELBASE
-
-    x = np.hstack([
-        state / state_std,
-        [action / action_std],
-        [phys_feat1 / phys_params['phys_std1']],
-        [phys_feat2 / phys_params['phys_std2']],
-    ]).reshape(1, -1)
-
-    delta_pred = np.array([gp.predict(x)[0] for gp in gps])
-    return delta_pred * delta_std * DT
+        out[dim] = alpha * physics_delta[dim] + (1 - alpha) * gp_delta[dim]
+    return out
 
 
 def predict_residual(gps, state, action, state_std, action_std, delta_std):
-    """Residual GP prediction: physics + GP_residual."""
+    """Residual GP: physics_delta + GP_residual."""
     x = np.hstack([state / state_std, [action / action_std]]).reshape(1, -1)
-    residual_delta = np.array([gp.predict(x)[0] for gp in gps]) * delta_std * DT
-
-    physics_delta = compute_physics_deltas(state, action)
-
-    return physics_delta + residual_delta
+    residual = np.array([gp.predict(x)[0] for gp in gps]) * delta_std * DT
+    physics_delta = compute_physics_deltas(state)
+    return physics_delta + residual
 
 
 # ============================================================
@@ -395,12 +244,7 @@ def predict_residual(gps, state, action, state_std, action_std, delta_std):
 # ============================================================
 
 def evaluate_model(predict_fn, data, state_std, action_std, delta_std,
-                   horizons, n_segments=5, seed=42, label="Model"):
-    """Evaluate a model on multi-step prediction.
-
-    Args:
-        predict_fn: callable(state, action) -> delta (7,)
-    """
+                   horizons, n_segments=3, seed=42):
     episodes = data['episodes']
     test_eps = data['test_eps']
 
@@ -468,73 +312,16 @@ def evaluate_model(predict_fn, data, state_std, action_std, delta_std,
                 for name in STATE_NAMES_7D
             },
         }
-
     return results
 
 
-def format_results_table(results, horizons, label):
-    """Format results as a printable table."""
-    lines = [f"\n{label}:", f"{'Horizon':<10} {'NMAE':<12} {'Survival':<12}"]
-    lines.append("-" * 34)
-    for h in horizons:
-        r = results[h]
-        lines.append(f"H={h:<7} {r['nmae_mean']:<12.4f} {r['survival_rate']:<12.2%}")
-    primary = np.mean([results[100]['nmae_mean'], results[200]['nmae_mean'],
-                       results[500]['nmae_mean']])
-    lines.append(f"PrimaryLongHorizonScore: {primary:.4f}")
-    return "\n".join(lines), primary
-
-
-def format_per_state_table(results, horizons, label):
-    """Format per-state NMAE table."""
-    lines = [f"\n{label} - Per-State NMAE:"]
-    header = f"{'Horizon':<8}" + "".join(f"{name:<12}" for name in STATE_NAMES_7D)
-    lines.append(header)
-    lines.append("-" * (8 + 12 * STATE_DIM))
-    for h in horizons:
-        r = results[h]
-        row = f"H={h:<5}"
-        for name in STATE_NAMES_7D:
-            val = r['per_state_nmae'][name]['mean']
-            row += f"{val:<12.4f}"
-        lines.append(row)
-    return "\n".join(lines)
+def primary_score(results):
+    return np.mean([results[100]['nmae_mean'], results[200]['nmae_mean'],
+                    results[500]['nmae_mean']])
 
 
 # ============================================================
-# Alpha Sweep
-# ============================================================
-
-def sweep_alpha(gps, data, state_std, action_std, delta_std,
-                horizons, alphas, n_segments=5, seed=42):
-    """Sweep alpha values to find optimal blending weight."""
-    best_alpha = 0.0
-    best_primary = float('inf')
-    alpha_results = {}
-
-    for alpha in alphas:
-        predict_fn = lambda s, a, alpha=alpha: predict_physics_blended(
-            gps, s, a, state_std, action_std, delta_std, alpha=alpha
-        )
-        results = evaluate_model(
-            predict_fn, data, state_std, action_std, delta_std,
-            horizons, n_segments=n_segments, seed=seed,
-            label=f"Alpha={alpha:.2f}"
-        )
-        primary = np.mean([results[100]['nmae_mean'],
-                           results[200]['nmae_mean'],
-                           results[500]['nmae_mean']])
-        alpha_results[alpha] = {'results': results, 'primary': primary}
-
-        if primary < best_primary:
-            best_primary = primary
-            best_alpha = alpha
-
-    return best_alpha, best_primary, alpha_results
-
-
-# ============================================================
-# Main Experiment
+# Main
 # ============================================================
 
 def main():
@@ -544,212 +331,191 @@ def main():
 
     horizons = [1, 10, 50, 100, 200, 500]
     kernel = ConstantKernel(1.0) * RBF(length_scale=1.0)
-    n_samples = 5000
-    n_segments = 5
+    n_samples = 500
+    n_segments = 3
     seed = 42
 
     # ----------------------------------------------------------
     # 1. Load Data
     # ----------------------------------------------------------
-    print("\n[1/6] Loading data...")
+    print("\n[1/5] Loading data...")
     data = load_data(seed=seed)
     state_std = data['state_std']
     action_std = data['action_std']
     delta_std = data['delta_std']
     print(f"  Train samples: {len(data['train_obs'])}")
     print(f"  Test episodes: {len(data['test_eps'])}")
-    print(f"  State std: {state_std}")
-    print(f"  Delta std: {delta_std}")
 
     # ----------------------------------------------------------
-    # 2. Analyze Physics Accuracy on Training Data
+    # 2. Physics Model Accuracy Analysis
     # ----------------------------------------------------------
-    print("\n[2/6] Analyzing physics model accuracy on training data...")
-    train_obs = data['train_obs'][:5000]
-    train_acts = data['train_action'][:5000].flatten()
-    train_deltas = data['train_deltas'][:5000]
+    print("\n[2/5] Physics model accuracy on training data...")
+    n_phys = min(3000, len(data['train_obs']))
+    obs_phys = data['train_obs'][:n_phys]
+    actual_deltas = data['train_deltas'][:n_phys]
+    physics_deltas = compute_physics_deltas_batch(obs_phys)
 
-    physics_deltas = compute_physics_deltas_batch(train_obs, train_acts)
+    delta_std_data = np.std(actual_deltas, axis=0)
+    delta_std_data[delta_std_data < 1e-10] = 1.0
+    physics_nmae = np.mean(np.abs(physics_deltas - actual_deltas), axis=0) / delta_std_data
 
-    # Compute physics error per dimension
-    physics_errors = np.abs(physics_deltas - train_deltas)
-    physics_nmae = np.mean(physics_errors, axis=0) / (np.std(train_deltas, axis=0) + 1e-10)
-
-    print(f"\n  Physics Model NMAE per dimension (on training data):")
-    print(f"  {'Dimension':<15} {'Physics NMAE':<15} {'GP-Relevant?':<15}")
-    print(f"  {'-'*45}")
+    print(f"\n  {'Dimension':<15} {'Physics NMAE':<15}")
+    print(f"  {'-'*30}")
     for i, name in enumerate(STATE_NAMES_7D):
-        relevant = "YES" if i in [IDX_EY, IDX_EPSI, IDX_THETA, IDX_DELTA] else "NO"
-        print(f"  {name:<15} {physics_nmae[i]:<15.4f} {relevant:<15}")
+        print(f"  {name:<15} {physics_nmae[i]:<15.4f}")
 
-    # Correlation between physics and actual deltas
-    print(f"\n  Correlation between physics and actual deltas:")
+    print(f"\n  Correlation (physics vs actual):")
     for i, name in enumerate(STATE_NAMES_7D):
-        corr = np.corrcoef(physics_deltas[:, i], train_deltas[:, i])[0, 1]
-        print(f"  {name:<15} r = {corr:.4f}")
+        std_a = np.std(physics_deltas[:, i])
+        std_b = np.std(actual_deltas[:, i])
+        if std_a > 1e-10 and std_b > 1e-10:
+            corr = np.corrcoef(physics_deltas[:, i], actual_deltas[:, i])[0, 1]
+            print(f"  {name:<15} r = {corr:.4f}")
+        else:
+            print(f"  {name:<15} r = N/A (zero variance)")
 
     # ----------------------------------------------------------
     # 3. Train Models
     # ----------------------------------------------------------
-    print("\n[3/6] Training models...")
+    print(f"\n[3/5] Training models (n_samples={n_samples})...")
+    np.random.seed(seed)
+    train_indices = np.random.choice(len(data['train_obs']),
+                                     min(n_samples, len(data['train_obs'])),
+                                     replace=False)
 
-    # 3a. Standard GP (baseline)
-    print("\n  Training standard GP...")
+    # Standard GP
+    print("  Training standard GP...")
     t0 = time.time()
-    gps_standard = train_standard_gps(data, kernel, n_samples=n_samples, seed=seed)
+    X_std, Y_std = prepare_standard_data(data, train_indices)
+    gps_standard = train_gps(X_std, Y_std, kernel, seed=seed, label="standard")
     t_standard = time.time() - t0
-    print(f"  Done in {t_standard:.1f}s")
+    print(f"    Done in {t_standard:.1f}s")
 
-    # 3b. Physics-augmented GP
-    print("\n  Training physics-augmented GP...")
+    # Residual GP
+    print("  Training residual GP...")
     t0 = time.time()
-    gps_augmented, phys_params = train_physics_augmented_gps(
-        data, kernel, n_samples=n_samples, seed=seed
-    )
-    t_augmented = time.time() - t0
-    print(f"  Done in {t_augmented:.1f}s")
-
-    # 3c. Residual GP
-    print("\n  Training residual GP...")
-    t0 = time.time()
-    gps_residual = train_residual_gps(data, kernel, n_samples=n_samples, seed=seed)
+    X_res, Y_res = prepare_residual_data(data, train_indices)
+    gps_residual = train_gps(X_res, Y_res, kernel, seed=seed, label="residual")
     t_residual = time.time() - t0
-    print(f"  Done in {t_residual:.1f}s")
+    print(f"    Done in {t_residual:.1f}s")
 
     # ----------------------------------------------------------
-    # 4. Evaluate Models
+    # 4. Evaluate
     # ----------------------------------------------------------
-    print("\n[4/6] Evaluating models...")
+    print("\n[4/5] Evaluating models...")
 
     # Standard GP
     predict_std_fn = lambda s, a: predict_standard(
-        gps_standard, s, a, state_std, action_std, delta_std
-    )
+        gps_standard, s, a, state_std, action_std, delta_std)
     results_standard = evaluate_model(
         predict_std_fn, data, state_std, action_std, delta_std,
-        horizons, n_segments=n_segments, seed=seed, label="Standard GP"
-    )
-
-    # Physics-augmented GP
-    predict_aug_fn = lambda s, a: predict_physics_augmented(
-        gps_augmented, s, a, state_std, action_std, delta_std, phys_params
-    )
-    results_augmented = evaluate_model(
-        predict_aug_fn, data, state_std, action_std, delta_std,
-        horizons, n_segments=n_segments, seed=seed, label="Physics-Augmented GP"
-    )
+        horizons, n_segments=n_segments, seed=seed)
 
     # Residual GP
     predict_res_fn = lambda s, a: predict_residual(
-        gps_residual, s, a, state_std, action_std, delta_std
-    )
+        gps_residual, s, a, state_std, action_std, delta_std)
     results_residual = evaluate_model(
         predict_res_fn, data, state_std, action_std, delta_std,
-        horizons, n_segments=n_segments, seed=seed, label="Residual GP"
-    )
+        horizons, n_segments=n_segments, seed=seed)
 
-    # Alpha-blended GP (sweep alpha)
-    print("\n  Sweeping alpha for blended GP...")
+    # Blended GP alpha sweep
+    print("  Alpha sweep for blended GP...")
     alphas = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
-    best_alpha, best_alpha_primary, alpha_results = sweep_alpha(
-        gps_standard, data, state_std, action_std, delta_std,
-        horizons, alphas, n_segments=n_segments, seed=seed
-    )
+    alpha_results = {}
+    best_alpha = 0.0
+    best_alpha_primary = float('inf')
+
+    for alpha in alphas:
+        predict_blend_fn = lambda s, a, a_=alpha: predict_blended(
+            gps_standard, s, a, state_std, action_std, delta_std, alpha=a_)
+        r = evaluate_model(
+            predict_blend_fn, data, state_std, action_std, delta_std,
+            horizons, n_segments=n_segments, seed=seed)
+        p = primary_score(r)
+        alpha_results[alpha] = {'results': r, 'primary': p}
+        if p < best_alpha_primary:
+            best_alpha_primary = p
+            best_alpha = alpha
+
     results_blended = alpha_results[best_alpha]['results']
-    print(f"  Best alpha = {best_alpha:.2f} (Primary = {best_alpha_primary:.4f})")
+    print(f"    Best alpha = {best_alpha:.1f} (Primary = {best_alpha_primary:.4f})")
 
     # ----------------------------------------------------------
-    # 5. Summary
+    # 5. Summary & Save
     # ----------------------------------------------------------
-    print("\n[5/6] Generating summary...")
+    print("\n[5/5] Summary")
+    print("=" * 85)
 
     all_models = {
         'Standard GP': {'results': results_standard, 'time': t_standard},
-        'Physics-Augmented GP': {'results': results_augmented, 'time': t_augmented},
         'Residual GP': {'results': results_residual, 'time': t_residual},
-        f'Blended GP (alpha={best_alpha:.1f})': {'results': results_blended, 'time': t_standard},
+        f'Blended GP (a={best_alpha:.1f})': {'results': results_blended, 'time': t_standard},
     }
 
-    # Compute primary scores
     for name, info in all_models.items():
-        r = info['results']
-        info['primary'] = np.mean([r[100]['nmae_mean'], r[200]['nmae_mean'],
-                                   r[500]['nmae_mean']])
+        info['primary'] = primary_score(info['results'])
 
-    # Print comparison table
-    print("\n" + "=" * 90)
-    print("COMPARISON: All Models")
-    print("=" * 90)
-
-    header = f"{'Model':<28} {'H=1':<8} {'H=10':<8} {'H=50':<8} {'H=100':<8} {'H=200':<8} {'H=500':<8} {'Primary':<8}"
+    # Comparison table
+    header = f"{'Model':<25} {'H=1':<8} {'H=10':<8} {'H=50':<8} {'H=100':<8} {'H=200':<8} {'H=500':<8} {'Primary':<8}"
     print(header)
-    print("-" * 90)
-
+    print("-" * 85)
     for name, info in all_models.items():
         r = info['results']
-        primary = info['primary']
-        print(f"{name:<28} {r[1]['nmae_mean']:<8.4f} {r[10]['nmae_mean']:<8.4f} "
+        p = info['primary']
+        print(f"{name:<25} {r[1]['nmae_mean']:<8.4f} {r[10]['nmae_mean']:<8.4f} "
               f"{r[50]['nmae_mean']:<8.4f} {r[100]['nmae_mean']:<8.4f} "
-              f"{r[200]['nmae_mean']:<8.4f} {r[500]['nmae_mean']:<8.4f} {primary:<8.4f}")
+              f"{r[200]['nmae_mean']:<8.4f} {r[500]['nmae_mean']:<8.4f} {p:<8.4f}")
 
-    # Per-state analysis for best model
-    best_model_name = min(all_models.keys(), key=lambda k: all_models[k]['primary'])
-    print(f"\nBest model: {best_model_name} (Primary = {all_models[best_model_name]['primary']:.4f})")
+    # Per-state for best model
+    best_model = min(all_models.keys(), key=lambda k: all_models[k]['primary'])
+    print(f"\nBest model: {best_model} (Primary = {all_models[best_model]['primary']:.4f})")
 
-    print(format_per_state_table(results_standard, [100, 200, 500], "Standard GP"))
-    print(format_per_state_table(all_models[best_model_name]['results'], [100, 200, 500],
-                                  best_model_name))
+    for label_name in ['Standard GP', best_model]:
+        r = all_models[label_name]['results']
+        print(f"\n  {label_name} - Per-State NMAE at H=500:")
+        print(f"  {'State':<15} {'NMAE':<10}")
+        print(f"  {'-'*25}")
+        for name in STATE_NAMES_7D:
+            val = r[500]['per_state_nmae'][name]['mean']
+            print(f"  {name:<15} {val:<10.4f}")
 
-    # Alpha sweep results
-    print(f"\nAlpha Sweep Results:")
-    print(f"{'Alpha':<8} {'H=100':<10} {'H=200':<10} {'H=500':<10} {'Primary':<10}")
-    print("-" * 48)
+    # Alpha sweep table
+    print(f"\nAlpha Sweep:")
+    print(f"  {'Alpha':<8} {'H=100':<10} {'H=200':<10} {'H=500':<10} {'Primary':<10}")
+    print(f"  {'-'*48}")
     for alpha in alphas:
         r = alpha_results[alpha]['results']
-        primary = alpha_results[alpha]['primary']
+        p = alpha_results[alpha]['primary']
         marker = " <-- best" if alpha == best_alpha else ""
-        print(f"{alpha:<8.1f} {r[100]['nmae_mean']:<10.4f} {r[200]['nmae_mean']:<10.4f} "
-              f"{r[500]['nmae_mean']:<10.4f} {primary:<10.4f}{marker}")
+        print(f"  {alpha:<8.1f} {r[100]['nmae_mean']:<10.4f} {r[200]['nmae_mean']:<10.4f} "
+              f"{r[500]['nmae_mean']:<10.4f} {p:<10.4f}{marker}")
 
-    # Comparison with v9 baseline
-    print(f"\nComparison with v9 Neural ODE baseline:")
+    # v9 comparison
     v9_nmae = {1: 0.0051, 10: 0.0628, 50: 0.4557, 100: 0.5064, 200: 0.4737, 500: 0.5529}
     v9_primary = np.mean([v9_nmae[100], v9_nmae[200], v9_nmae[500]])
+    print(f"\nv9 Neural ODE comparison:")
     print(f"  v9 PrimaryLongHorizonScore: {v9_primary:.4f}")
     for name, info in all_models.items():
-        improvement = (v9_primary - info['primary']) / v9_primary * 100
-        direction = "better" if improvement > 0 else "worse"
-        print(f"  {name:<28} Primary={info['primary']:.4f}  ({improvement:+.1f}% {direction})")
+        imp = (v9_primary - info['primary']) / v9_primary * 100
+        direction = "better" if imp > 0 else "worse"
+        print(f"  {name:<25} Primary={info['primary']:.4f}  ({imp:+.1f}% {direction})")
 
-    # ----------------------------------------------------------
-    # 6. Save Results
-    # ----------------------------------------------------------
-    print("\n[6/6] Saving results...")
-
+    # Save JSON
     output = {
         'timestamp': datetime.now().isoformat(),
-        'run_id': '20260628_175824_neural_ode_72h',
         'experiment': 'gp_physics_constrained',
         'config': {
-            'kernel': 'ConstantKernel(1.0) * RBF(length_scale=1.0)',
-            'n_samples': n_samples,
-            'n_segments': n_segments,
-            'seed': seed,
-            'wheelbase': WHEELBASE,
-            'dt': DT,
+            'n_samples': n_samples, 'n_segments': n_segments,
+            'kernel': 'ConstantKernel(1.0) * RBF(1.0)',
+            'wheelbase': WHEELBASE, 'dt': DT, 'seed': seed,
         },
-        'physics_accuracy': {
-            name: float(physics_nmae[i]) for i, name in enumerate(STATE_NAMES_7D)
-        },
+        'physics_accuracy': {name: float(physics_nmae[i])
+                             for i, name in enumerate(STATE_NAMES_7D)},
         'models': {},
-        'alpha_sweep': {
-            str(alpha): {'primary': alpha_results[alpha]['primary']}
-            for alpha in alphas
-        },
+        'alpha_sweep': {str(a): alpha_results[a]['primary'] for a in alphas},
         'best_alpha': best_alpha,
-        'best_model': best_model_name,
+        'best_model': best_model,
     }
-
     for name, info in all_models.items():
         output['models'][name] = {
             'primary': info['primary'],
@@ -758,18 +524,17 @@ def main():
                 str(h): {
                     'nmae_mean': info['results'][h]['nmae_mean'],
                     'survival_rate': info['results'][h]['survival_rate'],
-                }
-                for h in horizons
+                } for h in horizons
             },
         }
 
     output_path = 'D:/系统辨识作业/sindy_bicycle/research_72h/05_candidates/EXP013_gp_physics_constrained.json'
     with open(output_path, 'w') as f:
         json.dump(output, f, indent=2, default=str)
-    print(f"  Results saved to: {output_path}")
+    print(f"\nResults saved to: {output_path}")
 
     return output, all_models, alpha_results
 
 
 if __name__ == '__main__':
-    output, all_models, alpha_results = main()
+    main()

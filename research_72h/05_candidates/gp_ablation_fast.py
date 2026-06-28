@@ -1,6 +1,7 @@
-"""GP Multi-Seed Validation.
+"""GP Ablation Study - Fast Version.
 
-Trains and evaluates GP models with multiple seeds for statistical validation.
+Tests different GP configurations to understand what makes GP work well.
+Uses reduced n_restarts_optimizer and n_segments for faster execution.
 """
 import sys
 import json
@@ -86,7 +87,7 @@ def load_data(seed=42):
     }
 
 
-def train_gp_model(data, kernel, n_samples=1500, seed=42):
+def train_gp_model(data, kernel, n_samples=5000, seed=42, n_restarts=1):
     """Train GP model."""
     np.random.seed(seed)
 
@@ -105,20 +106,23 @@ def train_gp_model(data, kernel, n_samples=1500, seed=42):
 
     gps = []
     for i in range(STATE_DIM):
-        print(f"  Training GP for {STATE_NAMES_7D[i]}...")
+        print(f'  Training GP for {STATE_NAMES_7D[i]}...', end=' ', flush=True)
+        t0 = time.time()
         gp = GaussianProcessRegressor(
             kernel=kernel,
-            n_restarts_optimizer=1,
+            n_restarts_optimizer=n_restarts,
             random_state=seed,
             alpha=1e-6
         )
         gp.fit(X, Y[:, i])
         gps.append(gp)
+        elapsed = time.time() - t0
+        print(f'done ({elapsed:.1f}s)', flush=True)
 
     return gps
 
 
-def evaluate_gp(gps, data, state_std, action_std, delta_std, horizons, n_segments=5, seed=42):
+def evaluate_gp(gps, data, state_std, action_std, delta_std, horizons, n_segments=3, seed=42):
     """Evaluate GP model."""
     dt = 1.0 / 30.0
     episodes = data['episodes']
@@ -131,6 +135,8 @@ def evaluate_gp(gps, data, state_std, action_std, delta_std, horizons, n_segment
         if ep['length'] >= 1100:
             segments.append(ep)
     segments = segments[:n_segments]
+
+    print(f'  Evaluating on {len(segments)} segments...', flush=True)
 
     results = {}
     for h in horizons:
@@ -194,102 +200,136 @@ def evaluate_gp(gps, data, state_std, action_std, delta_std, horizons, n_segment
 
 
 def main():
-    print("=" * 60)
-    print("GP Multi-Seed Validation")
-    print("=" * 60)
+    print("=" * 60, flush=True)
+    print("GP Ablation Study (Fast)", flush=True)
+    print("=" * 60, flush=True)
 
-    kernel = ConstantKernel(1.0) * RBF(length_scale=1.0)
+    # Define ablation configurations
+    # Reduced n_restarts_optimizer from 3 to 1 for speed
+    ablation_configs = {
+        'full': {
+            'kernel': ConstantKernel(1.0) * RBF(length_scale=1.0),
+            'n_samples': 5000,
+            'n_restarts': 1,
+            'description': 'Full GP (baseline)',
+        },
+        'small_data': {
+            'kernel': ConstantKernel(1.0) * RBF(length_scale=1.0),
+            'n_samples': 1000,
+            'n_restarts': 1,
+            'description': 'Small dataset (1000 samples)',
+        },
+        'large_data': {
+            'kernel': ConstantKernel(1.0) * RBF(length_scale=1.0),
+            'n_samples': 10000,
+            'n_restarts': 1,
+            'description': 'Large dataset (10000 samples)',
+        },
+        'matern': {
+            'kernel': ConstantKernel(1.0) * Matern(length_scale=1.0, nu=2.5),
+            'n_samples': 5000,
+            'n_restarts': 1,
+            'description': 'Matern kernel (nu=2.5)',
+        },
+        'rbf_short': {
+            'kernel': ConstantKernel(1.0) * RBF(length_scale=0.1),
+            'n_samples': 5000,
+            'n_restarts': 1,
+            'description': 'RBF with short length scale',
+        },
+        'rbf_long': {
+            'kernel': ConstantKernel(1.0) * RBF(length_scale=10.0),
+            'n_samples': 5000,
+            'n_restarts': 1,
+            'description': 'RBF with long length scale',
+        },
+    }
 
-    print("\n1. Loading data...")
+    print("\n1. Loading data...", flush=True)
     data = load_data(seed=42)
+    print("   Data loaded.", flush=True)
 
-    seeds = [42, 43, 44, 45, 46]
     horizons = [1, 10, 50, 100, 200, 500]
     all_results = {}
 
-    for seed in seeds:
-        print(f"\n{'='*60}")
-        print(f"Training GP with seed={seed}")
-        print(f"{'='*60}")
+    for name, config in ablation_configs.items():
+        print(f"\n{'='*60}", flush=True)
+        print(f"Ablation: {name} - {config['description']}", flush=True)
+        print(f"{'='*60}", flush=True)
 
         start_time = time.time()
-        gps = train_gp_model(data, kernel, n_samples=1500, seed=seed)
+        gps = train_gp_model(data, config['kernel'], n_samples=config['n_samples'], seed=42, n_restarts=config['n_restarts'])
         train_time = time.time() - start_time
 
-        print(f"\nEvaluating seed={seed}...")
-        results = evaluate_gp(gps, data, data['state_std'], data['action_std'], data['delta_std'], horizons)
+        print(f"\nEvaluating {name}...", flush=True)
+        results = evaluate_gp(gps, data, data['state_std'], data['action_std'], data['delta_std'], horizons, n_segments=3)
 
-        print(f"\nResults for seed={seed}:")
-        print(f"{'Horizon':<10} {'NMAE':<12} {'Survival':<12}")
-        print("-" * 34)
+        print(f"\nResults for {name}:", flush=True)
+        print(f"{'Horizon':<10} {'NMAE':<12} {'Survival':<12}", flush=True)
+        print("-" * 34, flush=True)
         for h in horizons:
             r = results[h]
-            print(f"H={h:<7} {r['nmae_mean']:<12.4f} {r['survival_rate']:<12.2%}")
+            print(f"H={h:<7} {r['nmae_mean']:<12.4f} {r['survival_rate']:<12.2%}", flush=True)
 
         primary = np.mean([results[100]['nmae_mean'], results[200]['nmae_mean'], results[500]['nmae_mean']])
-        print(f"\nPrimaryLongHorizonScore: {primary:.4f}")
+        print(f"\nPrimaryLongHorizonScore: {primary:.4f}", flush=True)
 
-        all_results[seed] = {
+        all_results[name] = {
             'results': results,
             'primary': primary,
             'train_time': train_time,
+            'description': config['description'],
         }
 
     # Summary
-    print("\n" + "=" * 60)
-    print("SUMMARY: GP Multi-Seed Results")
-    print("=" * 60)
+    print("\n" + "=" * 60, flush=True)
+    print("SUMMARY: GP Ablation Results", flush=True)
+    print("=" * 60, flush=True)
 
-    print(f"\n{'Seed':<8} {'H=1':<10} {'H=10':<10} {'H=50':<10} {'H=100':<10} {'H=200':<10} {'H=500':<10} {'Primary':<10}")
-    print("-" * 78)
+    print(f"\n{'Config':<20} {'H=50':<10} {'H=100':<10} {'H=200':<10} {'H=500':<10} {'Primary':<10} {'Time':<10}", flush=True)
+    print("-" * 80, flush=True)
 
-    for seed in seeds:
-        r = all_results[seed]['results']
-        primary = all_results[seed]['primary']
-        print(f"{seed:<8} {r[1]['nmae_mean']:<10.4f} {r[10]['nmae_mean']:<10.4f} {r[50]['nmae_mean']:<10.4f} "
-              f"{r[100]['nmae_mean']:<10.4f} {r[200]['nmae_mean']:<10.4f} {r[500]['nmae_mean']:<10.4f} {primary:<10.4f}")
+    for name, data_dict in all_results.items():
+        r = data_dict['results']
+        primary = data_dict['primary']
+        train_time = data_dict['train_time']
+        print(f"{name:<20} {r[50]['nmae_mean']:<10.4f} {r[100]['nmae_mean']:<10.4f} "
+              f"{r[200]['nmae_mean']:<10.4f} {r[500]['nmae_mean']:<10.4f} {primary:<10.4f} {train_time:<10.1f}", flush=True)
 
-    # Compute statistics
-    primaries = [all_results[seed]['primary'] for seed in seeds]
-    print(f"\nPrimary Statistics:")
-    print(f"  Mean: {np.mean(primaries):.4f}")
-    print(f"  Std: {np.std(primaries):.4f}")
-    print(f"  Min: {np.min(primaries):.4f}")
-    print(f"  Max: {np.max(primaries):.4f}")
-
-    # Compare with v9 baseline
-    print(f"\nComparison with v9 baseline:")
-    print(f"{'Horizon':<10} {'v9 NMAE':<12} {'GP Mean':<12} {'GP Std':<12} {'Improvement':<12}")
-    print("-" * 58)
-    v9_nmae = {1: 0.0051, 10: 0.0628, 50: 0.4557, 100: 0.5064, 200: 0.4737, 500: 0.5529}
-    for h in horizons:
-        v9_val = v9_nmae.get(h, float('nan'))
-        gp_vals = [all_results[seed]['results'][h]['nmae_mean'] for seed in seeds]
-        gp_mean = np.mean(gp_vals)
-        gp_std = np.std(gp_vals)
-        if v9_val > 0 and not np.isnan(gp_mean):
-            improvement = (v9_val - gp_mean) / v9_val * 100
-            print(f"H={h:<7} {v9_val:<12.4f} {gp_mean:<12.4f} {gp_std:<12.4f} {improvement:<12.1f}%")
+    # Find best configuration
+    best_config = min(all_results.keys(), key=lambda k: all_results[k]['primary'])
+    print(f"\nBest configuration: {best_config} (Primary = {all_results[best_config]['primary']:.4f})", flush=True)
 
     # Save results
     output = {
         'timestamp': datetime.now().isoformat(),
         'run_id': '20260628_175824_neural_ode_72h',
-        'experiment': 'gp_multi_seed',
-        'seeds': seeds,
-        'results': {str(seed): {'primary': all_results[seed]['primary']} for seed in seeds},
-        'statistics': {
-            'mean': float(np.mean(primaries)),
-            'std': float(np.std(primaries)),
-            'min': float(np.min(primaries)),
-            'max': float(np.max(primaries)),
-        },
+        'experiment': 'gp_ablation',
+        'configs': list(ablation_configs.keys()),
+        'results': {},
+        'best_config': best_config,
     }
 
-    output_path = 'D:/系统辨识作业/sindy_bicycle/research_72h/05_candidates/EXP011_gp_multi_seed.json'
+    for name, data_dict in all_results.items():
+        output['results'][name] = {
+            'primary': data_dict['primary'],
+            'train_time': data_dict['train_time'],
+            'description': data_dict['description'],
+            'horizons': {}
+        }
+        for h in horizons:
+            r = data_dict['results'][h]
+            output['results'][name]['horizons'][str(h)] = {
+                'nmae_mean': r['nmae_mean'],
+                'nmae_std': r['nmae_std'],
+                'survival_rate': r['survival_rate'],
+                'per_state_nmae': r['per_state_nmae'],
+            }
+
+    output_path = 'D:/系统辨识作业/sindy_bicycle/research_72h/05_candidates/EXP012_gp_ablation.json'
     with open(output_path, 'w') as f:
         json.dump(output, f, indent=2, default=str)
-    print(f"\nResults saved to: {output_path}")
+    print(f"\nResults saved to: {output_path}", flush=True)
 
 
 if __name__ == '__main__':
