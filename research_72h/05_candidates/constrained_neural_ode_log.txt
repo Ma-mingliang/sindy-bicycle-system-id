@@ -1,0 +1,105 @@
+============================================================
+Constrained Neural ODE with Stability Constraints
+============================================================
+
+1. Loading data...
+
+============================================================
+Testing: weak_constraint
+============================================================
+Training Constrained Neural ODE (seed=43)...
+  max_jacobian_norm: 10.0
+  lambda_jacobian: 0.01
+  Epoch 50/200: loss=372.934438, time=457.2s
+  Epoch 100/200: loss=341.276524, time=917.6s
+  Epoch 150/200: loss=330.717238, time=1332.6s
+  Epoch 200/200: loss=327.910371, time=1789.8s
+Training completed in 1789.8s
+
+Evaluating weak_constraint...
+
+Results for weak_constraint:
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0231       100.00%     
+H=10      0.0522       100.00%     
+H=50      0.1731       100.00%     
+H=100     0.5531       100.00%     
+H=200     1.0685       100.00%     
+H=500     1.8641       100.00%     
+
+PrimaryLongHorizonScore: 1.1619
+
+============================================================
+Testing: medium_constraint
+============================================================
+Training Constrained Neural ODE (seed=43)...
+  max_jacobian_norm: 1.0
+  lambda_jacobian: 0.1
+  Epoch 50/200: loss=473.159877, time=330.9s
+  Epoch 100/200: loss=454.505534, time=678.5s
+  Epoch 150/200: loss=440.719303, time=1037.3s
+  Epoch 200/200: loss=455.192935, time=1337.5s
+Training completed in 1337.5s
+
+Evaluating medium_constraint...
+
+Results for medium_constraint:
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0232       100.00%     
+H=10      0.0550       100.00%     
+H=50      0.1495       100.00%     
+H=100     0.5373       100.00%     
+H=200     0.9888       100.00%     
+H=500     1.5803       100.00%     
+
+PrimaryLongHorizonScore: 1.0355
+
+============================================================
+Testing: strong_constraint
+============================================================
+Training Constrained Neural ODE (seed=43)...
+  max_jacobian_norm: 0.1
+  lambda_jacobian: 1.0
+  Epoch 50/200: loss=803.833222, time=246.5s
+  Epoch 100/200: loss=966.383206, time=488.0s
+  Epoch 150/200: loss=947.609234, time=731.0s
+  Epoch 200/200: loss=961.700997, time=974.2s
+Training completed in 974.2s
+
+Evaluating strong_constraint...
+
+Results for strong_constraint:
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0220       100.00%     
+H=10      0.0492       100.00%     
+H=50      0.1087       100.00%     
+H=100     0.3586       100.00%     
+H=200     0.6698       100.00%     
+H=500     0.9097       100.00%     
+
+PrimaryLongHorizonScore: 0.6460
+
+============================================================
+SUMMARY: Constrained Neural ODE Results
+============================================================
+
+Config               H=50       H=100      H=200      H=500      Primary   
+----------------------------------------------------------------------
+weak_constraint      0.1731     0.5531     1.0685     1.8641     1.1619    
+medium_constraint    0.1495     0.5373     0.9888     1.5803     1.0355    
+strong_constraint    0.1087     0.3586     0.6698     0.9097     0.6460    
+
+Comparison with v9 baseline:
+Horizon    v9 NMAE      Best Constrained Improvement 
+----------------------------------------------
+H=1       0.0051       0.0220       -331.0      %
+H=10      0.0628       0.0492       21.6        %
+H=50      0.4557       0.1087       76.1        %
+H=100     0.5064       0.3586       29.2        %
+H=200     0.4737       0.6698       -41.4       %
+H=500     0.5529       0.9097       -64.5       %
+
+Results saved to: D:/系统辨识作业/sindy_bicycle/research_72h/05_candidates/EXP014_constrained_neural_ode.json

@@ -1,0 +1,22 @@
+{
+  "timestamp": "2026-06-28T21:54:03.695282",
+  "run_id": "20260628_175824_neural_ode_144h",
+  "experiment": "constrained_neural_ode",
+  "configs": [
+    "weak_constraint",
+    "medium_constraint",
+    "strong_constraint"
+  ],
+  "results": {
+    "weak_constraint": {
+      "primary": 1.1619048515955608
+    },
+    "medium_constraint": {
+      "primary": 1.035499592622121
+    },
+    "strong_constraint": {
+      "primary": 0.6460243264834086
+    }
+  },
+  "best_config": "strong_constraint"
+}
