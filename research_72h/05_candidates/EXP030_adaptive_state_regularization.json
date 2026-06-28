@@ -1,0 +1,35 @@
+{
+  "timestamp": "2026-06-29T02:27:32.378033",
+  "run_id": "20260628_175824_neural_ode_144h",
+  "experiment": "adaptive_state_regularization",
+  "base_strengths": [
+    0.05,
+    0.1,
+    0.15,
+    0.2
+  ],
+  "results": {
+    "0.05": {
+      "primary": 0.5458692357535094
+    },
+    "0.1": {
+      "primary": 0.5257968265863893
+    },
+    "0.15": {
+      "primary": 0.5670267614349521
+    },
+    "0.2": {
+      "primary": 0.8688223399436282
+    }
+  },
+  "best_strength": 0.1,
+  "state_correction_weights": {
+    "e_y": 1.5,
+    "e_psi": 1.5,
+    "v": 0.5,
+    "theta": 1.0,
+    "theta_dot": 1.0,
+    "delta": 1.0,
+    "delta_dot": 1.0
+  }
+}
