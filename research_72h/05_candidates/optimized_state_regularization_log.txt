@@ -1,0 +1,165 @@
+============================================================
+Optimized State Space Regularization - Multi-Seed
+============================================================
+
+1. Loading data...
+
+============================================================
+Training with seed=42
+============================================================
+Training model (seed=42)...
+  Epoch 50/200: loss=282.445959, time=110.0s
+  Epoch 100/200: loss=226.760316, time=218.7s
+  Epoch 150/200: loss=205.533607, time=328.2s
+  Epoch 200/200: loss=199.382034, time=437.1s
+Training completed in 437.1s
+
+Building state corrector...
+
+Evaluating with correction_strength=0.1...
+
+Results for seed=42:
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0227       100.00%     
+H=10      0.0654       100.00%     
+H=50      0.1213       100.00%     
+H=100     0.2888       100.00%     
+H=200     0.5848       100.00%     
+H=500     0.7577       100.00%     
+
+PrimaryLongHorizonScore: 0.5438
+
+============================================================
+Training with seed=43
+============================================================
+Training model (seed=43)...
+  Epoch 50/200: loss=293.219913, time=108.7s
+  Epoch 100/200: loss=233.456428, time=218.7s
+  Epoch 150/200: loss=215.263491, time=328.1s
+  Epoch 200/200: loss=208.477498, time=436.6s
+Training completed in 436.6s
+
+Building state corrector...
+
+Evaluating with correction_strength=0.1...
+
+Results for seed=43:
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0187       100.00%     
+H=10      0.0425       100.00%     
+H=50      0.0790       100.00%     
+H=100     0.2176       100.00%     
+H=200     0.3934       100.00%     
+H=500     0.6502       100.00%     
+
+PrimaryLongHorizonScore: 0.4204
+
+============================================================
+Training with seed=44
+============================================================
+Training model (seed=44)...
+  Epoch 50/200: loss=290.339705, time=109.6s
+  Epoch 100/200: loss=233.135601, time=218.9s
+  Epoch 150/200: loss=212.700700, time=328.0s
+  Epoch 200/200: loss=206.661973, time=437.4s
+Training completed in 437.4s
+
+Building state corrector...
+
+Evaluating with correction_strength=0.1...
+
+Results for seed=44:
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0176       100.00%     
+H=10      0.0427       100.00%     
+H=50      0.0791       100.00%     
+H=100     0.2707       100.00%     
+H=200     0.5173       100.00%     
+H=500     0.7776       100.00%     
+
+PrimaryLongHorizonScore: 0.5219
+
+============================================================
+Training with seed=45
+============================================================
+Training model (seed=45)...
+  Epoch 50/200: loss=308.852297, time=109.5s
+  Epoch 100/200: loss=231.791014, time=219.3s
+  Epoch 150/200: loss=210.404565, time=328.5s
+  Epoch 200/200: loss=206.843434, time=437.1s
+Training completed in 437.1s
+
+Building state corrector...
+
+Evaluating with correction_strength=0.1...
+
+Results for seed=45:
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0193       100.00%     
+H=10      0.0719       100.00%     
+H=50      0.1243       100.00%     
+H=100     0.5032       100.00%     
+H=200     1.1236       100.00%     
+H=500     1.5072       100.00%     
+
+PrimaryLongHorizonScore: 1.0447
+
+============================================================
+Training with seed=46
+============================================================
+Training model (seed=46)...
+  Epoch 50/200: loss=294.982330, time=109.8s
+  Epoch 100/200: loss=227.243621, time=219.3s
+  Epoch 150/200: loss=206.044954, time=329.0s
+  Epoch 200/200: loss=199.783188, time=438.2s
+Training completed in 438.2s
+
+Building state corrector...
+
+Evaluating with correction_strength=0.1...
+
+Results for seed=46:
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0116       100.00%     
+H=10      0.0334       100.00%     
+H=50      0.0716       100.00%     
+H=100     0.2335       100.00%     
+H=200     0.5711       100.00%     
+H=500     0.7864       100.00%     
+
+PrimaryLongHorizonScore: 0.5303
+
+============================================================
+SUMMARY: Multi-Seed Results
+============================================================
+
+Seed     H=1        H=10       H=50       H=100      H=200      H=500      Primary   
+------------------------------------------------------------------------------
+42       0.0227     0.0654     0.1213     0.2888     0.5848     0.7577     0.5438    
+43       0.0187     0.0425     0.0790     0.2176     0.3934     0.6502     0.4204    
+44       0.0176     0.0427     0.0791     0.2707     0.5173     0.7776     0.5219    
+45       0.0193     0.0719     0.1243     0.5032     1.1236     1.5072     1.0447    
+46       0.0116     0.0334     0.0716     0.2335     0.5711     0.7864     0.5303    
+
+Primary Statistics:
+  Mean: 0.6122
+  Std: 0.2206
+  Min: 0.4204
+  Max: 1.0447
+
+Comparison with v9 baseline:
+Horizon    v9 NMAE      Mean         Std          Improvement 
+----------------------------------------------------------
+H=1       0.0051       0.0180       0.0036       -252.1      %
+H=10      0.0628       0.0512       0.0148       18.5        %
+H=50      0.4557       0.0950       0.0228       79.1        %
+H=100     0.5064       0.3028       0.1034       40.2        %
+H=200     0.4737       0.6380       0.2520       -34.7       %
+H=500     0.5529       0.8958       0.3096       -62.0       %
+
+Results saved to: D:/系统辨识作业/sindy_bicycle/research_72h/05_candidates/EXP029_optimized_state_regularization.json
