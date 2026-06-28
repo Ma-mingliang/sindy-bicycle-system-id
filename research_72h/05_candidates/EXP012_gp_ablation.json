@@ -1,0 +1,262 @@
+{
+  "timestamp": "2026-06-28T20:50:53.246253",
+  "run_id": "20260628_175824_neural_ode_72h",
+  "experiment": "gp_ablation",
+  "configs": [
+    "full",
+    "small_data",
+    "large_data",
+    "matern",
+    "rbf_short",
+    "rbf_long"
+  ],
+  "results": {
+    "full": {
+      "primary": 0.7229965634517713,
+      "train_time": 2.6591789722442627,
+      "description": "Full GP (baseline, 500 samples)",
+      "learned_kernels": [
+        "1.19**2 * RBF(length_scale=1e-05)",
+        "0.985**2 * RBF(length_scale=1e-05)"
+      ],
+      "horizons": {
+        "1": {
+          "nmae_mean": 0.007010827741748349,
+          "nmae_std": 0.003223398863498575,
+          "survival_rate": 1.0
+        },
+        "10": {
+          "nmae_mean": 0.029830998354610297,
+          "nmae_std": 0.009483000877688337,
+          "survival_rate": 1.0
+        },
+        "50": {
+          "nmae_mean": 0.08012631673543437,
+          "nmae_std": 0.0156806572803362,
+          "survival_rate": 1.0
+        },
+        "100": {
+          "nmae_mean": 0.2723909662104205,
+          "nmae_std": 0.18467184971362036,
+          "survival_rate": 1.0
+        },
+        "200": {
+          "nmae_mean": 0.6304933947503188,
+          "nmae_std": 0.3938399881994941,
+          "survival_rate": 1.0
+        },
+        "500": {
+          "nmae_mean": 1.2661053293945748,
+          "nmae_std": 0.17761342275680217,
+          "survival_rate": 1.0
+        }
+      }
+    },
+    "small_data": {
+      "primary": 0.7229965634517713,
+      "train_time": 0.28601551055908203,
+      "description": "Small dataset (200 samples)",
+      "learned_kernels": [
+        "1.19**2 * RBF(length_scale=1e-05)",
+        "0.874**2 * RBF(length_scale=1e-05)"
+      ],
+      "horizons": {
+        "1": {
+          "nmae_mean": 0.007010827741748349,
+          "nmae_std": 0.003223398863498575,
+          "survival_rate": 1.0
+        },
+        "10": {
+          "nmae_mean": 0.029830998354610297,
+          "nmae_std": 0.009483000877688337,
+          "survival_rate": 1.0
+        },
+        "50": {
+          "nmae_mean": 0.08012631673543437,
+          "nmae_std": 0.0156806572803362,
+          "survival_rate": 1.0
+        },
+        "100": {
+          "nmae_mean": 0.2723909662104205,
+          "nmae_std": 0.18467184971362036,
+          "survival_rate": 1.0
+        },
+        "200": {
+          "nmae_mean": 0.6304933947503188,
+          "nmae_std": 0.3938399881994941,
+          "survival_rate": 1.0
+        },
+        "500": {
+          "nmae_mean": 1.2661053293945748,
+          "nmae_std": 0.17761342275680217,
+          "survival_rate": 1.0
+        }
+      }
+    },
+    "large_data": {
+      "primary": 0.7229965634517713,
+      "train_time": 12.125050783157349,
+      "description": "Large dataset (1000 samples)",
+      "learned_kernels": [
+        "1.05**2 * RBF(length_scale=1e-05)",
+        "0.985**2 * RBF(length_scale=1e-05)"
+      ],
+      "horizons": {
+        "1": {
+          "nmae_mean": 0.007010827741748349,
+          "nmae_std": 0.003223398863498575,
+          "survival_rate": 1.0
+        },
+        "10": {
+          "nmae_mean": 0.029830998354610297,
+          "nmae_std": 0.009483000877688337,
+          "survival_rate": 1.0
+        },
+        "50": {
+          "nmae_mean": 0.08012631673543437,
+          "nmae_std": 0.0156806572803362,
+          "survival_rate": 1.0
+        },
+        "100": {
+          "nmae_mean": 0.2723909662104205,
+          "nmae_std": 0.18467184971362036,
+          "survival_rate": 1.0
+        },
+        "200": {
+          "nmae_mean": 0.6304933947503188,
+          "nmae_std": 0.3938399881994941,
+          "survival_rate": 1.0
+        },
+        "500": {
+          "nmae_mean": 1.2661053293945748,
+          "nmae_std": 0.17761342275680217,
+          "survival_rate": 1.0
+        }
+      }
+    },
+    "matern": {
+      "primary": 0.7229965634517713,
+      "train_time": 3.5030834674835205,
+      "description": "Matern kernel (nu=2.5)",
+      "learned_kernels": [
+        "1.19**2 * Matern(length_scale=1e-05, nu=2.5)",
+        "0.985**2 * Matern(length_scale=1e-05, nu=2.5)"
+      ],
+      "horizons": {
+        "1": {
+          "nmae_mean": 0.007010827741748349,
+          "nmae_std": 0.003223398863498575,
+          "survival_rate": 1.0
+        },
+        "10": {
+          "nmae_mean": 0.029830998354610297,
+          "nmae_std": 0.009483000877688337,
+          "survival_rate": 1.0
+        },
+        "50": {
+          "nmae_mean": 0.08012631673543437,
+          "nmae_std": 0.0156806572803362,
+          "survival_rate": 1.0
+        },
+        "100": {
+          "nmae_mean": 0.2723909662104205,
+          "nmae_std": 0.18467184971362036,
+          "survival_rate": 1.0
+        },
+        "200": {
+          "nmae_mean": 0.6304933947503188,
+          "nmae_std": 0.3938399881994941,
+          "survival_rate": 1.0
+        },
+        "500": {
+          "nmae_mean": 1.2661053293945748,
+          "nmae_std": 0.17761342275680217,
+          "survival_rate": 1.0
+        }
+      }
+    },
+    "rbf_short": {
+      "primary": 0.7229968943261497,
+      "train_time": 2.946993112564087,
+      "description": "RBF with short length scale (0.1)",
+      "learned_kernels": [
+        "1.2**2 * RBF(length_scale=0.0228)",
+        "1.03**2 * RBF(length_scale=0.0805)"
+      ],
+      "horizons": {
+        "1": {
+          "nmae_mean": 0.007010827741748349,
+          "nmae_std": 0.003223398863498575,
+          "survival_rate": 1.0
+        },
+        "10": {
+          "nmae_mean": 0.02983099789963805,
+          "nmae_std": 0.009483000375232224,
+          "survival_rate": 1.0
+        },
+        "50": {
+          "nmae_mean": 0.08012632580922677,
+          "nmae_std": 0.015680670950888258,
+          "survival_rate": 1.0
+        },
+        "100": {
+          "nmae_mean": 0.2723910508622599,
+          "nmae_std": 0.18467196386630544,
+          "survival_rate": 1.0
+        },
+        "200": {
+          "nmae_mean": 0.6304936342995056,
+          "nmae_std": 0.39384042361229743,
+          "survival_rate": 1.0
+        },
+        "500": {
+          "nmae_mean": 1.2661059978166833,
+          "nmae_std": 0.17761465287402212,
+          "survival_rate": 1.0
+        }
+      }
+    },
+    "rbf_long": {
+      "primary": 0.7229965634517713,
+      "train_time": 2.561753034591675,
+      "description": "RBF with long length scale (10.0)",
+      "learned_kernels": [
+        "1.19**2 * RBF(length_scale=1e-05)",
+        "0.985**2 * RBF(length_scale=1e-05)"
+      ],
+      "horizons": {
+        "1": {
+          "nmae_mean": 0.007010827741748349,
+          "nmae_std": 0.003223398863498575,
+          "survival_rate": 1.0
+        },
+        "10": {
+          "nmae_mean": 0.029830998354610297,
+          "nmae_std": 0.009483000877688337,
+          "survival_rate": 1.0
+        },
+        "50": {
+          "nmae_mean": 0.08012631673543437,
+          "nmae_std": 0.0156806572803362,
+          "survival_rate": 1.0
+        },
+        "100": {
+          "nmae_mean": 0.2723909662104205,
+          "nmae_std": 0.18467184971362036,
+          "survival_rate": 1.0
+        },
+        "200": {
+          "nmae_mean": 0.6304933947503188,
+          "nmae_std": 0.3938399881994941,
+          "survival_rate": 1.0
+        },
+        "500": {
+          "nmae_mean": 1.2661053293945748,
+          "nmae_std": 0.17761342275680217,
+          "survival_rate": 1.0
+        }
+      }
+    }
+  },
+  "best_config": "full"
+}
