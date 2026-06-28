@@ -3,10 +3,14 @@
 Core idea: Koopman operator linearizes nonlinear systems.
 Linear systems do NOT accumulate errors the way nonlinear ones do.
 Key improvement over Deep Koopman (EXP008):
-1. Spectral normalization on K to enforce |eigenvalues| < 1 (stability)
+1. Eigenvalue clamping on K to enforce |eigenvalues| < 1 (stability)
 2. Multi-step rollout loss to prevent error accumulation
 3. Larger lifted space (32 vs 20)
 4. Eigenvalue monitoring during training
+
+Stability mechanism: After each gradient update, we clamp the eigenvalues of K
+to lie within a circle of radius spectral_bound < 1, ensuring contractive dynamics
+that prevent long-horizon error accumulation.
 """
 import sys
 import os
@@ -38,11 +42,11 @@ class StableKoopman(nn.Module):
     - Encoder: phi: R^7 -> R^lifted_dim (lifting)
     - Decoder: psi: R^lifted_dim -> R^7 (inverse lifting)
     - Linear dynamics: z_{t+1} = K * z_t + B * u_t
-    - K is spectrally normalized to ensure |eigenvalues| < 1 (stability)
+    - K eigenvalues clamped to |lambda| <= spectral_bound after each step
 
-    Stability is enforced via spectral normalization which rescales K so its
-    largest singular value is <= spectral_bound (< 1), making the dynamics
-    contractive and preventing long-horizon error accumulation.
+    Stability is enforced by eigenvalue clamping: after each gradient update,
+    we decompose K = V * diag(lambda) * V^{-1} and clamp |lambda| <= spectral_bound.
+    This guarantees the dynamics are contractive.
     """
     def __init__(self, state_dim=7, action_dim=1, lifted_dim=32, hidden=128,
                  spectral_bound=0.98):
@@ -74,42 +78,41 @@ class StableKoopman(nn.Module):
         )
 
         # Linear dynamics in lifted space
-        # K is stored as raw weights; spectral norm applied in forward
-        self.K_raw = nn.Linear(lifted_dim, lifted_dim, bias=False)
+        self.K = nn.Linear(lifted_dim, lifted_dim, bias=False)
         self.B = nn.Linear(action_dim, lifted_dim, bias=False)
 
-        # Initialize K close to a scaled identity for stability
-        nn.init.eye_(self.K_raw.weight)
-        self.K_raw.weight.data *= 0.5  # Start well within unit circle
+        # Initialize K as scaled identity (well within unit circle)
+        nn.init.eye_(self.K.weight)
+        self.K.weight.data *= 0.5
         nn.init.xavier_uniform_(self.B.weight, gain=0.1)
 
-    def _spectral_norm_K(self):
-        """Compute spectral norm of K_raw and return normalized K weight.
+    def clamp_K_eigenvalues(self):
+        """Clamp eigenvalues of K to lie within unit circle of given radius.
 
-        Uses power iteration for efficiency. Returns the weight matrix
-        rescaled so its spectral norm <= self.spectral_bound.
+        Decomposes K = V * diag(lambda) * V^{-1}, clamps |lambda| <= spectral_bound,
+        then reconstructs K = V * diag(clamped_lambda) * V^{-1}.
+        This is done in-place after each gradient update step.
         """
-        W = self.K_raw.weight  # (lifted_dim, lifted_dim)
-        # Power iteration to estimate largest singular value
-        # Use a batch of random vectors for robustness
-        n = W.shape[0]
-        u = torch.randn(n, device=W.device, dtype=W.dtype)
-        u = u / (u.norm() + 1e-8)
-        v = torch.randn(n, device=W.device, dtype=W.dtype)
-        v = v / (v.norm() + 1e-8)
-
         with torch.no_grad():
-            for _ in range(5):
-                v_new = W.T @ u
-                v = v_new / (v_new.norm() + 1e-8)
-                u_new = W @ v
-                u = u_new / (u_new.norm() + 1e-8)
-
-        sigma = torch.dot(u, W @ v).abs()
-
-        # Rescale if sigma exceeds bound
-        scale = self.spectral_bound / torch.clamp(sigma, min=self.spectral_bound)
-        return W * scale
+            W = self.K.weight.data
+            try:
+                # Eigendecomposition (may produce complex eigenvalues)
+                eigenvalues, V = torch.linalg.eig(W)
+                # Clamp magnitude
+                magnitudes = torch.abs(eigenvalues)
+                clamped_magnitudes = torch.clamp(magnitudes, max=self.spectral_bound)
+                # Apply clamping: lambda_clamped = lambda * (clamped_mag / mag)
+                scale = clamped_magnitudes / (magnitudes + 1e-10)
+                eigenvalues_clamped = eigenvalues * scale.to(eigenvalues.dtype)
+                # Reconstruct: W = V * diag(lambda) * V^{-1}
+                V_inv = torch.linalg.inv(V)
+                W_new = (V @ torch.diag(eigenvalues_clamped) @ V_inv).real
+                self.K.weight.data.copy_(W_new)
+            except Exception:
+                # Fallback: just rescale by spectral norm
+                sigma = torch.linalg.svdvals(W)[0]
+                if sigma > self.spectral_bound:
+                    self.K.weight.data *= self.spectral_bound / sigma
 
     def encode(self, x):
         return self.encoder(x)
@@ -118,8 +121,7 @@ class StableKoopman(nn.Module):
         return self.decoder(z)
 
     def predict_next_z(self, z, u):
-        K = self._spectral_norm_K()
-        return nn.functional.linear(z, K) + self.B(u)
+        return self.K(z) + self.B(u)
 
     def forward(self, x, u):
         z = self.encode(x)
@@ -127,23 +129,12 @@ class StableKoopman(nn.Module):
         x_next = self.decode(z_next)
         return x_next, z_next
 
-    def rollout(self, x0, actions, steps):
-        """Rollout for multi-step prediction."""
-        z = self.encode(x0)
-        predictions = [self.decode(z)]
-
-        for step in range(steps):
-            u = actions[:, step:step+1] if actions.dim() == 2 else actions[step:step+1]
-            z = self.predict_next_z(z, u)
-            predictions.append(self.decode(z))
-
-        return torch.stack(predictions, dim=1)
-
-    def get_spectral_norm(self):
-        """Get current spectral norm of K for monitoring."""
-        W = self.K_raw.weight.detach()
+    def get_max_eigenvalue_magnitude(self):
+        """Get the maximum eigenvalue magnitude of K for monitoring."""
+        W = self.K.weight.detach()
         try:
-            return torch.linalg.svdvals(W)[0].item()
+            eigenvalues = torch.linalg.eigvals(W)
+            return torch.abs(eigenvalues).max().item()
         except:
             return float('nan')
 
@@ -203,24 +194,6 @@ def load_data(seed=42):
     }
 
 
-def sample_batch(episodes, eps_indices, batch_size):
-    """Sample a batch of (state, next_state, action) tuples."""
-    states_list = []
-    next_states_list = []
-    actions_list = []
-
-    for _ in range(batch_size):
-        ep_idx = np.random.choice(eps_indices)
-        ep = episodes[ep_idx]
-        idx = np.random.randint(0, ep['length'] - 1)
-        states_list.append(ep['obs'][idx])
-        next_states_list.append(ep['obs'][idx + 1])
-        actions_list.append(ep['action'][idx])
-
-    return (np.array(states_list), np.array(next_states_list),
-            np.array(actions_list))
-
-
 def train_stable_koopman(data, config, seed=43):
     torch.manual_seed(seed)
     np.random.seed(seed)
@@ -247,6 +220,8 @@ def train_stable_koopman(data, config, seed=43):
     opt = torch.optim.Adam(model.parameters(), lr=config['lr'], weight_decay=1e-5)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=config['n_epochs'])
 
+    batch_size = config['batch_size']
+
     print(f"Training Stable Koopman (seed={seed})...")
     print(f"  Lifted dim: {config.get('lifted_dim', 32)}, Hidden: {config.get('hidden', 128)}")
     print(f"  Spectral bound: {config.get('spectral_bound', 0.98)}")
@@ -257,20 +232,25 @@ def train_stable_koopman(data, config, seed=43):
     patience = 50
     patience_counter = 0
 
-    batch_size = config['batch_size']
-
     model.train()
     for epoch in range(config['n_epochs']):
         epoch_loss = 0.0
         n_batches = 0
 
         for _ in range(100):
-            s_np, s_next_np, a_np = sample_batch(
-                episodes, actual_train_eps, batch_size)
+            # Sample batch
+            states_list, next_states_list, actions_list = [], [], []
+            for _ in range(batch_size):
+                ep_idx = np.random.choice(actual_train_eps)
+                ep = episodes[ep_idx]
+                idx = np.random.randint(0, ep['length'] - 1)
+                states_list.append(ep['obs'][idx])
+                next_states_list.append(ep['obs'][idx + 1])
+                actions_list.append(ep['action'][idx])
 
-            sb = torch.FloatTensor(s_np / state_std)
-            sb_next = torch.FloatTensor(s_next_np / state_std)
-            ab = torch.FloatTensor(a_np.reshape(-1, 1) / action_std)
+            sb = torch.FloatTensor(np.array(states_list) / state_std)
+            sb_next = torch.FloatTensor(np.array(next_states_list) / state_std)
+            ab = torch.FloatTensor(np.array(actions_list).reshape(-1, 1) / action_std)
 
             # Single-step prediction
             x_next_pred, z_next = model(sb, ab)
@@ -289,7 +269,7 @@ def train_stable_koopman(data, config, seed=43):
             loss_multi = torch.tensor(0.0, device=sb.device)
             if epoch >= 20 and np.random.random() < 0.3:
                 rollout_len = min(np.random.choice([3, 5, 8]), 8)
-                seq_s, seq_s_next, seq_a = [], [], []
+                seq_s, seq_a, seq_sn = [], [], []
 
                 for _ in range(batch_size):
                     ep_idx = np.random.choice(actual_train_eps)
@@ -297,22 +277,21 @@ def train_stable_koopman(data, config, seed=43):
                     max_start = ep['length'] - rollout_len - 1
                     if max_start <= 0:
                         continue
-                    start_idx = np.random.randint(0, max_start)
-                    seq_s.append(ep['obs'][start_idx])
-                    seq_a.append(ep['action'][start_idx:start_idx + rollout_len])
-                    seq_s_next.append(
-                        ep['obs'][start_idx + 1:start_idx + rollout_len + 1])
+                    si = np.random.randint(0, max_start)
+                    seq_s.append(ep['obs'][si])
+                    seq_a.append(ep['action'][si:si + rollout_len].flatten())
+                    seq_sn.append(ep['obs'][si + 1:si + rollout_len + 1])
 
                 if len(seq_s) >= 16:
                     s0_t = torch.FloatTensor(np.array(seq_s) / state_std)
-                    acts_t = torch.FloatTensor(np.array(seq_a) / action_std)
-                    targets_t = torch.FloatTensor(np.array(seq_s_next) / state_std)
+                    acts_t = torch.FloatTensor(np.array(seq_a) / action_std)  # (N, rollout_len)
+                    targets_t = torch.FloatTensor(np.array(seq_sn) / state_std)  # (N, rollout_len, 7)
 
-                    z_cur = model.encode(s0_t)
+                    z_cur = model.encode(s0_t)  # (N, lifted_dim)
                     for t in range(rollout_len):
-                        u_t = acts_t[:, t:t+1]
+                        u_t = acts_t[:, t:t+1]  # (N, 1)
                         z_cur = model.predict_next_z(z_cur, u_t)
-                        x_pred_t = model.decode(z_cur)
+                        x_pred_t = model.decode(z_cur)  # (N, 7)
                         weight = 1.0 + 0.1 * t
                         loss_multi = loss_multi + weight * nn.functional.mse_loss(
                             x_pred_t, targets_t[:, t, :])
@@ -328,6 +307,9 @@ def train_stable_koopman(data, config, seed=43):
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             opt.step()
 
+            # Clamp eigenvalues after each gradient step
+            model.clamp_K_eigenvalues()
+
             epoch_loss += loss.item()
             n_batches += 1
 
@@ -339,11 +321,18 @@ def train_stable_koopman(data, config, seed=43):
             n_val_batches = 0
 
             for _ in range(20):
-                s_np, s_next_np, a_np = sample_batch(
-                    episodes, val_eps, batch_size)
-                sb = torch.FloatTensor(s_np / state_std)
-                sb_next = torch.FloatTensor(s_next_np / state_std)
-                ab = torch.FloatTensor(a_np.reshape(-1, 1) / action_std)
+                states_list, next_states_list, actions_list = [], [], []
+                for _ in range(batch_size):
+                    ep_idx = np.random.choice(val_eps)
+                    ep = episodes[ep_idx]
+                    idx = np.random.randint(0, ep['length'] - 1)
+                    states_list.append(ep['obs'][idx])
+                    next_states_list.append(ep['obs'][idx + 1])
+                    actions_list.append(ep['action'][idx])
+
+                sb = torch.FloatTensor(np.array(states_list) / state_std)
+                sb_next = torch.FloatTensor(np.array(next_states_list) / state_std)
+                ab = torch.FloatTensor(np.array(actions_list).reshape(-1, 1) / action_std)
 
                 with torch.no_grad():
                     x_next_pred, _ = model(sb, ab)
@@ -368,9 +357,9 @@ def train_stable_koopman(data, config, seed=43):
         if (epoch + 1) % 50 == 0:
             avg_loss = epoch_loss / max(n_batches, 1)
             elapsed = time.time() - start_time
-            sigma = model.get_spectral_norm()
+            max_eig = model.get_max_eigenvalue_magnitude()
             print(f"  Epoch {epoch+1}/{config['n_epochs']}: loss={avg_loss:.6f}, "
-                  f"val_loss={val_loss:.6f}, spectral_norm={sigma:.4f}, "
+                  f"val_loss={val_loss:.6f}, max|eig(K)|={max_eig:.4f}, "
                   f"time={elapsed:.1f}s")
 
     if best_model_state is not None:
@@ -378,9 +367,10 @@ def train_stable_koopman(data, config, seed=43):
     model.eval()
 
     total_time = time.time() - start_time
-    sigma = model.get_spectral_norm()
+    max_eig = model.get_max_eigenvalue_magnitude()
     print(f"Training completed in {total_time:.1f}s")
-    print(f"Final spectral norm of K: {sigma:.4f} (target <= {config.get('spectral_bound', 0.98)})")
+    print(f"Final max|eigenvalue(K)|: {max_eig:.4f} "
+          f"(target <= {config.get('spectral_bound', 0.98)})")
 
     return model, state_std, action_std
 
@@ -469,7 +459,7 @@ def main():
     print("Stable Koopman for Bicycle Dynamics")
     print("=" * 60)
     print("Key improvements over Deep Koopman (EXP008):")
-    print("  1. Spectral normalization on K (|singular values| < 1)")
+    print("  1. Eigenvalue clamping on K (|lambda| <= 0.98)")
     print("  2. Multi-step rollout loss (prevents error accumulation)")
     print("  3. Larger lifted space (32 vs 20)")
     print("  4. Deeper encoder/decoder (128 hidden)")

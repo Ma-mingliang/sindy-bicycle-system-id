@@ -69,26 +69,23 @@ class ODEFunc(nn.Module):
         return self.net(x)
 
 
-def physics_derivatives(s, a, state_std, delta_std, dt):
-    """Compute simplified bicycle physics derivatives in normalized space.
+def physics_derivatives(s_cur, action_val, state_std, action_std, delta_std, dt):
+    """Compute simplified bicycle physics derivatives.
 
     This is the fallback model when ensemble uncertainty is high.
-    Returns dsdt in normalized space (same as neural ODE output).
+    Input: s_cur (7D physical state), action_val (scalar physical action)
+    Returns s_next (7D physical state after one Euler step).
     """
-    # Denormalize to physical space
-    s_phys = s * state_std
-    a_phys = a * state_std[5]  # steering action maps to delta-ish
-
-    e_y = s_phys[:, 0]
-    e_psi = s_phys[:, 1]
-    v = s_phys[:, 2]
-    theta = s_phys[:, 3]
-    theta_dot = s_phys[:, 4]
-    delta = s_phys[:, 5]
-    delta_dot = s_phys[:, 6]
+    e_y = s_cur[0]
+    e_psi = s_cur[1]
+    v = s_cur[2]
+    theta = s_cur[3]
+    theta_dot = s_cur[4]
+    delta = s_cur[5]
+    delta_dot = s_cur[6]
 
     # Simplified bicycle kinematics
-    e_y_dot = v * np.sin(e_psi) if isinstance(e_psi, float) else v * np.sin(e_psi)
+    e_y_dot = v * np.sin(e_psi)
     e_psi_dot = -v * delta / WHEELBASE
     v_dot = 0.0
     theta_dot_phys = theta_dot
@@ -97,15 +94,18 @@ def physics_derivatives(s, a, state_std, delta_std, dt):
     # Simplified steering: spring-damper toward zero
     delta_ddot = -25.0 * delta - 5.0 * delta_dot
 
-    # Stack
+    # Stack derivatives
     dsdt_phys = np.array([
         e_y_dot, e_psi_dot, v_dot, theta_dot_phys,
         theta_ddot, delta_dot_phys, delta_ddot
     ])
 
-    # Normalize back to model output space
-    dsdt_norm = dsdt_phys / (delta_std * dt)
-    return dsdt_norm
+    # Clip to prevent explosion
+    dsdt_phys = np.clip(dsdt_phys, -10.0, 10.0)
+
+    # Euler step
+    s_next = s_cur + dsdt_phys * dt
+    return s_next
 
 
 def check_survival(state):
@@ -214,8 +214,13 @@ def sample_contiguous_windows(episodes, ep_indices, window_size, batch_size,
     return states_t, actions_t, deltas_t
 
 
-def train_single_model(data, config, seed=42):
-    """Train a single Neural ODE model with contiguous window multi-step loss."""
+def train_single_model(data, config, seed=42, bootstrap_fraction=1.0):
+    """Train a single Neural ODE model with contiguous window multi-step loss.
+
+    Args:
+        bootstrap_fraction: fraction of training episodes to sample (for diversity).
+            Use <1.0 for bootstrap aggregating to increase ensemble diversity.
+    """
     torch.manual_seed(seed)
     np.random.seed(seed)
 
@@ -227,11 +232,20 @@ def train_single_model(data, config, seed=42):
     train_eps = data['train_eps']
     episodes = data['episodes']
 
+    # Bootstrap sampling for diversity
+    if bootstrap_fraction < 1.0:
+        n_bootstrap = max(1, int(len(train_eps) * bootstrap_fraction))
+        np.random.seed(seed + 1000)
+        boot_indices = np.random.choice(len(train_eps), size=n_bootstrap, replace=True)
+        boot_eps = train_eps[boot_indices]
+    else:
+        boot_eps = train_eps
+
     # Split train into train/val (90/10)
-    n_train = len(train_eps)
+    n_train = len(boot_eps)
     n_val = max(1, n_train // 10)
-    val_eps = train_eps[:n_val]
-    actual_train_eps = train_eps[n_val:]
+    val_eps = boot_eps[:n_val]
+    actual_train_eps = boot_eps[n_val:]
 
     model = ODEFunc(
         hidden=config['hidden'],
@@ -245,7 +259,7 @@ def train_single_model(data, config, seed=42):
     curriculum = [int(x) for x in config.get('rollout_curriculum', '1,5,10,20').split(',')]
 
     print(f"  Training model (hidden={config['hidden']}, depth={config['depth']}, "
-          f"act={config['activation']}, seed={seed})...")
+          f"act={config['activation']}, seed={seed}, bootstrap={bootstrap_fraction})...")
     start_time = time.time()
 
     best_val_loss = float('inf')
@@ -313,6 +327,11 @@ def train_single_model(data, config, seed=42):
             loss = (loss_single
                     + config.get('lambda_multi', 0.3) * loss_multi
                     + config.get('lambda_jacobian', 0.01) * loss_jacobian)
+
+            # Guard against loss explosion
+            if torch.isnan(loss) or torch.isinf(loss) or loss.item() > 1e6:
+                opt.zero_grad()
+                continue
 
             opt.zero_grad()
             loss.backward()
@@ -461,12 +480,10 @@ def evaluate_ensemble_switching(models, data, state_std, action_std, delta_std,
                     elif strategy == 'physics_fallback':
                         # Switch to physics when uncertain
                         if uncertainty > threshold:
-                            s_next_norm = physics_derivatives(
-                                s_cur / state_std,
-                                np.array([actions_seg[step]]) / action_std,
-                                state_std, delta_std, dt
+                            s_next = physics_derivatives(
+                                s_cur, actions_seg[step],
+                                state_std, action_std, delta_std, dt
                             )
-                            s_next = s_cur + s_next_norm * delta_std * dt
                             n_switched += 1
                         else:
                             s_next = mean_pred
@@ -486,12 +503,10 @@ def evaluate_ensemble_switching(models, data, state_std, action_std, delta_std,
                         weight = np.clip(weight, 0.0, 1.0)
 
                         # Physics prediction
-                        s_next_norm_phys = physics_derivatives(
-                            s_cur / state_std,
-                            np.array([actions_seg[step]]) / action_std,
-                            state_std, delta_std, dt
+                        s_next_phys = physics_derivatives(
+                            s_cur, actions_seg[step],
+                            state_std, action_std, delta_std, dt
                         )
-                        s_next_phys = s_cur + s_next_norm_phys * delta_std * dt
 
                         # Weighted blend
                         s_next = weight * mean_pred + (1 - weight) * s_next_phys
@@ -559,6 +574,7 @@ def main():
     print("3 models: Standard(tanh,h64,d3), Wide(tanh,h128,d2), SiLU(silu,h64,d3)")
 
     # Configuration for each model architecture
+    # Use bootstrap sampling + diverse architectures for ensemble diversity
     model_configs = [
         {
             'name': 'standard',
@@ -566,6 +582,7 @@ def main():
             'lr': 1e-3, 'n_epochs': 200, 'batch_size': 256,
             'rollout_curriculum': '1,5,10,20',
             'lambda_multi': 0.3, 'lambda_jacobian': 0.01,
+            'bootstrap_fraction': 0.8,  # Bootstrap 80% of data
         },
         {
             'name': 'wide',
@@ -573,6 +590,7 @@ def main():
             'lr': 1e-3, 'n_epochs': 200, 'batch_size': 256,
             'rollout_curriculum': '1,5,10,20',
             'lambda_multi': 0.3, 'lambda_jacobian': 0.01,
+            'bootstrap_fraction': 0.8,
         },
         {
             'name': 'silu',
@@ -580,6 +598,7 @@ def main():
             'lr': 1e-3, 'n_epochs': 200, 'batch_size': 256,
             'rollout_curriculum': '1,5,10,20',
             'lambda_multi': 0.3, 'lambda_jacobian': 0.01,
+            'bootstrap_fraction': 0.8,
         },
     ]
 
@@ -605,7 +624,10 @@ def main():
         print(f"\n{'='*70}")
         print(f"Model {i+1}/3: {config['name']} (seed={seed})")
         print(f"{'='*70}")
-        model = train_single_model(data, config, seed=seed)
+        model = train_single_model(
+            data, config, seed=seed,
+            bootstrap_fraction=config.get('bootstrap_fraction', 1.0)
+        )
         models.append(model)
 
         # Save model
@@ -623,16 +645,17 @@ def main():
     # Evaluate all strategies
     horizons = [1, 10, 50, 100, 200, 500]
 
+    # Thresholds calibrated to actual uncertainty range (mean~0.01, p99~0.018)
     strategies = {
         'ensemble_avg': {'threshold': None},
-        'physics_fallback_0.05': {'strategy': 'physics_fallback', 'threshold': 0.05},
-        'physics_fallback_0.1': {'strategy': 'physics_fallback', 'threshold': 0.1},
-        'physics_fallback_0.2': {'strategy': 'physics_fallback', 'threshold': 0.2},
-        'hold_state_0.1': {'strategy': 'hold_state', 'threshold': 0.1},
-        'hold_state_0.2': {'strategy': 'hold_state', 'threshold': 0.2},
-        'adaptive_0.05': {'strategy': 'adaptive', 'threshold': 0.05},
-        'adaptive_0.1': {'strategy': 'adaptive', 'threshold': 0.1},
-        'adaptive_0.2': {'strategy': 'adaptive', 'threshold': 0.2},
+        'physics_fallback_p50': {'strategy': 'physics_fallback', 'threshold': 0.010},
+        'physics_fallback_p90': {'strategy': 'physics_fallback', 'threshold': 0.014},
+        'physics_fallback_p99': {'strategy': 'physics_fallback', 'threshold': 0.018},
+        'hold_state_p50': {'strategy': 'hold_state', 'threshold': 0.010},
+        'hold_state_p90': {'strategy': 'hold_state', 'threshold': 0.014},
+        'adaptive_p50': {'strategy': 'adaptive', 'threshold': 0.010},
+        'adaptive_p90': {'strategy': 'adaptive', 'threshold': 0.014},
+        'adaptive_p99': {'strategy': 'adaptive', 'threshold': 0.018},
     }
 
     print("\n3. Evaluating strategies...")
