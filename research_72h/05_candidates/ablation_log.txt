@@ -1,0 +1,141 @@
+============================================================
+Ablation Experiment for Constrained Neural ODE
+============================================================
+
+1. Loading data...
+
+============================================================
+Ablation: baseline
+============================================================
+Training Constrained Neural ODE (seed=43)...
+  Epoch 50/200: loss=803.833222, time=256.5s
+  Epoch 100/200: loss=966.383206, time=511.9s
+  Epoch 150/200: loss=947.609234, time=734.9s
+  Epoch 200/200: loss=961.700997, time=995.1s
+Training completed in 995.1s
+
+Evaluating baseline...
+
+Results for baseline:
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0220       100.00%     
+H=10      0.0492       100.00%     
+H=50      0.1087       100.00%     
+H=100     0.3586       100.00%     
+H=200     0.6698       100.00%     
+H=500     0.9097       100.00%     
+
+PrimaryLongHorizonScore: 0.6460
+
+============================================================
+Ablation: no_constraint
+============================================================
+Training Constrained Neural ODE (seed=43)...
+  Epoch 50/200: loss=293.219913, time=159.5s
+  Epoch 100/200: loss=233.456428, time=335.1s
+  Epoch 150/200: loss=215.263491, time=505.1s
+  Epoch 200/200: loss=208.477498, time=650.2s
+Training completed in 650.2s
+
+Evaluating no_constraint...
+
+Results for no_constraint:
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0180       100.00%     
+H=10      0.0406       100.00%     
+H=50      0.1236       100.00%     
+H=100     0.3395       100.00%     
+H=200     0.6665       100.00%     
+H=500     0.8045       80.00%      
+
+PrimaryLongHorizonScore: 0.6035
+
+============================================================
+Ablation: weak_constraint
+============================================================
+Training Constrained Neural ODE (seed=43)...
+  Epoch 50/200: loss=372.934438, time=429.9s
+  Epoch 100/200: loss=341.276524, time=961.4s
+  Epoch 150/200: loss=330.717238, time=1365.4s
+  Epoch 200/200: loss=327.910371, time=1658.3s
+Training completed in 1658.3s
+
+Evaluating weak_constraint...
+
+Results for weak_constraint:
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0231       100.00%     
+H=10      0.0522       100.00%     
+H=50      0.1731       100.00%     
+H=100     0.5531       100.00%     
+H=200     1.0685       100.00%     
+H=500     1.8641       100.00%     
+
+PrimaryLongHorizonScore: 1.1619
+
+============================================================
+Ablation: strong_constraint
+============================================================
+Training Constrained Neural ODE (seed=43)...
+  Epoch 50/200: loss=2898.221367, time=294.1s
+  Epoch 100/200: loss=4389.143715, time=563.6s
+  Epoch 150/200: loss=3987.063617, time=984.6s
+  Epoch 200/200: loss=2854.004437, time=1422.1s
+Training completed in 1422.1s
+
+Evaluating strong_constraint...
+
+Results for strong_constraint:
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0218       100.00%     
+H=10      0.0509       100.00%     
+H=50      0.1107       100.00%     
+H=100     0.3698       100.00%     
+H=200     0.8114       100.00%     
+H=500     1.0746       100.00%     
+
+PrimaryLongHorizonScore: 0.7519
+
+============================================================
+Ablation: larger_network
+============================================================
+Training Constrained Neural ODE (seed=43)...
+  Epoch 50/200: loss=1066.269275, time=550.2s
+  Epoch 100/200: loss=1689.762448, time=1242.7s
+  Epoch 150/200: loss=1372.039993, time=1875.8s
+  Epoch 200/200: loss=1391.716715, time=2459.6s
+Training completed in 2459.6s
+
+Evaluating larger_network...
+
+Results for larger_network:
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0236       100.00%     
+H=10      0.0569       100.00%     
+H=50      0.1569       100.00%     
+H=100     0.4726       100.00%     
+H=200     1.3690       100.00%     
+H=500     2.7339       100.00%     
+
+PrimaryLongHorizonScore: 1.5252
+
+============================================================
+SUMMARY: Ablation Results
+============================================================
+
+Config               H=50       H=100      H=200      H=500      Primary   
+----------------------------------------------------------------------
+baseline             0.1087     0.3586     0.6698     0.9097     0.6460    
+no_constraint        0.1236     0.3395     0.6665     0.8045     0.6035    
+weak_constraint      0.1731     0.5531     1.0685     1.8641     1.1619    
+strong_constraint    0.1107     0.3698     0.8114     1.0746     0.7519    
+larger_network       0.1569     0.4726     1.3690     2.7339     1.5252    
+
+Best configuration: no_constraint (Primary = 0.6035)
+
+Results saved to: D:/系统辨识作业/sindy_bicycle/research_72h/05_candidates/EXP019_ablation.json

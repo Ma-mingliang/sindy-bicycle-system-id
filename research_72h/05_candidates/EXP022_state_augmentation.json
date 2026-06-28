@@ -1,0 +1,65 @@
+{
+  "timestamp": "2026-06-29T01:30:00",
+  "run_id": "20260628_state_augmentation",
+  "experiment": "state_space_augmentation",
+  "description": "State Space Augmentation Neural ODE: expand 7D state to 16D/32D with hidden states for better long-horizon prediction",
+  "approach": "Multiple variants tested: direct augmentation, latent augmentation, residual augmentation, v2 extension. All use augmented ODE dynamics in higher-dimensional space with hidden states capturing unobserved physics (tire forces, slip angles, etc.)",
+  "best_experiment": "augmented_16d_direct_fast",
+  "horizons": [1, 10, 50, 100, 200, 500],
+  "v9_baseline": {
+    "1": 0.0255,
+    "10": 0.0648,
+    "50": 0.1854,
+    "100": 0.4407,
+    "200": 0.9967,
+    "500": 1.3837
+  },
+  "results": {
+    "augmented_16d_direct_fast": {
+      "config": {
+        "variant": "direct",
+        "augmented_dim": 16,
+        "hidden": 128,
+        "depth": 4,
+        "lr": 0.001,
+        "n_epochs": 200,
+        "batch_size": 256,
+        "rollout_curriculum": "1,5,10,20",
+        "lambda_multi": 0.3
+      },
+      "primary_score": 1.6131,
+      "per_horizon": {
+        "1": {"nmae_mean": 1.0499, "nmae_std": 0.0, "survival_rate": 1.0, "per_state": {"e_y": {"mean": 0.7884}, "e_psi": {"mean": 0.7075}, "v": {"mean": 0.1727}, "theta": {"mean": 0.7744}, "theta_dot": {"mean": 1.3809}, "delta": {"mean": 2.1569}, "delta_dot": {"mean": 2.3692}}},
+        "10": {"nmae_mean": 1.5311, "nmae_std": 0.0, "survival_rate": 0.2, "per_state": {"e_y": {"mean": 1.2394}, "e_psi": {"mean": 1.0873}, "v": {"mean": 0.1723}, "theta": {"mean": 1.2246}, "theta_dot": {"mean": 1.8501}, "delta": {"mean": 2.7731}, "delta_dot": {"mean": 2.7705}}},
+        "50": {"nmae_mean": 1.6131, "nmae_std": 0.0, "survival_rate": 0.0, "per_state": {"e_y": {"mean": 1.6131}, "e_psi": {"mean": 1.6131}, "v": {"mean": 1.6131}, "theta": {"mean": 1.6131}, "theta_dot": {"mean": 1.6131}, "delta": {"mean": 1.6131}, "delta_dot": {"mean": 1.6131}}},
+        "100": {"nmae_mean": 1.6131, "nmae_std": 0.0, "survival_rate": 0.0, "per_state": {"e_y": {"mean": 1.6131}, "e_psi": {"mean": 1.6131}, "v": {"mean": 1.6131}, "theta": {"mean": 1.6131}, "theta_dot": {"mean": 1.6131}, "delta": {"mean": 1.6131}, "delta_dot": {"mean": 1.6131}}},
+        "200": {"nmae_mean": 1.6131, "nmae_std": 0.0, "survival_rate": 0.0, "per_state": {"e_y": {"mean": 1.6131}, "e_psi": {"mean": 1.6131}, "v": {"mean": 1.6131}, "theta": {"mean": 1.6131}, "theta_dot": {"mean": 1.6131}, "delta": {"mean": 1.6131}, "delta_dot": {"mean": 1.6131}}},
+        "500": {"nmae_mean": 1.6131, "nmae_std": 0.0, "survival_rate": 0.0, "per_state": {"e_y": {"mean": 1.6131}, "e_psi": {"mean": 1.6131}, "v": {"mean": 1.6131}, "theta": {"mean": 1.6131}, "theta_dot": {"mean": 1.6131}, "delta": {"mean": 1.6131}, "delta_dot": {"mean": 1.6131}}}
+      }
+    },
+    "augmented_9h_v2": {
+      "config": {
+        "n_hidden": 9,
+        "hidden": 64,
+        "depth": 3,
+        "lr": 0.001,
+        "n_epochs": 200,
+        "batch_size": 256,
+        "rollout_curriculum": "1,5,10,20",
+        "lambda_multi": 0.3,
+        "lambda_hidden": 0.01
+      },
+      "primary_score": 16.3034,
+      "per_horizon": {
+        "1": {"nmae_mean": 16.3034, "nmae_std": 0.0, "survival_rate": 0.2, "per_state": {}},
+        "10": {"nmae_mean": 16.3034, "nmae_std": 0.0, "survival_rate": 0.0, "per_state": {}},
+        "50": {"nmae_mean": 16.3034, "nmae_std": 0.0, "survival_rate": 0.0, "per_state": {}},
+        "100": {"nmae_mean": 16.3034, "nmae_std": 0.0, "survival_rate": 0.0, "per_state": {}},
+        "200": {"nmae_mean": 16.3034, "nmae_std": 0.0, "survival_rate": 0.0, "per_state": {}},
+        "500": {"nmae_mean": 16.3034, "nmae_std": 0.0, "survival_rate": 0.0, "per_state": {}}
+      }
+    }
+  },
+  "conclusion": "State Space Augmentation FAILED to improve over v9 baseline. All variants showed significantly worse results. The fundamental issue is that hidden states have no ground truth for training, leading to unstable dynamics that degrade prediction quality.",
+  "recommendation": "Use alternative approaches: (1) History window augmentation, (2) Ensemble methods, (3) Error correction networks, (4) Scheduled sampling for training."
+}

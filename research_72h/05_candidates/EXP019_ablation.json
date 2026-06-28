@@ -1,0 +1,30 @@
+{
+  "timestamp": "2026-06-29T00:35:33.421530",
+  "run_id": "20260628_175824_neural_ode_144h",
+  "experiment": "ablation_constrained_neural_ode",
+  "configs": [
+    "baseline",
+    "no_constraint",
+    "weak_constraint",
+    "strong_constraint",
+    "larger_network"
+  ],
+  "results": {
+    "baseline": {
+      "primary": 0.6460243264834086
+    },
+    "no_constraint": {
+      "primary": 0.6035221914450327
+    },
+    "weak_constraint": {
+      "primary": 1.1619048515955608
+    },
+    "strong_constraint": {
+      "primary": 0.7519239087899526
+    },
+    "larger_network": {
+      "primary": 1.5251735250155132
+    }
+  },
+  "best_config": "no_constraint"
+}

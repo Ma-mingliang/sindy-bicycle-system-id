@@ -3,16 +3,16 @@
 Core idea: Use multiple diverse models and switch based on uncertainty.
 When ensemble variance is high (OOD state), fall back to physics model.
 
-Key differences from existing ensemble_v9.py:
-1. Diverse architectures (not just different seeds of same architecture)
-2. Switching logic with physics fallback (not just averaging)
-3. Contiguous window multi-step training (bug-fixed)
-4. Multiple switching strategies tested
+Key features:
+1. Uses pre-trained V9 checkpoints + newly trained diverse models
+2. Tests multiple switching strategies with calibrated thresholds
+3. Compares with V9 baseline (Primary=0.5110)
 
 Models:
-- Model A: Standard v9 (tanh, hidden=64, depth=3)
-- Model B: Wider/shallower (tanh, hidden=128, depth=2)
-- Model C: SiLU activation (silu, hidden=64, depth=3)
+- Model A: V9 fixed seed=42 (tanh, hidden=64, depth=3) - pre-trained
+- Model B: V9 fixed seed=43 (tanh, hidden=64, depth=3) - pre-trained
+- Model C: V9 fixed seed=44 (tanh, hidden=64, depth=3) - pre-trained
+- Model D: Wide (tanh, hidden=128, depth=2) - trained fresh
 """
 import sys
 import json
@@ -60,7 +60,6 @@ class ODEFunc(nn.Module):
         layers.append(nn.Linear(hidden, STATE_DIM))
         self.net = nn.Sequential(*layers)
 
-        # Initialize last layer small for stability
         nn.init.zeros_(self.net[-1].bias)
         nn.init.xavier_uniform_(self.net[-1].weight, gain=0.1)
 
@@ -69,13 +68,13 @@ class ODEFunc(nn.Module):
         return self.net(x)
 
 
-def physics_derivatives(s_cur, action_val, state_std, action_std, delta_std, dt):
-    """Compute simplified bicycle physics derivatives.
+def physics_fallback(s_cur, action_val):
+    """Simplified bicycle physics fallback.
 
-    This is the fallback model when ensemble uncertainty is high.
     Input: s_cur (7D physical state), action_val (scalar physical action)
     Returns s_next (7D physical state after one Euler step).
     """
+    dt = 1.0 / 30.0
     e_y = s_cur[0]
     e_psi = s_cur[1]
     v = s_cur[2]
@@ -91,10 +90,8 @@ def physics_derivatives(s_cur, action_val, state_std, action_std, delta_std, dt)
     theta_dot_phys = theta_dot
     theta_ddot = (GRAVITY / HEIGHT_CG) * theta - (v ** 2 / (HEIGHT_CG * WHEELBASE)) * delta
     delta_dot_phys = delta_dot
-    # Simplified steering: spring-damper toward zero
     delta_ddot = -25.0 * delta - 5.0 * delta_dot
 
-    # Stack derivatives
     dsdt_phys = np.array([
         e_y_dot, e_psi_dot, v_dot, theta_dot_phys,
         theta_ddot, delta_dot_phys, delta_ddot
@@ -103,7 +100,6 @@ def physics_derivatives(s_cur, action_val, state_std, action_std, delta_std, dt)
     # Clip to prevent explosion
     dsdt_phys = np.clip(dsdt_phys, -10.0, 10.0)
 
-    # Euler step
     s_next = s_cur + dsdt_phys * dt
     return s_next
 
@@ -169,6 +165,26 @@ def load_data(seed=42):
     }
 
 
+def load_pretrained_model(checkpoint_path):
+    """Load a pre-trained V9 model from checkpoint."""
+    checkpoint = torch.load(checkpoint_path, map_location='cpu', weights_only=False)
+    config = checkpoint['config']
+
+    model = ODEFunc(
+        hidden=config.get('hidden', 64),
+        depth=config.get('depth', 3),
+        activation=config.get('activation', 'tanh')
+    )
+    model.load_state_dict(checkpoint['model_state'])
+    model.eval()
+
+    state_std = checkpoint['state_std']
+    action_std = checkpoint['action_std']
+    delta_std = checkpoint['delta_std']
+
+    return model, state_std, action_std, delta_std
+
+
 def sample_contiguous_windows(episodes, ep_indices, window_size, batch_size,
                                state_std, action_std, delta_std, dt):
     """Sample contiguous trajectory windows for multi-step training."""
@@ -214,13 +230,8 @@ def sample_contiguous_windows(episodes, ep_indices, window_size, batch_size,
     return states_t, actions_t, deltas_t
 
 
-def train_single_model(data, config, seed=42, bootstrap_fraction=1.0):
-    """Train a single Neural ODE model with contiguous window multi-step loss.
-
-    Args:
-        bootstrap_fraction: fraction of training episodes to sample (for diversity).
-            Use <1.0 for bootstrap aggregating to increase ensemble diversity.
-    """
+def train_single_model(data, config, seed=42):
+    """Train a single Neural ODE model (V9 fixed style)."""
     torch.manual_seed(seed)
     np.random.seed(seed)
 
@@ -232,20 +243,11 @@ def train_single_model(data, config, seed=42, bootstrap_fraction=1.0):
     train_eps = data['train_eps']
     episodes = data['episodes']
 
-    # Bootstrap sampling for diversity
-    if bootstrap_fraction < 1.0:
-        n_bootstrap = max(1, int(len(train_eps) * bootstrap_fraction))
-        np.random.seed(seed + 1000)
-        boot_indices = np.random.choice(len(train_eps), size=n_bootstrap, replace=True)
-        boot_eps = train_eps[boot_indices]
-    else:
-        boot_eps = train_eps
-
     # Split train into train/val (90/10)
-    n_train = len(boot_eps)
+    n_train = len(train_eps)
     n_val = max(1, n_train // 10)
-    val_eps = boot_eps[:n_val]
-    actual_train_eps = boot_eps[n_val:]
+    val_eps = train_eps[:n_val]
+    actual_train_eps = train_eps[n_val:]
 
     model = ODEFunc(
         hidden=config['hidden'],
@@ -259,7 +261,7 @@ def train_single_model(data, config, seed=42, bootstrap_fraction=1.0):
     curriculum = [int(x) for x in config.get('rollout_curriculum', '1,5,10,20').split(',')]
 
     print(f"  Training model (hidden={config['hidden']}, depth={config['depth']}, "
-          f"act={config['activation']}, seed={seed}, bootstrap={bootstrap_fraction})...")
+          f"act={config['activation']}, seed={seed})...")
     start_time = time.time()
 
     best_val_loss = float('inf')
@@ -272,7 +274,6 @@ def train_single_model(data, config, seed=42, bootstrap_fraction=1.0):
         epoch_loss = 0.0
         n_batches = 0
 
-        # Determine current rollout steps
         rollout_steps = 1
         for i, threshold in enumerate(curriculum):
             if epoch >= config['n_epochs'] * (i + 1) / (len(curriculum) + 1):
@@ -296,7 +297,6 @@ def train_single_model(data, config, seed=42, bootstrap_fraction=1.0):
             pred = model(sb, ab)
             loss_single = nn.functional.mse_loss(pred, yb)
 
-            # Multi-step rollout loss
             loss_multi = torch.tensor(0.0)
             if rollout_steps > 1 and window_size > rollout_steps:
                 n_roll = min(config['batch_size'], len(states_t))
@@ -310,7 +310,6 @@ def train_single_model(data, config, seed=42, bootstrap_fraction=1.0):
                     loss_multi = loss_multi + nn.functional.mse_loss(s_cur, target)
                 loss_multi = loss_multi / rollout_steps
 
-            # Jacobian regularization
             loss_jacobian = torch.tensor(0.0)
             if config.get('lambda_jacobian', 0) > 0:
                 s_req = sb[:min(32, len(sb))].requires_grad_(True)
@@ -328,7 +327,6 @@ def train_single_model(data, config, seed=42, bootstrap_fraction=1.0):
                     + config.get('lambda_multi', 0.3) * loss_multi
                     + config.get('lambda_jacobian', 0.01) * loss_jacobian)
 
-            # Guard against loss explosion
             if torch.isnan(loss) or torch.isinf(loss) or loss.item() > 1e6:
                 opt.zero_grad()
                 continue
@@ -343,7 +341,6 @@ def train_single_model(data, config, seed=42, bootstrap_fraction=1.0):
 
         scheduler.step()
 
-        # Validation with early stopping
         if (epoch + 1) % 10 == 0:
             model.eval()
             val_loss = 0.0
@@ -410,8 +407,8 @@ def predict_single_model(model, s_cur, action, state_std, action_std, delta_std,
     return s_next, dsdt_norm
 
 
-def evaluate_ensemble_switching(models, data, state_std, action_std, delta_std,
-                                 horizons, strategy='adaptive', threshold=0.1,
+def evaluate_ensemble_switching(models, model_state_stds, model_action_stds, model_delta_stds,
+                                 data, horizons, strategy='adaptive', threshold=0.1,
                                  n_segments=5, seed=42):
     """Evaluate ensemble with switching strategies.
 
@@ -420,10 +417,14 @@ def evaluate_ensemble_switching(models, data, state_std, action_std, delta_std,
     - 'physics_fallback': Switch to physics when uncertainty > threshold
     - 'hold_state': Hold current state when uncertainty > threshold
     - 'adaptive': Weighted blend based on uncertainty (smooth switching)
+    - 'best_model': Use only the best single model (no ensemble)
     """
     dt = 1.0 / 30.0
     episodes = data['episodes']
     test_eps = data['test_eps']
+    state_std = data['state_std']
+    action_std = data['action_std']
+    delta_std = data['delta_std']
 
     np.random.seed(seed)
     segments = []
@@ -457,10 +458,11 @@ def evaluate_ensemble_switching(models, data, state_std, action_std, delta_std,
                 try:
                     # Get predictions from all models
                     predictions = []
-                    for model in models:
+                    for i, model in enumerate(models):
                         s_next_i, _ = predict_single_model(
                             model, s_cur, actions_seg[step],
-                            state_std, action_std, delta_std, dt
+                            model_state_stds[i], model_action_stds[i],
+                            model_delta_stds[i], dt
                         )
                         predictions.append(s_next_i)
 
@@ -474,22 +476,20 @@ def evaluate_ensemble_switching(models, data, state_std, action_std, delta_std,
 
                     # Apply switching strategy
                     if strategy == 'ensemble_avg':
-                        # Simple averaging (no switching)
                         s_next = mean_pred
 
+                    elif strategy == 'best_model':
+                        # Use only the first model (best single model)
+                        s_next = predictions[0]
+
                     elif strategy == 'physics_fallback':
-                        # Switch to physics when uncertain
                         if uncertainty > threshold:
-                            s_next = physics_derivatives(
-                                s_cur, actions_seg[step],
-                                state_std, action_std, delta_std, dt
-                            )
+                            s_next = physics_fallback(s_cur, actions_seg[step])
                             n_switched += 1
                         else:
                             s_next = mean_pred
 
                     elif strategy == 'hold_state':
-                        # Hold current state when uncertain
                         if uncertainty > threshold:
                             s_next = s_cur.copy()
                             n_switched += 1
@@ -497,18 +497,10 @@ def evaluate_ensemble_switching(models, data, state_std, action_std, delta_std,
                             s_next = mean_pred
 
                     elif strategy == 'adaptive':
-                        # Smooth blending based on uncertainty
-                        # Weight = 1 when uncertainty is 0, approaches 0 as uncertainty grows
                         weight = np.exp(-uncertainty / threshold)
                         weight = np.clip(weight, 0.0, 1.0)
 
-                        # Physics prediction
-                        s_next_phys = physics_derivatives(
-                            s_cur, actions_seg[step],
-                            state_std, action_std, delta_std, dt
-                        )
-
-                        # Weighted blend
+                        s_next_phys = physics_fallback(s_cur, actions_seg[step])
                         s_next = weight * mean_pred + (1 - weight) * s_next_phys
                         if weight < 0.5:
                             n_switched += 1
@@ -571,106 +563,134 @@ def main():
     print("Ensemble with Switching for Neural ODE")
     print("=" * 70)
     print("\nCore idea: Diverse models + uncertainty-based switching to physics")
-    print("3 models: Standard(tanh,h64,d3), Wide(tanh,h128,d2), SiLU(silu,h64,d3)")
-
-    # Configuration for each model architecture
-    # Use bootstrap sampling + diverse architectures for ensemble diversity
-    model_configs = [
-        {
-            'name': 'standard',
-            'hidden': 64, 'depth': 3, 'activation': 'tanh',
-            'lr': 1e-3, 'n_epochs': 200, 'batch_size': 256,
-            'rollout_curriculum': '1,5,10,20',
-            'lambda_multi': 0.3, 'lambda_jacobian': 0.01,
-            'bootstrap_fraction': 0.8,  # Bootstrap 80% of data
-        },
-        {
-            'name': 'wide',
-            'hidden': 128, 'depth': 2, 'activation': 'tanh',
-            'lr': 1e-3, 'n_epochs': 200, 'batch_size': 256,
-            'rollout_curriculum': '1,5,10,20',
-            'lambda_multi': 0.3, 'lambda_jacobian': 0.01,
-            'bootstrap_fraction': 0.8,
-        },
-        {
-            'name': 'silu',
-            'hidden': 64, 'depth': 3, 'activation': 'silu',
-            'lr': 1e-3, 'n_epochs': 200, 'batch_size': 256,
-            'rollout_curriculum': '1,5,10,20',
-            'lambda_multi': 0.3, 'lambda_jacobian': 0.01,
-            'bootstrap_fraction': 0.8,
-        },
-    ]
+    print("Using pre-trained V9 checkpoints + newly trained diverse model")
 
     # Load data
     print("\n1. Loading data...")
     data = load_data(seed=42)
-    print(f"   State std: {data['state_std']}")
-    print(f"   Action std: {data['action_std']}")
-    print(f"   Delta std: {data['delta_std']}")
-    print(f"   Train episodes: {len(data['train_eps'])}")
-    print(f"   Test episodes: {len(data['test_eps'])}")
-
     state_std = data['state_std']
     action_std = data['action_std']
     delta_std = data['delta_std']
+    print(f"   State std: {state_std}")
+    print(f"   Action std: {action_std}")
+    print(f"   Delta std: {delta_std}")
+    print(f"   Train episodes: {len(data['train_eps'])}")
+    print(f"   Test episodes: {len(data['test_eps'])}")
 
-    # Train 3 diverse models
-    print("\n2. Training ensemble models...")
+    # Load pre-trained V9 models
+    print("\n2. Loading pre-trained V9 models...")
     models = []
-    seeds = [42, 43, 44]
+    model_state_stds = []
+    model_action_stds = []
+    model_delta_stds = []
+    model_names = []
 
-    for i, (config, seed) in enumerate(zip(model_configs, seeds)):
-        print(f"\n{'='*70}")
-        print(f"Model {i+1}/3: {config['name']} (seed={seed})")
-        print(f"{'='*70}")
-        model = train_single_model(
-            data, config, seed=seed,
-            bootstrap_fraction=config.get('bootstrap_fraction', 1.0)
-        )
-        models.append(model)
+    v9_checkpoints = [
+        ('D:/系统辨识作业/sindy_bicycle/research_72h/07_models/v9_fixed_seed42.pt', 'v9_fixed_42'),
+        ('D:/系统辨识作业/sindy_bicycle/research_72h/07_models/v9_fixed_seed43.pt', 'v9_fixed_43'),
+        ('D:/系统辨识作业/sindy_bicycle/research_72h/07_models/v9_fixed_seed44.pt', 'v9_fixed_44'),
+    ]
 
-        # Save model
-        model_path = f'D:/系统辨识作业/sindy_bicycle/research_72h/07_models/ensemble_switch_{config["name"]}_seed{seed}.pt'
-        torch.save({
-            'config': config,
-            'state_std': state_std,
-            'action_std': action_std,
-            'delta_std': delta_std,
-            'model_state': model.state_dict(),
-            'seed': seed,
-        }, model_path)
-        print(f"    Model saved to: {model_path}")
+    for ckpt_path, name in v9_checkpoints:
+        try:
+            model, m_state_std, m_action_std, m_delta_std = load_pretrained_model(ckpt_path)
+            models.append(model)
+            model_state_stds.append(m_state_std)
+            model_action_stds.append(m_action_std)
+            model_delta_stds.append(m_delta_std)
+            model_names.append(name)
+            print(f"   Loaded: {name}")
+        except Exception as e:
+            print(f"   Failed to load {name}: {e}")
+
+    # Train one additional diverse model (wide architecture)
+    print("\n3. Training diverse model (wide, hidden=128, depth=2)...")
+    wide_config = {
+        'name': 'wide',
+        'hidden': 128, 'depth': 2, 'activation': 'tanh',
+        'lr': 1e-3, 'n_epochs': 200, 'batch_size': 256,
+        'rollout_curriculum': '1,5,10,20',
+        'lambda_multi': 0.3, 'lambda_jacobian': 0.01,
+    }
+    wide_model = train_single_model(data, wide_config, seed=45)
+    models.append(wide_model)
+    model_state_stds.append(state_std)
+    model_action_stds.append(action_std)
+    model_delta_stds.append(delta_std)
+    model_names.append('wide_45')
+
+    # Save wide model
+    wide_path = 'D:/系统辨识作业/sindy_bicycle/research_72h/07_models/ensemble_switch_wide_45.pt'
+    torch.save({
+        'config': wide_config,
+        'state_std': state_std,
+        'action_std': action_std,
+        'delta_std': delta_std,
+        'model_state': wide_model.state_dict(),
+        'seed': 45,
+    }, wide_path)
+    print(f"   Saved: {wide_path}")
+
+    print(f"\n   Total models in ensemble: {len(models)}")
+    for name in model_names:
+        print(f"     - {name}")
+
+    # First, measure uncertainty distribution to calibrate thresholds
+    print("\n4. Measuring uncertainty distribution...")
+    # Use ensemble_avg to measure raw uncertainty
+    _, raw_stats = evaluate_ensemble_switching(
+        models, model_state_stds, model_action_stds, model_delta_stds,
+        data, [100, 200, 500], strategy='ensemble_avg', threshold=0.0,
+        n_segments=5, seed=42
+    )
+
+    print("\n   Uncertainty distribution:")
+    for h in [100, 200, 500]:
+        if h in raw_stats:
+            s = raw_stats[h]
+            print(f"   H={h}: mean={s['uncertainty_mean']:.6f}, "
+                  f"p50={s['uncertainty_p50']:.6f}, p90={s['uncertainty_p90']:.6f}, "
+                  f"p99={s['uncertainty_p99']:.6f}")
+
+    # Calibrate thresholds based on actual uncertainty
+    unc_mean = np.mean([raw_stats[h]['uncertainty_mean'] for h in [100, 200, 500] if h in raw_stats])
+    unc_p50 = np.mean([raw_stats[h]['uncertainty_p50'] for h in [100, 200, 500] if h in raw_stats])
+    unc_p90 = np.mean([raw_stats[h]['uncertainty_p90'] for h in [100, 200, 500] if h in raw_stats])
+    unc_p99 = np.mean([raw_stats[h]['uncertainty_p99'] for h in [100, 200, 500] if h in raw_stats])
+
+    print(f"\n   Calibrated thresholds:")
+    print(f"     mean={unc_mean:.6f}, p50={unc_p50:.6f}, p90={unc_p90:.6f}, p99={unc_p99:.6f}")
+
+    # Define strategies with calibrated thresholds
+    strategies = {
+        'ensemble_avg': {'strategy': 'ensemble_avg', 'threshold': 0.0},
+        'best_single': {'strategy': 'best_model', 'threshold': 0.0},
+        f'physics_mean': {'strategy': 'physics_fallback', 'threshold': unc_mean},
+        f'physics_p50': {'strategy': 'physics_fallback', 'threshold': unc_p50},
+        f'physics_p90': {'strategy': 'physics_fallback', 'threshold': unc_p90},
+        f'physics_p99': {'strategy': 'physics_fallback', 'threshold': unc_p99},
+        f'hold_p50': {'strategy': 'hold_state', 'threshold': unc_p50},
+        f'hold_p90': {'strategy': 'hold_state', 'threshold': unc_p90},
+        f'adaptive_mean': {'strategy': 'adaptive', 'threshold': unc_mean},
+        f'adaptive_p50': {'strategy': 'adaptive', 'threshold': unc_p50},
+        f'adaptive_p90': {'strategy': 'adaptive', 'threshold': unc_p90},
+    }
 
     # Evaluate all strategies
     horizons = [1, 10, 50, 100, 200, 500]
-
-    # Thresholds calibrated to actual uncertainty range (mean~0.01, p99~0.018)
-    strategies = {
-        'ensemble_avg': {'threshold': None},
-        'physics_fallback_p50': {'strategy': 'physics_fallback', 'threshold': 0.010},
-        'physics_fallback_p90': {'strategy': 'physics_fallback', 'threshold': 0.014},
-        'physics_fallback_p99': {'strategy': 'physics_fallback', 'threshold': 0.018},
-        'hold_state_p50': {'strategy': 'hold_state', 'threshold': 0.010},
-        'hold_state_p90': {'strategy': 'hold_state', 'threshold': 0.014},
-        'adaptive_p50': {'strategy': 'adaptive', 'threshold': 0.010},
-        'adaptive_p90': {'strategy': 'adaptive', 'threshold': 0.014},
-        'adaptive_p99': {'strategy': 'adaptive', 'threshold': 0.018},
-    }
-
-    print("\n3. Evaluating strategies...")
+    print("\n5. Evaluating strategies...")
     all_results = {}
 
     for strat_name, strat_config in strategies.items():
+        strategy = strat_config['strategy']
+        threshold = strat_config['threshold']
         print(f"\n{'='*70}")
-        strategy = strat_config.get('strategy', 'ensemble_avg')
-        threshold = strat_config.get('threshold', 0.1)
-        print(f"Strategy: {strat_name} (strategy={strategy}, threshold={threshold})")
+        print(f"Strategy: {strat_name} (strategy={strategy}, threshold={threshold:.6f})")
         print(f"{'='*70}")
 
         results, switch_stats = evaluate_ensemble_switching(
-            models, data, state_std, action_std, delta_std,
-            horizons, strategy=strategy, threshold=threshold,
+            models, model_state_stds, model_action_stds, model_delta_stds,
+            data, horizons, strategy=strategy, threshold=threshold,
             n_segments=5, seed=42
         )
 
@@ -699,14 +719,14 @@ def main():
     print("SUMMARY: All Strategies")
     print("=" * 70)
 
-    print(f"\n{'Strategy':<25} {'H=1':<8} {'H=10':<8} {'H=50':<8} {'H=100':<8} "
+    print(f"\n{'Strategy':<20} {'H=1':<8} {'H=10':<8} {'H=50':<8} {'H=100':<8} "
           f"{'H=200':<8} {'H=500':<8} {'Primary':<8}")
-    print("-" * 90)
+    print("-" * 84)
 
     for strat_name, data_dict in all_results.items():
         r = data_dict['results']
         primary = data_dict['primary_score']
-        print(f"{strat_name:<25} ", end="")
+        print(f"{strat_name:<20} ", end="")
         for h in horizons:
             print(f"{r[h]['nmae_mean']:<8.4f} ", end="")
         print(f"{primary:<8.4f}")
@@ -738,33 +758,29 @@ def main():
             imp = (v9_val - b_val) / v9_val * 100
             print(f"H={h:<7} {v9_val:<12.4f} {b_val:<12.4f} {imp:<12.1f}%")
 
-    # Individual model analysis
-    print(f"\n{'='*70}")
-    print("Individual Model Analysis (ensemble_avg = each model contributes)")
-    print(f"{'='*70}")
-
-    # Analyze uncertainty distribution
-    ea_stats = all_results.get('ensemble_avg', {}).get('switching_stats', {})
-    if ea_stats:
-        for h in [100, 200, 500]:
-            if h in ea_stats:
-                s = ea_stats[h]
-                print(f"\n  H={h}: uncertainty_mean={s['uncertainty_mean']:.4f}, "
-                      f"p50={s['uncertainty_p50']:.4f}, p90={s['uncertainty_p90']:.4f}, "
-                      f"p99={s['uncertainty_p99']:.4f}")
+    # Per-state analysis for best strategy
+    print(f"\nPer-state NMAE (best strategy, H=100):")
+    print(f"{'State':<15} {'NMAE':<12}")
+    print("-" * 27)
+    if 100 in best_results:
+        for name in STATE_NAMES_7D:
+            val = best_results[100]['per_state_nmae'][name]['mean']
+            print(f"{name:<15} {val:<12.4f}")
 
     # Save results
     output = {
         'timestamp': datetime.now().isoformat(),
         'experiment': 'ensemble_switching',
-        'description': 'Ensemble of 3 diverse Neural ODE models with uncertainty-based switching',
-        'model_configs': [
-            {'name': c['name'], 'hidden': c['hidden'], 'depth': c['depth'],
-             'activation': c['activation']}
-            for c in model_configs
-        ],
-        'seeds': seeds,
+        'description': 'Ensemble of V9 models with uncertainty-based switching',
+        'model_names': model_names,
+        'n_models': len(models),
         'horizons': horizons,
+        'uncertainty_calibration': {
+            'mean': float(unc_mean),
+            'p50': float(unc_p50),
+            'p90': float(unc_p90),
+            'p99': float(unc_p99),
+        },
         'v9_baseline': {
             'nmae': v9_nmae,
             'primary_score': v9_primary,
@@ -772,16 +788,16 @@ def main():
         'strategies': {
             name: {
                 'strategy': d['strategy'],
-                'threshold': d['threshold'],
-                'primary_score': d['primary_score'],
+                'threshold': float(d['threshold']),
+                'primary_score': float(d['primary_score']),
                 'results': d['results'],
                 'switching_stats': d['switching_stats'],
             }
             for name, d in all_results.items()
         },
         'best_strategy': best_strat,
-        'best_primary_score': best_primary,
-        'improvement_over_v9': improvement,
+        'best_primary_score': float(best_primary),
+        'improvement_over_v9': float(improvement),
     }
 
     output_path = 'D:/系统辨识作业/sindy_bicycle/research_72h/05_candidates/EXP024_ensemble_switching.json'
