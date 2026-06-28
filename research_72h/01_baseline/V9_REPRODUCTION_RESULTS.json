@@ -1,0 +1,236 @@
+{
+  "timestamp": "2026-06-28T18:06:46.777726",
+  "run_id": "20260628_175824_neural_ode_72h",
+  "model": "v9_neural_ode",
+  "config": {
+    "hidden": 64,
+    "depth": 3,
+    "activation": "tanh"
+  },
+  "horizons": [
+    1,
+    10,
+    50,
+    100,
+    200,
+    500
+  ],
+  "results": {
+    "1": {
+      "nmae_mean": NaN,
+      "nmae_std": NaN,
+      "survival_rate": 0.0,
+      "n_valid": 0,
+      "per_state_nmae": {
+        "e_y": {
+          "mean": NaN,
+          "std": NaN
+        },
+        "e_psi": {
+          "mean": NaN,
+          "std": NaN
+        },
+        "v": {
+          "mean": NaN,
+          "std": NaN
+        },
+        "theta": {
+          "mean": NaN,
+          "std": NaN
+        },
+        "theta_dot": {
+          "mean": NaN,
+          "std": NaN
+        },
+        "delta": {
+          "mean": NaN,
+          "std": NaN
+        },
+        "delta_dot": {
+          "mean": NaN,
+          "std": NaN
+        }
+      }
+    },
+    "10": {
+      "nmae_mean": NaN,
+      "nmae_std": NaN,
+      "survival_rate": 0.0,
+      "n_valid": 0,
+      "per_state_nmae": {
+        "e_y": {
+          "mean": NaN,
+          "std": NaN
+        },
+        "e_psi": {
+          "mean": NaN,
+          "std": NaN
+        },
+        "v": {
+          "mean": NaN,
+          "std": NaN
+        },
+        "theta": {
+          "mean": NaN,
+          "std": NaN
+        },
+        "theta_dot": {
+          "mean": NaN,
+          "std": NaN
+        },
+        "delta": {
+          "mean": NaN,
+          "std": NaN
+        },
+        "delta_dot": {
+          "mean": NaN,
+          "std": NaN
+        }
+      }
+    },
+    "50": {
+      "nmae_mean": NaN,
+      "nmae_std": NaN,
+      "survival_rate": 0.0,
+      "n_valid": 0,
+      "per_state_nmae": {
+        "e_y": {
+          "mean": NaN,
+          "std": NaN
+        },
+        "e_psi": {
+          "mean": NaN,
+          "std": NaN
+        },
+        "v": {
+          "mean": NaN,
+          "std": NaN
+        },
+        "theta": {
+          "mean": NaN,
+          "std": NaN
+        },
+        "theta_dot": {
+          "mean": NaN,
+          "std": NaN
+        },
+        "delta": {
+          "mean": NaN,
+          "std": NaN
+        },
+        "delta_dot": {
+          "mean": NaN,
+          "std": NaN
+        }
+      }
+    },
+    "100": {
+      "nmae_mean": NaN,
+      "nmae_std": NaN,
+      "survival_rate": 0.0,
+      "n_valid": 0,
+      "per_state_nmae": {
+        "e_y": {
+          "mean": NaN,
+          "std": NaN
+        },
+        "e_psi": {
+          "mean": NaN,
+          "std": NaN
+        },
+        "v": {
+          "mean": NaN,
+          "std": NaN
+        },
+        "theta": {
+          "mean": NaN,
+          "std": NaN
+        },
+        "theta_dot": {
+          "mean": NaN,
+          "std": NaN
+        },
+        "delta": {
+          "mean": NaN,
+          "std": NaN
+        },
+        "delta_dot": {
+          "mean": NaN,
+          "std": NaN
+        }
+      }
+    },
+    "200": {
+      "nmae_mean": NaN,
+      "nmae_std": NaN,
+      "survival_rate": 0.0,
+      "n_valid": 0,
+      "per_state_nmae": {
+        "e_y": {
+          "mean": NaN,
+          "std": NaN
+        },
+        "e_psi": {
+          "mean": NaN,
+          "std": NaN
+        },
+        "v": {
+          "mean": NaN,
+          "std": NaN
+        },
+        "theta": {
+          "mean": NaN,
+          "std": NaN
+        },
+        "theta_dot": {
+          "mean": NaN,
+          "std": NaN
+        },
+        "delta": {
+          "mean": NaN,
+          "std": NaN
+        },
+        "delta_dot": {
+          "mean": NaN,
+          "std": NaN
+        }
+      }
+    },
+    "500": {
+      "nmae_mean": NaN,
+      "nmae_std": NaN,
+      "survival_rate": 0.0,
+      "n_valid": 0,
+      "per_state_nmae": {
+        "e_y": {
+          "mean": NaN,
+          "std": NaN
+        },
+        "e_psi": {
+          "mean": NaN,
+          "std": NaN
+        },
+        "v": {
+          "mean": NaN,
+          "std": NaN
+        },
+        "theta": {
+          "mean": NaN,
+          "std": NaN
+        },
+        "theta_dot": {
+          "mean": NaN,
+          "std": NaN
+        },
+        "delta": {
+          "mean": NaN,
+          "std": NaN
+        },
+        "delta_dot": {
+          "mean": NaN,
+          "std": NaN
+        }
+      }
+    }
+  }
+}

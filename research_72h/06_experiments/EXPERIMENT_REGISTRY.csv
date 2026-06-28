@@ -1,0 +1,7 @@
+实验编号,候选算法,对应假设,唯一变化,固定条件,训练预算,随机种子,数据版本,预期结果,通过条件,淘汰条件,运行命令,输出目录,状态
+EXP001,v9_baseline,基线,无变化,标准v9配置,200ep,42/43/44,stage2_150k,复现已知结果,H=500 NMAE<0.6,H=500 NMAE>0.8,python train_and_evaluate_v9.py,research_72h/06_experiments/exp001,运行中
+EXP002,euler_vs_rk4,H1_数值积分,积分方法,网络不变,200ep,43,stage2_150k,RK4改善>10%,H=500 NMAE下降>10%,无改善,待编写,research_72h/06_experiments/exp002,待运行
+EXP003,rollout_length,H2_分布偏移,rollout=50,其他不变,200ep,43,stage2_150k,H=100改善>5%,H=100 NMAE下降>5%,无改善或爆炸,待编写,research_72h/06_experiments/exp003,待运行
+EXP004,direct_delta,H10_离散预测,直接预测delta,相同容量,200ep,43,stage2_150k,H=500改善>15%,H=500 NMAE下降>15%,无改善,待编写,research_72h/06_experiments/exp004,待运行
+EXP005,history_window,H7_Markov,3步历史,相同容量,200ep,43,stage2_150k,H=100改善>5%,H=100 NMAE下降>5%,无改善,待编写,research_72h/06_experiments/exp005,待运行
+EXP006,physics_loss,H6_物理先验,物理约束损失,其他不变,200ep,43,stage2_150k,H=100改善>5%,H=100 NMAE下降>5%,无改善,待编写,research_72h/06_experiments/exp006,待运行
