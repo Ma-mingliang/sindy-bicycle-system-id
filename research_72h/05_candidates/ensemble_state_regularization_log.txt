@@ -1,0 +1,104 @@
+============================================================
+Ensemble State Space Regularization
+============================================================
+
+1. Loading data...
+
+2. Building state corrector...
+  Built nearest-neighbor corrector with 101404 training samples
+
+============================================================
+Testing ensemble size: 1
+============================================================
+
+  Training model 1/1 (seed=42)...
+
+Evaluating ensemble with correction_strength=0.1...
+
+Results for ensemble_size=1:
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0227       100.00%     
+H=10      0.0654       100.00%     
+H=50      0.1213       100.00%     
+H=100     0.2888       100.00%     
+H=200     0.5848       100.00%     
+H=500     0.7577       100.00%     
+
+PrimaryLongHorizonScore: 0.5438
+
+============================================================
+Testing ensemble size: 3
+============================================================
+
+  Training model 1/3 (seed=42)...
+
+  Training model 2/3 (seed=43)...
+
+  Training model 3/3 (seed=44)...
+
+Evaluating ensemble with correction_strength=0.1...
+
+Results for ensemble_size=3:
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0159       100.00%     
+H=10      0.0368       100.00%     
+H=50      0.0811       100.00%     
+H=100     0.2503       100.00%     
+H=200     0.4726       100.00%     
+H=500     0.7705       100.00%     
+
+PrimaryLongHorizonScore: 0.4978
+
+============================================================
+Testing ensemble size: 5
+============================================================
+
+  Training model 1/5 (seed=42)...
+
+  Training model 2/5 (seed=43)...
+
+  Training model 3/5 (seed=44)...
+
+  Training model 4/5 (seed=45)...
+
+  Training model 5/5 (seed=46)...
+
+Evaluating ensemble with correction_strength=0.1...
+
+Results for ensemble_size=5:
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0145       100.00%     
+H=10      0.0364       100.00%     
+H=50      0.0652       100.00%     
+H=100     0.2071       100.00%     
+H=200     0.5891       100.00%     
+H=500     1.0793       100.00%     
+
+PrimaryLongHorizonScore: 0.6252
+
+============================================================
+SUMMARY: Ensemble State Space Regularization Results
+============================================================
+
+Ensemble     H=50       H=100      H=200      H=500      Primary   
+--------------------------------------------------------------
+1            0.1213     0.2888     0.5848     0.7577     0.5438    
+3            0.0811     0.2503     0.4726     0.7705     0.4978    
+5            0.0652     0.2071     0.5891     1.0793     0.6252    
+
+Best ensemble size: 3 (Primary = 0.4978)
+
+Comparison with v9 baseline:
+Horizon    v9 NMAE      Best Ensemble Improvement 
+----------------------------------------------
+H=1       0.0051       0.0159       -212.3      %
+H=10      0.0628       0.0368       41.3        %
+H=50      0.4557       0.0811       82.2        %
+H=100     0.5064       0.2503       50.6        %
+H=200     0.4737       0.4726       0.2         %
+H=500     0.5529       0.7705       -39.4       %
+
+Results saved to: D:/系统辨识作业/sindy_bicycle/research_72h/05_candidates/EXP031_ensemble_state_regularization.json
