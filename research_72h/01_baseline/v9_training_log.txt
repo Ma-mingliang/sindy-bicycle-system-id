@@ -1,0 +1,99 @@
+============================================================
+V9 Neural ODE Training and Evaluation
+============================================================
+
+1. Loading data...
+   State std: [0.24181394 0.53697234 0.0131768  0.57336575 0.1939582  0.5756533
+ 0.5694286 ]
+   Action std: 0.057628314942121506
+   Delta std: [8.2606889e-02 1.9240411e-01 4.3847802e-05 5.1116385e-03 3.4055423e-03
+ 5.8821402e-03 1.3499567e-02]
+
+2. Getting test segments...
+   Number of segments: 5
+
+============================================================
+Training with seed=42
+============================================================
+Training v9 model (seed=42)...
+  Epoch 50/200: loss=373.619658, rollout=1, time=206.2s
+  Epoch 100/200: loss=338.795327, rollout=5, time=457.9s
+  Epoch 150/200: loss=328.913380, rollout=10, time=785.7s
+  Epoch 200/200: loss=328.449392, rollout=20, time=1330.4s
+Training completed in 1330.4s
+
+Evaluating seed=42...
+
+Results for seed=42:
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0389       100.00%     
+H=10      0.1326       100.00%     
+H=50      0.3961       100.00%     
+H=100     0.4837       100.00%     
+H=200     0.6027       100.00%     
+H=500     0.7452       100.00%     
+Model saved to: D:/系统辨识作业/sindy_bicycle/research_72h/07_models/v9_seed42.pt
+
+============================================================
+Training with seed=43
+============================================================
+Training v9 model (seed=43)...
+  Epoch 50/200: loss=369.796775, rollout=1, time=219.7s
+  Epoch 100/200: loss=338.632619, rollout=5, time=474.6s
+  Epoch 150/200: loss=326.961294, rollout=10, time=837.0s
+  Epoch 200/200: loss=329.715254, rollout=20, time=1375.6s
+Training completed in 1375.6s
+
+Evaluating seed=43...
+
+Results for seed=43:
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0303       100.00%     
+H=10      0.1230       100.00%     
+H=50      0.3602       100.00%     
+H=100     0.3995       100.00%     
+H=200     0.5199       80.00%      
+H=500     0.6077       0.00%       
+Model saved to: D:/系统辨识作业/sindy_bicycle/research_72h/07_models/v9_seed43.pt
+
+============================================================
+Training with seed=44
+============================================================
+Training v9 model (seed=44)...
+  Epoch 50/200: loss=374.673059, rollout=1, time=215.2s
+  Epoch 100/200: loss=339.779957, rollout=5, time=466.5s
+  Epoch 150/200: loss=327.759604, rollout=10, time=829.1s
+  Epoch 200/200: loss=324.846889, rollout=20, time=1367.8s
+Training completed in 1367.8s
+
+Evaluating seed=44...
+
+Results for seed=44:
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0288       100.00%     
+H=10      0.1236       100.00%     
+H=50      0.3768       100.00%     
+H=100     0.4616       100.00%     
+H=200     0.5660       100.00%     
+H=500     0.7088       100.00%     
+Model saved to: D:/系统辨识作业/sindy_bicycle/research_72h/07_models/v9_seed44.pt
+
+============================================================
+SUMMARY
+============================================================
+
+Seed     H=1        H=10       H=50       H=100      H=200      H=500     
+--------------------------------------------------------------------
+42       0.0389     0.1326     0.3961     0.4837     0.6027     0.7452     
+43       0.0303     0.1230     0.3602     0.3995     0.5199     0.6077     
+44       0.0288     0.1236     0.3768     0.4616     0.5660     0.7088     
+
+PrimaryLongHorizonScore (mean of H=100,200,500):
+  Seed 42: 0.6105
+  Seed 43: 0.5090
+  Seed 44: 0.5788
+
+Results saved to: D:/系统辨识作业/sindy_bicycle/research_72h/01_baseline/V9_REPRODUCTION_RESULTS.json
