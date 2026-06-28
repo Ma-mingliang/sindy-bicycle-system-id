@@ -1,0 +1,121 @@
+{
+  "timestamp": "2026-06-29T00:56:13.423649",
+  "run_id": "20260628_175824_neural_ode_144h",
+  "experiment": "ood_testing",
+  "scenarios": [
+    "high_speed",
+    "high_speed",
+    "large_heading_error",
+    "large_heading_error",
+    "large_lateral_error",
+    "large_lateral_error",
+    "aggressive_steering",
+    "aggressive_steering"
+  ],
+  "results": {
+    "high_speed": {
+      "1": {
+        "nmae_mean": NaN,
+        "survival_rate": 0.0
+      },
+      "10": {
+        "nmae_mean": NaN,
+        "survival_rate": 0.0
+      },
+      "50": {
+        "nmae_mean": NaN,
+        "survival_rate": 0.0
+      },
+      "100": {
+        "nmae_mean": NaN,
+        "survival_rate": 0.0
+      },
+      "200": {
+        "nmae_mean": NaN,
+        "survival_rate": 0.0
+      },
+      "500": {
+        "nmae_mean": NaN,
+        "survival_rate": 0.0
+      }
+    },
+    "large_heading_error": {
+      "1": {
+        "nmae_mean": NaN,
+        "survival_rate": 0.0
+      },
+      "10": {
+        "nmae_mean": NaN,
+        "survival_rate": 0.0
+      },
+      "50": {
+        "nmae_mean": NaN,
+        "survival_rate": 0.0
+      },
+      "100": {
+        "nmae_mean": NaN,
+        "survival_rate": 0.0
+      },
+      "200": {
+        "nmae_mean": NaN,
+        "survival_rate": 0.0
+      },
+      "500": {
+        "nmae_mean": NaN,
+        "survival_rate": 0.0
+      }
+    },
+    "large_lateral_error": {
+      "1": {
+        "nmae_mean": NaN,
+        "survival_rate": 0.0
+      },
+      "10": {
+        "nmae_mean": NaN,
+        "survival_rate": 0.0
+      },
+      "50": {
+        "nmae_mean": NaN,
+        "survival_rate": 0.0
+      },
+      "100": {
+        "nmae_mean": NaN,
+        "survival_rate": 0.0
+      },
+      "200": {
+        "nmae_mean": NaN,
+        "survival_rate": 0.0
+      },
+      "500": {
+        "nmae_mean": NaN,
+        "survival_rate": 0.0
+      }
+    },
+    "aggressive_steering": {
+      "1": {
+        "nmae_mean": NaN,
+        "survival_rate": 0.0
+      },
+      "10": {
+        "nmae_mean": NaN,
+        "survival_rate": 0.0
+      },
+      "50": {
+        "nmae_mean": NaN,
+        "survival_rate": 0.0
+      },
+      "100": {
+        "nmae_mean": NaN,
+        "survival_rate": 0.0
+      },
+      "200": {
+        "nmae_mean": NaN,
+        "survival_rate": 0.0
+      },
+      "500": {
+        "nmae_mean": NaN,
+        "survival_rate": 0.0
+      }
+    }
+  }
+}
