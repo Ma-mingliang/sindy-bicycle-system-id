@@ -1,0 +1,56 @@
+============================================================
+Hybrid SiLU NODE + GP Model
+============================================================
+
+State grouping:
+  SiLU NODE: ['e_y', 'e_psi', 'theta_dot', 'delta_dot']
+  GP: ['v', 'theta', 'delta']
+
+1. Loading data...
+
+2. Training Wide SiLU NODE for complex states...
+  Training Wide SiLU NODE for ['e_y', 'e_psi', 'theta_dot', 'delta_dot']...
+    Epoch 50/200: loss=446.356963, time=326.2s
+    Epoch 100/200: loss=354.038633, time=702.8s
+    Epoch 150/200: loss=277.759144, time=1040.8s
+    Epoch 200/200: loss=248.005285, time=1379.7s
+  Training completed in 1379.7s
+
+3. Training GP for smooth states...
+    GP for v trained
+    GP for theta trained
+    GP for delta trained
+
+4. Creating hybrid model...
+
+5. Evaluating...
+
+============================================================
+RESULTS: Hybrid SiLU NODE + GP
+============================================================
+
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0172       100.00%     
+H=10      0.0746       100.00%     
+H=50      0.1407       100.00%     
+H=100     0.4087       80.00%      
+H=200     0.8326       80.00%      
+H=500     1.0822       20.00%      
+H=1000    1.1669       20.00%      
+
+Comparison with baselines:
+Horizon    v9 NMAE      Hybrid       Improvement 
+----------------------------------------------
+H=1       0.0051       0.0172       -237.9      %
+H=10      0.0628       0.0746       -18.8       %
+H=50      0.4557       0.1407       69.1        %
+H=100     0.5064       0.4087       19.3        %
+H=200     0.4737       0.8326       -75.8       %
+H=500     0.5529       1.0822       -95.7       %
+H=1000    0.6443       1.1669       -81.1       %
+
+PrimaryLongHorizonScore: 0.7745
+Improvement vs v9: -51.6%
+
+Results saved to: D:/系统辨识作业/sindy_bicycle/research_72h/05_candidates/EXP048_hybrid_silu_node_gp.json

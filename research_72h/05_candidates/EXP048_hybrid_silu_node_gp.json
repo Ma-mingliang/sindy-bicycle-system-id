@@ -1,0 +1,48 @@
+{
+  "timestamp": "2026-06-29T14:36:58.634336",
+  "run_id": "20260628_175824_neural_ode_144h",
+  "experiment": "hybrid_silu_node_gp",
+  "silu_dims": [
+    "e_y",
+    "e_psi",
+    "theta_dot",
+    "delta_dot"
+  ],
+  "gp_dims": [
+    "v",
+    "theta",
+    "delta"
+  ],
+  "results": {
+    "1": {
+      "nmae_mean": 0.017233058985688422,
+      "survival_rate": 1.0
+    },
+    "10": {
+      "nmae_mean": 0.07460168176131003,
+      "survival_rate": 1.0
+    },
+    "50": {
+      "nmae_mean": 0.14070205311960662,
+      "survival_rate": 1.0
+    },
+    "100": {
+      "nmae_mean": 0.4087358179539928,
+      "survival_rate": 0.8
+    },
+    "200": {
+      "nmae_mean": 0.8325826269273028,
+      "survival_rate": 0.8
+    },
+    "500": {
+      "nmae_mean": 1.0821614049022883,
+      "survival_rate": 0.2
+    },
+    "1000": {
+      "nmae_mean": 1.1669143815515965,
+      "survival_rate": 0.2
+    }
+  },
+  "primary_score": 0.7744932832611946,
+  "improvement_vs_v9": -51.5642432996467
+}
