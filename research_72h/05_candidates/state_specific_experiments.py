@@ -26,6 +26,18 @@ from sklearn.linear_model import Ridge
 warnings.filterwarnings('ignore')
 sys.path.insert(0, 'D:/系统辨识作业/sindy_bicycle')
 
+# Dual output: print to both stdout and log file
+_LOG_FILE = open('D:/系统辨识作业/sindy_bicycle/research_72h/05_candidates/EXP041_run_log.txt', 'w', encoding='utf-8')
+
+_orig_print = print
+def print(*args, **kwargs):
+    kwargs.setdefault('flush', True)
+    _orig_print(*args, **kwargs)
+    kwargs['file'] = _LOG_FILE
+    kwargs.pop('flush', None)
+    _orig_print(*args, **kwargs)
+    _LOG_FILE.flush()
+
 # ─── Constants ───────────────────────────────────────────────────────────
 STATE_NAMES_7D = ['e_y', 'e_psi', 'v', 'theta', 'theta_dot', 'delta', 'delta_dot']
 STATE_DIM = 7
@@ -236,8 +248,11 @@ def train_single_state_node(data, target_dim, config, seed=42, wide=False):
     ds_train = torch.utils.data.TensorDataset(X_s_train, X_a_train, Y_train)
     loader_train = torch.utils.data.DataLoader(ds_train, batch_size=config['batch_size'], shuffle=True)
 
+    max_batches = config.get('max_batches', 100)
+
     model.train()
     for epoch in range(config['n_epochs']):
+        batch_count = 0
         for sb, ab, yb in loader_train:
             pred = model(sb, ab).squeeze(-1)
             loss = nn.functional.mse_loss(pred, yb)
@@ -245,6 +260,9 @@ def train_single_state_node(data, target_dim, config, seed=42, wide=False):
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             opt.step()
+            batch_count += 1
+            if batch_count >= max_batches:
+                break
         scheduler.step()
 
         # Validation
@@ -315,8 +333,11 @@ def train_single_state_direct_delta(data, target_dim, config, seed=42):
     ds_train = torch.utils.data.TensorDataset(X_s_train, X_a_train, Y_train)
     loader_train = torch.utils.data.DataLoader(ds_train, batch_size=config['batch_size'], shuffle=True)
 
+    max_batches = config.get('max_batches', 100)
+
     model.train()
     for epoch in range(config['n_epochs']):
+        batch_count = 0
         for sb, ab, yb in loader_train:
             pred = model(sb, ab).squeeze(-1)
             loss = nn.functional.mse_loss(pred, yb)
@@ -324,6 +345,9 @@ def train_single_state_direct_delta(data, target_dim, config, seed=42):
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             opt.step()
+            batch_count += 1
+            if batch_count >= max_batches:
+                break
         scheduler.step()
 
         model.eval()
@@ -426,8 +450,11 @@ def train_v9_baseline(data, config, seed=43):
     patience = config.get('patience', 50)
     patience_counter = 0
 
+    max_batches = config.get('max_batches', 100)
+
     model.train()
     for epoch in range(config['n_epochs']):
+        batch_count = 0
         for sb, ab, yb in loader:
             pred = model(sb, ab)
             loss = nn.functional.mse_loss(pred, yb)
@@ -435,6 +462,9 @@ def train_v9_baseline(data, config, seed=43):
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             opt.step()
+            batch_count += 1
+            if batch_count >= max_batches:
+                break
         scheduler.step()
 
         model.eval()
@@ -469,7 +499,7 @@ def check_survival(state):
     return not (np.any(np.isnan(state)) or np.any(np.isinf(state)))
 
 
-def evaluate_composite(predict_fn, data, horizons, n_segments=5, seed=42):
+def evaluate_composite(predict_fn, data, horizons, n_segments=3, seed=42):
     """Evaluate a composite prediction function on test segments.
 
     predict_fn: callable(s_cur, action) -> s_next (7D numpy array)
@@ -687,17 +717,17 @@ def run_single_state_experiment(data, state_name, state_idx, horizons,
 
     node_config = {
         'hidden': 64, 'depth': 3, 'activation': 'tanh',
-        'lr': 1e-3, 'n_epochs': 200, 'batch_size': 256, 'patience': 50,
+        'lr': 1e-3, 'n_epochs': 100, 'batch_size': 256, 'patience': 30,
     }
     node_wide_config = {
         'hidden': 128, 'depth': 4, 'activation': 'tanh',
-        'lr': 1e-3, 'n_epochs': 300, 'batch_size': 256, 'patience': 50,
+        'lr': 1e-3, 'n_epochs': 150, 'batch_size': 256, 'patience': 30,
     }
 
     arch_results = {}
 
     # --- Architecture 1: NODE (standard) ---
-    print(f"\n  [1/5] Training NODE (standard) for {state_name}...")
+    print(f"\n  [1/4] Training NODE (standard) for {state_name}...")
     t0 = time.time()
     node_model = train_single_state_node(data, state_idx, node_config, seed=seed)
     node_predict = make_predict_fn_node_single(node_model, state_idx, state_std, action_std, delta_std)
@@ -711,7 +741,7 @@ def run_single_state_experiment(data, state_name, state_idx, horizons,
     print(f"    Completed in {node_time:.1f}s")
 
     # --- Architecture 2: NODE (wide) ---
-    print(f"\n  [2/5] Training NODE (wide) for {state_name}...")
+    print(f"\n  [2/4] Training NODE (wide) for {state_name}...")
     t0 = time.time()
     node_wide_model = train_single_state_node(data, state_idx, node_wide_config, seed=seed, wide=True)
     composite_node_wide = make_predict_fn_composite(
@@ -723,7 +753,7 @@ def run_single_state_experiment(data, state_name, state_idx, horizons,
     print(f"    Completed in {node_wide_time:.1f}s")
 
     # --- Architecture 3: Direct Delta ---
-    print(f"\n  [3/5] Training Direct Delta for {state_name}...")
+    print(f"\n  [3/4] Training Direct Delta for {state_name}...")
     t0 = time.time()
     dd_model = train_single_state_direct_delta(data, state_idx, node_config, seed=seed)
     composite_dd = make_predict_fn_composite(
@@ -734,20 +764,8 @@ def run_single_state_experiment(data, state_name, state_idx, horizons,
     dd_time = time.time() - t0
     print(f"    Completed in {dd_time:.1f}s")
 
-    # --- Architecture 4: GP ---
-    print(f"\n  [4/5] Training GP for {state_name}...")
-    t0 = time.time()
-    gp_model = train_single_state_gp(data, state_idx, max_samples=5000, seed=seed)
-    composite_gp = make_predict_fn_composite(
-        v9_model, {state_idx: gp_model}, [state_idx], {state_idx: 'gp'},
-        state_std, action_std, delta_std
-    )
-    gp_results = evaluate_composite(composite_gp, data, horizons, seed=seed)
-    gp_time = time.time() - t0
-    print(f"    Completed in {gp_time:.1f}s")
-
-    # --- Architecture 5: Linear (Ridge) ---
-    print(f"\n  [5/5] Training Linear (Ridge) for {state_name}...")
+    # --- Architecture 4: Linear (Ridge) ---
+    print(f"\n  [4/4] Training Linear (Ridge) for {state_name}...")
     t0 = time.time()
     linear_model = train_single_state_linear(data, state_idx, alpha=1.0, seed=seed)
     composite_linear = make_predict_fn_composite(
@@ -763,7 +781,6 @@ def run_single_state_experiment(data, state_name, state_idx, horizons,
         'node': {'results': node_results, 'time': node_time},
         'node_wide': {'results': node_wide_results, 'time': node_wide_time},
         'direct_delta': {'results': dd_results, 'time': dd_time},
-        'gp': {'results': gp_results, 'time': gp_time},
         'linear': {'results': linear_results, 'time': linear_time},
     }
 
@@ -819,7 +836,7 @@ def run_single_state_experiment(data, state_name, state_idx, horizons,
     }
 
 
-def run_composite_experiment(data, best_per_state, horizons, seed=42):
+def run_composite_experiment(data, best_per_state, horizons, v9_model, seed=42):
     """Experiment 5: Combine best per-state models into composite."""
     print(f"\n{'='*60}")
     print(f"  Experiment 5: Best Composite Model")
@@ -829,22 +846,15 @@ def run_composite_experiment(data, best_per_state, horizons, seed=42):
     action_std = data['action_std']
     delta_std = data['delta_std']
 
-    # Train v9 baseline
-    v9_config = {
-        'hidden': 64, 'depth': 3, 'activation': 'tanh',
-        'lr': 1e-3, 'n_epochs': 200, 'batch_size': 256, 'patience': 50,
-    }
-    print("  Training v9 baseline...")
-    v9_model = train_v9_baseline(data, v9_config, seed=43)
+    print("  Using pre-trained v9 baseline.")
 
-    # Train specialized models for each target state
     node_config = {
         'hidden': 64, 'depth': 3, 'activation': 'tanh',
-        'lr': 1e-3, 'n_epochs': 200, 'batch_size': 256, 'patience': 50,
+        'lr': 1e-3, 'n_epochs': 100, 'batch_size': 256, 'patience': 30,
     }
     node_wide_config = {
         'hidden': 128, 'depth': 4, 'activation': 'tanh',
-        'lr': 1e-3, 'n_epochs': 300, 'batch_size': 256, 'patience': 50,
+        'lr': 1e-3, 'n_epochs': 150, 'batch_size': 256, 'patience': 30,
     }
 
     specialized_models = {}
@@ -869,7 +879,7 @@ def run_composite_experiment(data, best_per_state, horizons, seed=42):
             specialized_models[state_idx] = model
             specialized_types[state_idx] = 'direct_delta'
         elif best_arch == 'gp':
-            model = train_single_state_gp(data, state_idx, max_samples=5000, seed=seed)
+            model = train_single_state_gp(data, state_idx, max_samples=1000, seed=seed)
             specialized_models[state_idx] = model
             specialized_types[state_idx] = 'gp'
         elif best_arch == 'linear':
@@ -882,23 +892,18 @@ def run_composite_experiment(data, best_per_state, horizons, seed=42):
 
         specialized_dims.append(state_idx)
 
-    # Build composite predict function
     composite_predict = make_predict_fn_composite(
         v9_model, specialized_models, specialized_dims, specialized_types,
         state_std, action_std, delta_std
     )
-
-    # Also build pure v9 predict for comparison
     v9_predict = make_predict_fn_v9(v9_model, state_std, action_std, delta_std)
 
-    # Evaluate both
     print("\n  Evaluating composite model...")
     composite_results = evaluate_composite(composite_predict, data, horizons, seed=seed)
 
     print("  Evaluating v9 baseline...")
     v9_results = evaluate_composite(v9_predict, data, horizons, seed=seed)
 
-    # Compute scores
     def compute_primary(r):
         valid = all(h in r and not np.isnan(r[h]['nmae_mean']) for h in [100, 200, 500])
         if valid:
@@ -918,7 +923,7 @@ def run_composite_experiment(data, best_per_state, horizons, seed=42):
             imp = (v9_val - comp_val) / v9_val * 100
             print(f"  H={h:<7} {v9_val:<12.4f} {comp_val:<12.4f} {imp:>+9.1f}%")
 
-    print(f"\n  v9 Primary:      {v9_primary:.4f}")
+    print(f"\n  v9 Primary:        {v9_primary:.4f}")
     print(f"  Composite Primary: {composite_primary:.4f}")
     if v9_primary > 0 and not np.isnan(composite_primary):
         overall_imp = (v9_primary - composite_primary) / v9_primary * 100
@@ -941,6 +946,7 @@ def main():
     print("  EXP041: State-Specific Experiments")
     print("  Testing dedicated models for e_y, e_psi, v, theta")
     print("=" * 70)
+    sys.stdout.flush()
 
     horizons = [1, 10, 50, 100, 200, 500]
 
@@ -951,11 +957,23 @@ def main():
     print(f"  Delta std: {data['delta_std']}")
     print(f"  Train episodes: {len(data['train_eps'])}, Test episodes: {len(data['test_eps'])}")
 
+    # Train v9 baseline ONCE and share across all experiments
+    print("\nTraining shared v9 baseline (once for all experiments)...")
+    v9_config = {
+        'hidden': 64, 'depth': 3, 'activation': 'tanh',
+        'lr': 1e-3, 'n_epochs': 200, 'batch_size': 256, 'patience': 50,
+    }
+    v9_model = train_v9_baseline(data, v9_config, seed=43)
+    print("  v9 baseline trained and ready.")
+    sys.stdout.flush()
+
     # ─── Experiments 1-4: Per-state models ───────────────────────────
     per_state_results = {}
     for state_name, state_idx in TARGET_STATES.items():
-        result = run_single_state_experiment(data, state_name, state_idx, horizons, seed=42)
+        result = run_single_state_experiment(data, state_name, state_idx, horizons,
+                                              v9_model=v9_model, seed=42)
         per_state_results[state_name] = result
+        sys.stdout.flush()
 
     # ─── Experiment 5: Best Composite ────────────────────────────────
     best_per_state = {}
@@ -965,7 +983,8 @@ def main():
             'best_primary': result['best_primary'],
         }
 
-    composite_result = run_composite_experiment(data, best_per_state, horizons, seed=42)
+    composite_result = run_composite_experiment(data, best_per_state, horizons,
+                                                  v9_model=v9_model, seed=42)
 
     # ─── Final Summary ───────────────────────────────────────────────
     print("\n" + "=" * 70)
