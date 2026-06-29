@@ -1,0 +1,32 @@
+======================================================================
+Ensemble of Improved Coupling Networks (256-dim)
+======================================================================
+Device: cuda
+Seeds: [42, 43, 44, 45, 46]
+Config: coupling_dim=256, hidden=256
+Epochs: 200, Batch: 1024
+
+1. Loading data...
+   Loaded: 101404 train samples, 15 test episodes
+
+2. Training 5 models with different seeds...
+
+  --- Model 1/5 (seed=42) ---
+    Epoch 50/200: loss=282.794459, time=69.9s
+    Epoch 100/200: loss=237.702661, time=146.0s
+    Epoch 150/200: loss=202.975374, time=246.5s
+    Epoch 200/200: loss=188.832795, time=340.0s
+    Training completed in 340.0s
+  Model 1 done in 341.6s
+
+  --- Model 2/5 (seed=43) ---
+    Epoch 50/200: loss=349.851706, time=93.6s
+    Epoch 100/200: loss=264.974750, time=187.0s
+    Epoch 150/200: loss=219.719224, time=281.6s
+    Epoch 200/200: loss=204.386133, time=374.5s
+    Training completed in 374.5s
+  Model 2 done in 374.5s
+
+  --- Model 3/5 (seed=44) ---
+    Epoch 50/200: loss=287.814225, time=94.8s
+    Epoch 100/200: loss=238.138246, time=202.1s
