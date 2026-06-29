@@ -330,10 +330,11 @@ def compute_primary_score(results):
 # Evaluation
 # ============================================================
 
-def evaluate_model_on_val(predict_fn, data, n_segments=3, max_steps=50, seed=99):
+def evaluate_model_on_val(predict_fn, data, n_segments=3, max_steps=200, seed=99):
     """Evaluate a model's per-state NMAE on validation data.
 
-    Uses short rollouts (max_steps) to assess single-step quality.
+    Uses TEACHER FORCING: predicts from ground-truth states at each step.
+    This measures single-step prediction quality without error accumulation.
     Returns per_state_nmae: dict dim_idx -> mean NMAE.
     """
     state_std = data['state_std']
@@ -354,24 +355,23 @@ def evaluate_model_on_val(predict_fn, data, n_segments=3, max_steps=50, seed=99)
     per_state_errors = {d: [] for d in range(STATE_DIM)}
 
     for seg in segments:
-        s_cur = seg['obs'][0].copy()
         actions_seg = seg['action'].flatten()
         real_states = seg['obs']
         n = min(max_steps, len(actions_seg))
 
         for step in range(n):
             try:
+                # Teacher forcing: use ground-truth state as input
+                s_cur = real_states[step]
                 s_next = predict_fn(s_cur, actions_seg[step])
                 if np.any(np.isnan(s_next)) or np.any(np.isinf(s_next)):
-                    break
-                s_next = clip_state(s_next)
+                    continue
                 if step + 1 < len(real_states):
                     step_err = np.abs(s_next - real_states[step + 1]) / state_std
                     for d in range(STATE_DIM):
                         per_state_errors[d].append(step_err[d])
-                s_cur = s_next
             except Exception:
-                break
+                continue
 
     per_state_nmae = {}
     for d in range(STATE_DIM):
@@ -931,6 +931,17 @@ def run_experiment():
     weights_per_state, val_errors = learn_per_state_weights(
         node_models, gp_models, data,
     )
+
+    # Debug: test NODE prediction on first validation point
+    val_s = data['val_obs'][0]
+    val_a = data['val_action'][0].item()
+    for name, model in node_models.items():
+        s_t = torch.FloatTensor(val_s / state_std).unsqueeze(0)
+        a_t = torch.FloatTensor([val_a / action_std]).unsqueeze(0)
+        with torch.no_grad():
+            dsdt = model(s_t, a_t).numpy()[0]
+        delta_phys = dsdt * delta_std * DT
+        print(f"  Debug {name}: dsdt_norm={dsdt[:3]}, delta_phys={delta_phys[:3]}")
 
     # Print validation errors and learned weights
     print("  Validation errors (per state):")

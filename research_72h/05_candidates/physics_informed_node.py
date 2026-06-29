@@ -14,10 +14,23 @@ constraints while still being flexible enough to capture complex dynamics.
 import sys
 import json
 import time
+import os
 import numpy as np
 import torch
 import torch.nn as nn
 from datetime import datetime
+
+# Log to file for real-time monitoring
+LOG_FILE = 'D:/系统辨识作业/sindy_bicycle/research_72h/05_candidates/physics_informed_node_log.txt'
+_log_f = open(LOG_FILE, 'w', buffering=1)  # line-buffered
+
+def log_print(*args, **kwargs):
+    """Print to both stdout and log file."""
+    msg = ' '.join(str(a) for a in args)
+    print(msg, flush=True)
+    _log_f.write(msg + '\n')
+
+print = log_print
 
 sys.path.insert(0, 'D:/系统辨识作业/sindy_bicycle')
 
@@ -156,7 +169,7 @@ class PhysicsInformedNeuralODE:
                  dt=1.0/30.0, residual_scale=0.1,
                  rollout_curriculum='1,5,10,20',
                  lambda_multi=0.3, lambda_physics=0.5,
-                 lambda_consistency=0.1, lambda_jacobian=0.01,
+                 lambda_consistency=0.1, lambda_jacobian=0.0,
                  seed=42):
         self.hidden = hidden
         self.depth = depth
@@ -293,10 +306,10 @@ class PhysicsInformedNeuralODE:
                     theta_gt = sb[:, 3] + theta_dot * self.dt
                     loss_consistency = nn.functional.mse_loss(theta_pred, theta_gt)
 
-                # --- Jacobian regularization ---
+                # --- Jacobian regularization (only every 4th batch for speed) ---
                 loss_jacobian = torch.tensor(0.0)
-                if self.lambda_jacobian > 0:
-                    n_jac = min(32, len(sb))
+                if self.lambda_jacobian > 0 and n_batches % 4 == 0:
+                    n_jac = min(16, len(sb))
                     s_req = sb[:n_jac].requires_grad_(True)
                     a_req = ab[:n_jac].requires_grad_(True)
                     dsdt = self._model(
@@ -585,7 +598,7 @@ def main():
         'lambda_multi': 0.3,
         'lambda_physics': 0.5,
         'lambda_consistency': 0.1,
-        'lambda_jacobian': 0.01,
+        'lambda_jacobian': 0.0,
     }
 
     horizons = [1, 10, 50, 100, 200, 500, 1000]

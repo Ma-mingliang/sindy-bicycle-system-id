@@ -134,7 +134,7 @@ class GPSingleDim:
 
         kernel = Matern(nu=2.5, length_scale=1.0)
         self._gp = GaussianProcessRegressor(
-            kernel=kernel, n_restarts_optimizer=2, alpha=1e-3,
+            kernel=kernel, n_restarts_optimizer=1, alpha=1e-3,
         )
         self._gp.fit(X_scaled, y)
 
@@ -288,6 +288,8 @@ def train_wide_node(data, config, seed=42):
                 if epoch >= config['n_epochs'] * (i + 1) / (len(rollout_curriculum) + 1):
                     rollout_steps = threshold
 
+        max_batches = 100
+        batch_count = 0
         for sb, ab, yb in loader:
             pred = model(sb, ab)
             loss_single = nn.functional.mse_loss(pred, yb)
@@ -295,23 +297,14 @@ def train_wide_node(data, config, seed=42):
             # Multi-step rollout loss
             loss_multi = torch.tensor(0.0)
             if use_rollout and rollout_steps > 1:
-                # Use first N samples for rollout
                 n_roll = min(64, len(sb))
                 s_cur = sb[:n_roll].clone()
                 for step in range(rollout_steps):
                     dsdt = model(s_cur, ab[:n_roll])
-                    # Update e_y, e_psi only; keep other states from data
                     s_next = s_cur.clone()
                     s_next[:, NODE_TARGET_DIMS] = s_cur[:, NODE_TARGET_DIMS] + dsdt * DT
-                    # Use ground truth next state for other dims (teacher forcing)
-                    if (step + 1) * (len(sb) // rollout_steps) < len(sb):
-                        idx_offset = (step + 1) * (len(sb) // rollout_steps)
-                        s_other = sb[min(idx_offset + n_roll - 1, len(sb) - 1)]
-                        for d in GP_TARGET_DIMS:
-                            s_next[:, d] = s_other[d]
                     loss_multi = loss_multi + nn.functional.mse_loss(
-                        s_next[:, NODE_TARGET_DIMS],
-                        sb[min(n_roll + step, len(sb) - 1), NODE_TARGET_DIMS].unsqueeze(0).expand(n_roll, -1)
+                        s_next[:, NODE_TARGET_DIMS], yb[:n_roll]
                     )
                 loss_multi = loss_multi / rollout_steps
 
@@ -324,6 +317,9 @@ def train_wide_node(data, config, seed=42):
 
             epoch_loss += loss.item()
             n_batches += 1
+            batch_count += 1
+            if batch_count >= max_batches:
+                break
 
         scheduler.step()
 
@@ -361,7 +357,7 @@ def train_wide_node(data, config, seed=42):
     return model, total_time
 
 
-def train_gp_models(data, max_samples=5000):
+def train_gp_models(data, max_samples=2000):
     """Train GP models for non-e_y/e_psi states."""
     state_std = data['state_std']
     action_std = data['action_std']
@@ -550,32 +546,22 @@ def run_experiment():
 
     horizons = [1, 10, 50, 100, 200, 500, 1000]
 
-    # Define configs to try
+    # Define configs to try (streamlined for speed)
     configs = {
         'wide_node_v1': {
             'hidden': 256, 'depth': 5, 'activation': 'tanh',
-            'lr': 5e-4, 'n_epochs': 300, 'batch_size': 256,
+            'lr': 5e-4, 'n_epochs': 200, 'batch_size': 256,
             'weight_decay': 1e-5,
             'use_residual': True,
-            'patience': 60,
+            'patience': 40,
             'use_rollout': False,
         },
-        'wide_node_v2_residual': {
-            'hidden': 256, 'depth': 5, 'activation': 'tanh',
-            'lr': 5e-4, 'n_epochs': 300, 'batch_size': 256,
-            'weight_decay': 1e-5,
-            'use_residual': True,
-            'patience': 60,
-            'use_rollout': True,
-            'rollout_curriculum': [1, 5, 10, 20],
-            'lambda_multi': 0.3,
-        },
-        'wide_node_v3_silu': {
+        'wide_node_v2_silu': {
             'hidden': 256, 'depth': 5, 'activation': 'silu',
-            'lr': 3e-4, 'n_epochs': 300, 'batch_size': 256,
+            'lr': 3e-4, 'n_epochs': 200, 'batch_size': 256,
             'weight_decay': 1e-5,
             'use_residual': True,
-            'patience': 60,
+            'patience': 40,
             'use_rollout': False,
         },
     }
@@ -617,7 +603,7 @@ def run_experiment():
 
         # Train with multiple seeds
         seed_results = {}
-        for seed in [42, 43, 44]:
+        for seed in [42, 43]:
             print(f"\n  Training with seed={seed}...")
             t1 = time.time()
 
