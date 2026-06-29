@@ -11,3 +11,44 @@ Loading data...
   Train episodes: 43, Test episodes: 15
 
 Training shared v9 baseline (once for all experiments)...
+  v9 baseline trained and ready.
+
+============================================================
+  Experiment: e_y (index 0)
+============================================================
+  Using pre-trained v9 baseline.
+  Evaluating v9 baseline...
+
+  [1/4] Training NODE (standard) for e_y...
+    Completed in 75.1s
+
+  [2/4] Training NODE (wide) for e_y...
+    Completed in 147.3s
+
+  [3/4] Training Direct Delta for e_y...
+    Completed in 87.3s
+
+  [4/4] Training Linear (Ridge) for e_y...
+    Completed in 0.5s
+
+  --- e_y Summary ---
+  Architecture    Primary    Target@H100  vs v9      Time(s) 
+  -------------------------------------------------------
+  v9_baseline     0.8885     0.5744       ---        ---     
+  node            1.2267     0.9222         -38.1%  75.1    
+  node_wide       0.7769     0.5609         +12.6%  147.3   
+  direct_delta    0.8174     0.6423          +8.0%  87.3    
+  linear          0.9385     0.4153          -5.6%  0.5     
+
+  Best architecture for e_y: node_wide (Primary=0.7769)
+
+============================================================
+  Experiment: e_psi (index 1)
+============================================================
+  Using pre-trained v9 baseline.
+  Evaluating v9 baseline...
+
+  [1/4] Training NODE (standard) for e_psi...
+    Completed in 103.5s
+
+  [2/4] Training NODE (wide) for e_psi...
