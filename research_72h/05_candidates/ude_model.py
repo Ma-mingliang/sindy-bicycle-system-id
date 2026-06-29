@@ -280,8 +280,13 @@ def train_ude(data, config, seed=42):
             if rollout_steps > 1 and len(sb) > rollout_steps + 1:
                 n_roll = min(len(sb) - rollout_steps, 32)
                 s_cur_norm = sb[:n_roll].clone()
-                # Pre-compute physics scale factor
-                phys_scale = torch.FloatTensor(delta_std * DT / state_std)
+                # Pre-compute scale factors as tensors
+                scale_res = torch.FloatTensor(delta_std * DT / state_std)
+                s_std_t = torch.FloatTensor(state_std)
+                c0 = float(state_std[2] * DT / state_std[0])
+                c1 = float(state_std[2] * DT / (WHEELBASE * state_std[1]))
+                c3 = float(state_std[4] * DT / state_std[3])
+                c5 = float(state_std[6] * DT / state_std[5])
 
                 for step in range(rollout_steps):
                     a_cur_norm = ab[step:step + n_roll]
@@ -289,23 +294,21 @@ def train_ude(data, config, seed=42):
                     # NN residual prediction (normalized)
                     res_norm = model(s_cur_norm, a_cur_norm)
 
-                    # Physics prediction in normalized space:
-                    # e_y_dot = v * sin(e_psi), e_psi_dot = -v * delta / L
+                    # Physics prediction in normalized space
                     v_norm = s_cur_norm[:, 2]
-                    e_psi = s_cur_norm[:, 1] * state_std[1]  # de-normalize for sin
-                    delta_st = s_cur_norm[:, 5] * state_std[5]  # de-normalize
-                    theta_dot_norm = s_cur_norm[:, 4]
+                    e_psi_orig = s_cur_norm[:, 1] * s_std_t[1]
+                    delta_orig = s_cur_norm[:, 5] * s_std_t[5]
 
                     phys_norm = torch.zeros_like(s_cur_norm)
-                    phys_norm[:, 0] = v_norm * torch.sin(torch.tensor(e_psi)) * (state_std[2] * DT / state_std[0])
-                    phys_norm[:, 1] = -v_norm * delta_st * (state_std[2] * DT / (WHEELBASE * state_std[1]))
-                    phys_norm[:, 3] = theta_dot_norm * (state_std[4] * DT / state_std[3])
-                    phys_norm[:, 5] = s_cur_norm[:, 6] * (state_std[6] * DT / state_std[5])
+                    phys_norm[:, 0] = v_norm * torch.sin(e_psi_orig) * c0
+                    phys_norm[:, 1] = -v_norm * delta_orig * c1
+                    phys_norm[:, 3] = s_cur_norm[:, 4] * c3
+                    phys_norm[:, 5] = s_cur_norm[:, 6] * c5
 
-                    # Combine: total delta_norm = physics_norm + nn_residual
-                    s_next_norm = s_cur_norm + phys_norm + res_norm * (delta_std * DT / state_std)
+                    # Combine
+                    s_next_norm = s_cur_norm + phys_norm + res_norm * scale_res
 
-                    # Target: next normalized state from data
+                    # Target
                     target = sb[step + 1:step + 1 + n_roll]
                     loss_multi = loss_multi + nn.functional.mse_loss(
                         s_next_norm, target,

@@ -56,3 +56,11 @@ H=1000    1.0511       0.00%
 ======================================================================
 Training Physics-Informed Neural ODE (seed=43)
 ======================================================================
+  Epoch 10/200: loss=3188.482634, rollout=1, time=26.1s
+  Epoch 20/200: loss=2764.749750, rollout=1, time=48.9s
+  Epoch 30/200: loss=2416.114835, rollout=1, time=71.9s
+  Epoch 40/200: loss=2100.054910, rollout=1, time=93.0s
+  Epoch 50/200: loss=1822.205129, rollout=1, time=113.9s
+  Epoch 60/200: loss=1577.036124, rollout=1, time=134.3s
+  Epoch 70/200: loss=1358.672968, rollout=1, time=154.5s
+  Epoch 80/200: loss=1184.865842, rollout=1, time=175.1s
