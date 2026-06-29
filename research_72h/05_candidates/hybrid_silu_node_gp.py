@@ -245,6 +245,7 @@ class HybridSiLUNodeGP:
         self._delta_std = delta_std
         self._silu_dims = silu_dims
         self._gp_dims = gp_dims
+        self._dt = 1.0 / 30.0  # FIX: Define dt as instance variable
 
     def predict(self, s, tau):
         # Prepare input
@@ -260,7 +261,7 @@ class HybridSiLUNodeGP:
         with torch.no_grad():
             pred = self._silu_model(x_torch).numpy()[0]
         for i, dim in enumerate(self._silu_dims):
-            delta[dim] = pred[i] * self._delta_std[dim] * dt
+            delta[dim] = pred[i] * self._delta_std[dim] * self._dt
 
         # GP predictions for smooth states
         for dim in self._gp_dims:
