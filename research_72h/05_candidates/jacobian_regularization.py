@@ -122,29 +122,23 @@ class JacobianPenaltyODE(nn.Module):
     def forward(self, s, a):
         return self.net(torch.cat([s, a], dim=-1))
 
-    def compute_jacobian_frob_fd(self, s, a, eps=1e-4):
-        """Compute Frobenius norm of Jacobian dF/ds using central finite differences.
+    def compute_jacobian_frob(self, s, a):
+        """Compute Frobenius norm of Jacobian dF/ds using autograd.
 
-        This is O(STATE_DIM) forward passes instead of O(STATE_DIM) backward passes
-        with create_graph=True, making it much faster.
+        Uses create_graph=True to allow gradients to flow back through
+        the Jacobian penalty to the model parameters.
         """
-        with torch.no_grad():
-            f0 = self.forward(s, a)  # (batch, STATE_DIM)
-            jac_frob_sq = torch.tensor(0.0)
+        s_req = s.detach().requires_grad_(True)
+        dsdt = self.forward(s_req, a.detach())
 
-            for j in range(STATE_DIM):
-                s_plus = s.clone()
-                s_minus = s.clone()
-                s_plus[:, j] += eps
-                s_minus[:, j] -= eps
+        jac_frob_sq = 0.0
+        for i in range(STATE_DIM):
+            grad = torch.autograd.grad(
+                dsdt[:, i].sum(), s_req, create_graph=True, retain_graph=True
+            )[0]
+            jac_frob_sq = jac_frob_sq + grad.pow(2).sum()
 
-                f_plus = self.forward(s_plus, a)
-                f_minus = self.forward(s_minus, a)
-
-                jac_col = (f_plus - f_minus) / (2 * eps)  # (batch, STATE_DIM)
-                jac_frob_sq += jac_col.pow(2).sum()
-
-            return jac_frob_sq / len(s)
+        return jac_frob_sq / len(s)
 
 
 class LyapunovConstrainedODE(nn.Module):
@@ -322,7 +316,7 @@ def train_baseline(data, config, seed=43):
 
 
 def train_jacobian_penalty(data, config, lambda_jac, seed=43):
-    """Train model with Jacobian Frobenius norm penalty (finite differences)."""
+    """Train model with Jacobian Frobenius norm penalty (autograd)."""
     torch.manual_seed(seed)
     np.random.seed(seed)
 
@@ -335,17 +329,16 @@ def train_jacobian_penalty(data, config, lambda_jac, seed=43):
     model.train()
     for epoch in range(config['n_epochs']):
         for batch_idx, (sb, ab, yb) in enumerate(loader):
+            opt.zero_grad()
+
             pred = model(sb, ab)
             loss_mse = nn.functional.mse_loss(pred, yb)
 
-            # Jacobian penalty via finite differences (compute every 4th batch for speed)
-            if batch_idx % 4 == 0:
-                jac_sub = min(16, len(sb))
-                jac_frob = model.compute_jacobian_frob_fd(sb[:jac_sub], ab[:jac_sub])
-            # else reuse last jac_frob (approximate)
+            # Jacobian penalty with autograd - must be in same graph as loss
+            jac_sub = min(8, len(sb))
+            jac_frob = model.compute_jacobian_frob(sb[:jac_sub], ab[:jac_sub])
             loss = loss_mse + lambda_jac * jac_frob
 
-            opt.zero_grad()
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             opt.step()
@@ -550,7 +543,7 @@ def main():
     print("Method 1: Jacobian Frobenius Norm Penalty (finite differences)")
     print("=" * 70)
 
-    jac_lambdas = [0.01, 0.1]
+    jac_lambdas = [0.1, 1.0]
     jac_results = {}
 
     for lam in jac_lambdas:

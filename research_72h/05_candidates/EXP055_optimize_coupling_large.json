@@ -1,0 +1,63 @@
+{
+  "timestamp": "2026-06-28T23:30:00",
+  "run_id": "20260628_175824_neural_ode_144h",
+  "experiment": "optimize_coupling_large",
+  "note": "Partial results - coupling_512 training was interrupted at epoch 30/40 due to CPU time constraints. Baseline completed fully. deep6_512 not started.",
+  "baseline_ref": {
+    "name": "improved_coupling_256_200ep",
+    "primary": 0.4712,
+    "note": "256 dim, 200 epochs, 5 segments, H up to 1000"
+  },
+  "eval_mode": "partial (3 segments, 40 epochs, H up to 200)",
+  "configs": ["baseline_256", "coupling_512"],
+  "results": {
+    "baseline_256": {
+      "primary": 0.6634,
+      "n_params": 1072135,
+      "coupling_dim": 256,
+      "hidden": 256,
+      "encoder_layers": 3,
+      "n_epochs": 40,
+      "final_loss": 222.089,
+      "h1": 0.0185,
+      "h10": 0.0368,
+      "h50": 0.0836,
+      "h100": 0.4101,
+      "h200": 0.9167,
+      "survival_h200": 1.0,
+      "status": "completed"
+    },
+    "coupling_512": {
+      "primary": null,
+      "n_params": 4241415,
+      "coupling_dim": 512,
+      "hidden": 512,
+      "encoder_layers": 3,
+      "n_epochs": 40,
+      "loss_at_epoch_10": 352.406,
+      "loss_at_epoch_20": 293.794,
+      "loss_at_epoch_30": 245.028,
+      "loss_at_epoch_30_time": 743.3,
+      "status": "interrupted_at_epoch_30"
+    }
+  },
+  "loss_comparison": {
+    "baseline_256_at_epoch_30": 249.437,
+    "coupling_512_at_epoch_30": 245.028,
+    "delta": -4.409,
+    "relative_improvement_pct": 1.77
+  },
+  "training_speed": {
+    "baseline_256_per_epoch": 12.47,
+    "coupling_512_per_epoch": 24.78,
+    "speedup_ratio": 0.50
+  },
+  "best_config": "baseline_256",
+  "best_primary": 0.6634,
+  "analysis": {
+    "convergence_comparison": "At epoch 30, coupling_512 (loss=245.0) shows only 1.8% improvement over baseline_256 (loss=249.4). The larger model converges to essentially the same loss despite 4x more parameters.",
+    "training_speed": "coupling_512 takes 2x longer per epoch (24.8s vs 12.5s) due to 4x more parameters. The marginal loss improvement does not justify the 2x training cost.",
+    "expected_primary_score": "Based on the loss trajectory, coupling_512 would likely achieve Primary ~0.65-0.67 at epoch 40, similar to baseline_256 (0.6634).",
+    "verdict": "Larger coupling dimension (512) does NOT provide meaningful improvement. The 256-dim bottleneck is NOT the limiting factor. The problem is likely in the architecture design (encoder/decoder structure) or the training approach, not in the coupling capacity."
+  }
+}
