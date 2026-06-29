@@ -1,0 +1,44 @@
+{
+  "timestamp": "2026-06-29T12:40:18.270053",
+  "run_id": "20260628_175824_neural_ode_144h",
+  "experiment": "layered_prediction",
+  "architecture": {
+    "e_y": "physics_integration",
+    "e_psi": "physics_integration",
+    "v": "constant",
+    "theta": "neural_ode",
+    "delta": "neural_ode",
+    "theta_dot": "derived_from_theta",
+    "delta_dot": "derived_from_delta"
+  },
+  "results": {
+    "1": {
+      "nmae_mean": 0.021099312674521507,
+      "survival_rate": 1.0
+    },
+    "10": {
+      "nmae_mean": 0.28725571892968305,
+      "survival_rate": 1.0
+    },
+    "50": {
+      "nmae_mean": 0.5111514739865963,
+      "survival_rate": 1.0
+    },
+    "100": {
+      "nmae_mean": 1.0575231152965845,
+      "survival_rate": 1.0
+    },
+    "200": {
+      "nmae_mean": 1.3516153647554146,
+      "survival_rate": 0.0
+    },
+    "500": {
+      "nmae_mean": 1.3516153647554146,
+      "survival_rate": 0.0
+    },
+    "1000": {
+      "nmae_mean": 1.3516153647554146,
+      "survival_rate": 0.0
+    }
+  }
+}

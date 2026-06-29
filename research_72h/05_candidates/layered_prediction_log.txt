@@ -1,0 +1,54 @@
+============================================================
+Layered Prediction Architecture
+============================================================
+
+1. Loading data...
+
+2. Training NODE for theta, delta...
+Training NODE for theta, delta (seed=42)...
+  Epoch 50/200: loss=22.852884, time=115.1s
+  Epoch 100/200: loss=11.479502, time=229.7s
+  Epoch 150/200: loss=4.673585, time=345.1s
+  Epoch 200/200: loss=2.806426, time=461.2s
+Training completed in 461.2s
+
+3. Creating layered predictor...
+
+4. Evaluating...
+
+============================================================
+RESULTS: Layered Prediction
+============================================================
+
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0211       100.00%     
+H=10      0.2873       100.00%     
+H=50      0.5112       100.00%     
+H=100     1.0575       100.00%     
+H=200     1.3516       0.00%       
+H=500     1.3516       0.00%       
+H=1000    1.3516       0.00%       
+
+Comparison with v9 baseline:
+Horizon    v9 NMAE      Layered      Improvement 
+----------------------------------------------
+H=1       0.0051       0.0211       -313.7      %
+H=10      0.0628       0.2873       -357.4      %
+H=50      0.4557       0.5112       -12.2       %
+H=100     0.5064       1.0575       -108.8      %
+H=200     0.4737       1.3516       -185.3      %
+H=500     0.5529       1.3516       -144.5      %
+H=1000    0.6443       1.3516       -109.8      %
+
+Per-state NMAE (H=500):
+----------------------------------------
+  e_y         : 0.7690
+  e_psi       : 0.6673
+  v           : 0.6111
+  theta       : 1.5044
+  theta_dot   : 4.0531
+  delta       : 0.8736
+  delta_dot   : 0.9828
+
+Results saved to: D:/系统辨识作业/sindy_bicycle/research_72h/05_candidates/EXP043_layered_prediction.json
