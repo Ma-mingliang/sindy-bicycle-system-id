@@ -655,7 +655,8 @@ def make_predict_fn_composite(v9_model, specialized_models, specialized_dims,
 
 # ─── Main Experiments ───────────────────────────────────────────────────
 
-def run_single_state_experiment(data, state_name, state_idx, horizons, seed=42):
+def run_single_state_experiment(data, state_name, state_idx, horizons,
+                                 v9_model=None, seed=42):
     """Run all architectures for a single target state.
 
     Returns dict of {arch_name: {model, results, primary_score, target_nmae}}.
@@ -668,13 +669,16 @@ def run_single_state_experiment(data, state_name, state_idx, horizons, seed=42):
     action_std = data['action_std']
     delta_std = data['delta_std']
 
-    # Train v9 baseline to use for non-target states
-    v9_config = {
-        'hidden': 64, 'depth': 3, 'activation': 'tanh',
-        'lr': 1e-3, 'n_epochs': 200, 'batch_size': 256, 'patience': 50,
-    }
-    print("  Training v9 baseline for non-target states...")
-    v9_model = train_v9_baseline(data, v9_config, seed=43)
+    # Use provided v9 model or train new one
+    if v9_model is None:
+        v9_config = {
+            'hidden': 64, 'depth': 3, 'activation': 'tanh',
+            'lr': 1e-3, 'n_epochs': 200, 'batch_size': 256, 'patience': 50,
+        }
+        print("  Training v9 baseline for non-target states...")
+        v9_model = train_v9_baseline(data, v9_config, seed=43)
+    else:
+        print("  Using pre-trained v9 baseline.")
     v9_predict = make_predict_fn_v9(v9_model, state_std, action_std, delta_std)
 
     # Baseline: v9 full model evaluated
