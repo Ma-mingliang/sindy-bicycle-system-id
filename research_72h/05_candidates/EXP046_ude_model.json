@@ -1,0 +1,247 @@
+{
+  "timestamp": "2026-06-29T13:47:53.869080",
+  "run_id": "20260628_ude_model",
+  "experiment": "ude_model",
+  "description": "Universal Differential Equations: physics + NN residual",
+  "architecture": {
+    "type": "UDE",
+    "physics": [
+      "e_y_dot = v * sin(e_psi)",
+      "e_psi_dot = -v * delta / L",
+      "v_dot = 0",
+      "theta_dot = theta_dot (state[4])",
+      "delta_dot = delta_dot (state[6])"
+    ],
+    "nn_residual": {
+      "input_dim": 8,
+      "output_dim": 7,
+      "hidden": 128,
+      "depth": 4,
+      "activation": "tanh"
+    },
+    "combination": "total_delta = physics_delta + nn_residual * delta_std * dt"
+  },
+  "config": {
+    "hidden": 128,
+    "depth": 4,
+    "activation": "tanh",
+    "lr": 0.001,
+    "n_epochs": 200,
+    "batch_size": 256,
+    "rollout_curriculum": [
+      1,
+      5,
+      10,
+      20
+    ],
+    "lambda_multi": 0.3
+  },
+  "results": {
+    "1": {
+      "nmae_mean": 0.01320847765339345,
+      "nmae_std": 0.008865506895846056,
+      "survival_rate": 1.0,
+      "per_state_nmae": {
+        "e_y": {
+          "mean": 0.04098067586216203
+        },
+        "e_psi": {
+          "mean": 0.0356570704463358
+        },
+        "v": {
+          "mean": 0.0008011579506657727
+        },
+        "theta": {
+          "mean": 0.001163862196254591
+        },
+        "theta_dot": {
+          "mean": 0.005127217336176106
+        },
+        "delta": {
+          "mean": 0.00147908904154362
+        },
+        "delta_dot": {
+          "mean": 0.007250270740616243
+        }
+      }
+    },
+    "10": {
+      "nmae_mean": 0.04543525443821005,
+      "nmae_std": 0.016492099495497865,
+      "survival_rate": 1.0,
+      "per_state_nmae": {
+        "e_y": {
+          "mean": 0.06499122228664098
+        },
+        "e_psi": {
+          "mean": 0.07399616285876419
+        },
+        "v": {
+          "mean": 0.0018810189942888322
+        },
+        "theta": {
+          "mean": 0.005440938618887523
+        },
+        "theta_dot": {
+          "mean": 0.0123845584739209
+        },
+        "delta": {
+          "mean": 0.04907984676083564
+        },
+        "delta_dot": {
+          "mean": 0.11027303307413232
+        }
+      }
+    },
+    "50": {
+      "nmae_mean": 0.1328484812529866,
+      "nmae_std": 0.028847003084974936,
+      "survival_rate": 1.0,
+      "per_state_nmae": {
+        "e_y": {
+          "mean": 0.15190961046538526
+        },
+        "e_psi": {
+          "mean": 0.30677738249381925
+        },
+        "v": {
+          "mean": 0.00846937657723258
+        },
+        "theta": {
+          "mean": 0.062294413300329324
+        },
+        "theta_dot": {
+          "mean": 0.07733588849103448
+        },
+        "delta": {
+          "mean": 0.15241181745015528
+        },
+        "delta_dot": {
+          "mean": 0.17074087999295007
+        }
+      }
+    },
+    "100": {
+      "nmae_mean": 0.368818566689713,
+      "nmae_std": 0.09469661188159295,
+      "survival_rate": 1.0,
+      "per_state_nmae": {
+        "e_y": {
+          "mean": 0.4390824693532821
+        },
+        "e_psi": {
+          "mean": 0.731938714252142
+        },
+        "v": {
+          "mean": 0.09699478019111338
+        },
+        "theta": {
+          "mean": 0.2842580494355197
+        },
+        "theta_dot": {
+          "mean": 0.3281292279702702
+        },
+        "delta": {
+          "mean": 0.3241057824836654
+        },
+        "delta_dot": {
+          "mean": 0.37722094314199867
+        }
+      }
+    },
+    "200": {
+      "nmae_mean": 0.5652825498510481,
+      "nmae_std": 0.23570762706133588,
+      "survival_rate": 1.0,
+      "per_state_nmae": {
+        "e_y": {
+          "mean": 0.5451068817016542
+        },
+        "e_psi": {
+          "mean": 1.2279865411115263
+        },
+        "v": {
+          "mean": 0.24928668893030853
+        },
+        "theta": {
+          "mean": 0.39336040781289455
+        },
+        "theta_dot": {
+          "mean": 0.6306348864194036
+        },
+        "delta": {
+          "mean": 0.4347722122798202
+        },
+        "delta_dot": {
+          "mean": 0.4758302307017302
+        }
+      }
+    },
+    "500": {
+      "nmae_mean": 0.727098447214062,
+      "nmae_std": 0.28867390147552585,
+      "survival_rate": 0.2,
+      "per_state_nmae": {
+        "e_y": {
+          "mean": 0.9240585692097539
+        },
+        "e_psi": {
+          "mean": 1.6036097170614299
+        },
+        "v": {
+          "mean": 0.309867821653922
+        },
+        "theta": {
+          "mean": 0.48586909250049304
+        },
+        "theta_dot": {
+          "mean": 0.7593874796649474
+        },
+        "delta": {
+          "mean": 0.518492224586516
+        },
+        "delta_dot": {
+          "mean": 0.4884042258213711
+        }
+      }
+    },
+    "1000": {
+      "nmae_mean": 0.7414435610479575,
+      "nmae_std": 0.2885825836049699,
+      "survival_rate": 0.2,
+      "per_state_nmae": {
+        "e_y": {
+          "mean": 0.94358524216102
+        },
+        "e_psi": {
+          "mean": 1.6781447267021499
+        },
+        "v": {
+          "mean": 0.2567341905663012
+        },
+        "theta": {
+          "mean": 0.5172512129537319
+        },
+        "theta_dot": {
+          "mean": 0.7495288326863592
+        },
+        "delta": {
+          "mean": 0.57481451609259
+        },
+        "delta_dot": {
+          "mean": 0.47004620617354975
+        }
+      }
+    }
+  },
+  "v9_baseline": {
+    "1": 0.0051,
+    "10": 0.0628,
+    "50": 0.4557,
+    "100": 0.5064,
+    "200": 0.4737,
+    "500": 0.5529,
+    "1000": 0.6443
+  },
+  "primary_score": 0.5537331879182744
+}
