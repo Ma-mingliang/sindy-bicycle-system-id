@@ -1,0 +1,38 @@
+{
+  "timestamp": "2026-06-29T16:32:26.908385",
+  "run_id": "20260628_175824_neural_ode_144h",
+  "experiment": "kinematic_constrained_node_fixed",
+  "fix": "Compute kinematics in PHYSICAL space, not normalized space",
+  "results": {
+    "1": {
+      "nmae_mean": 0.0009641384822316468,
+      "survival_rate": 1.0
+    },
+    "10": {
+      "nmae_mean": 0.00965467281639576,
+      "survival_rate": 1.0
+    },
+    "50": {
+      "nmae_mean": 0.05013180896639824,
+      "survival_rate": 1.0
+    },
+    "100": {
+      "nmae_mean": 0.24605493247509003,
+      "survival_rate": 1.0
+    },
+    "200": {
+      "nmae_mean": 0.5444453358650208,
+      "survival_rate": 0.6
+    },
+    "500": {
+      "nmae_mean": 0.7880940437316895,
+      "survival_rate": 0.2
+    },
+    "1000": {
+      "nmae_mean": 0.9322479963302612,
+      "survival_rate": 0.2
+    }
+  },
+  "primary_score": 0.5261981040239334,
+  "improvement_vs_v9": -2.974188654390098
+}
