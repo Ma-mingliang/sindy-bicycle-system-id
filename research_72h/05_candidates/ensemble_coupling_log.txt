@@ -30,3 +30,90 @@ Epochs: 200, Batch: 1024
   --- Model 3/5 (seed=44) ---
     Epoch 50/200: loss=287.814225, time=94.8s
     Epoch 100/200: loss=238.138246, time=202.1s
+    Epoch 150/200: loss=197.504417, time=337.8s
+    Epoch 200/200: loss=184.260634, time=447.8s
+    Training completed in 447.8s
+  Model 3 done in 447.8s
+
+  --- Model 4/5 (seed=45) ---
+    Epoch 50/200: loss=308.686207, time=112.6s
+    Epoch 100/200: loss=241.951569, time=227.6s
+    Epoch 150/200: loss=206.344839, time=339.4s
+    Epoch 200/200: loss=192.740115, time=454.5s
+    Training completed in 454.5s
+  Model 4 done in 454.5s
+
+  --- Model 5/5 (seed=46) ---
+    Epoch 50/200: loss=297.917849, time=108.3s
+    Epoch 100/200: loss=236.426827, time=223.6s
+    Epoch 150/200: loss=203.246325, time=341.2s
+    Epoch 200/200: loss=188.657437, time=451.0s
+    Training completed in 451.0s
+  Model 5 done in 451.0s
+
+  Total training time: 2069.5s (34.5 min)
+
+3. Evaluating individual models...
+
+  --- Single Model 1 (seed=42) ---
+    PrimaryLongHorizonScore: 0.4265
+
+  --- Single Model 2 (seed=43) ---
+    PrimaryLongHorizonScore: 1.6849
+
+  --- Single Model 3 (seed=44) ---
+    PrimaryLongHorizonScore: 0.6011
+
+  --- Single Model 4 (seed=45) ---
+    PrimaryLongHorizonScore: 0.5287
+
+  --- Single Model 5 (seed=46) ---
+    PrimaryLongHorizonScore: 0.6637
+
+4. Computing validation-based weights...
+    Model 0 (seed=42): val_NMAE=0.2757
+    Model 1 (seed=43): val_NMAE=0.8915
+    Model 2 (seed=44): val_NMAE=0.5086
+    Model 3 (seed=45): val_NMAE=0.2847
+    Model 4 (seed=46): val_NMAE=0.4547
+
+    Validation NMAE scores: [0.27571414 0.89152731 0.50855558 0.2847173  0.4546503 ]
+    Weighted ensemble weights: [0.29186669 0.09026283 0.15823595 0.28263746 0.17699708]
+
+5. Evaluating Simple Average Ensemble...
+    PrimaryLongHorizonScore: 0.6434
+
+6. Evaluating Weighted Average Ensemble...
+    PrimaryLongHorizonScore: nan
+
+======================================================================
+SUMMARY: Ensemble vs Single Model
+======================================================================
+
+Method                            Primary  vs Best Single
+-------------------------------------------------------
+  Single model seed=42              0.4265 <-- best single
+  Single model seed=43              1.6849
+  Single model seed=44              0.6011
+  Single model seed=45              0.5287
+  Single model seed=46              0.6637
+  Average of singles                0.7810         +83.1%
+  Simple Average Ensemble           0.6434         +50.9%
+  Weighted Average Ensemble            nan          +nan%
+
+  Baseline (EXP051 xlarge):     0.4712
+
+  Best ensemble: weighted_average
+  Improvement vs EXP051 baseline: -36.6%
+
+Horizon         S0      S1      S2      S3      S4 SimpleAvg  WeightedAvg
+-------------------------------------------------------------------------
+H=1        0.0223  0.0243  0.0245  0.0261  0.0255    0.0233       0.0237
+H=10       0.0418  0.0509  0.0592  0.0520  0.0601    0.0467       0.0473
+H=50       0.0550  0.3382  0.1340  0.1120  0.1594    0.0965       0.0957
+H=100      0.2464  1.0778  0.4334  0.2749  0.4059    0.3343       0.2446
+H=200      0.4399  1.7478  0.6206  0.5318  0.6864    0.6977          nan
+H=500      0.5932  2.2291  0.7492  0.7794  0.8988    0.8984          nan
+H=1000     0.7766  2.2291  0.7928  0.8698  1.0341    1.0365          nan
+
+Results saved to: D:/系统辨识作业/sindy_bicycle/research_72h/05_candidates/EXP058_ensemble_coupling.json

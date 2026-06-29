@@ -1,7 +1,7 @@
-"""Optimize Coupling Network with Larger Capacity - Fast Version.
+"""Optimize Coupling Network with Larger Capacity - Minimal Fast Version.
 
-Tests 6 focused configs with fast evaluation (max H=200, 3 segments).
-Current best: Improved Coupling Network (256 dim) = Primary 0.4712
+Tests 3 key configs with 40 epochs to get quick comparison.
+Current best: Improved Coupling Network (256 dim, 200 epochs) = Primary 0.4712
 """
 import sys
 import json
@@ -184,7 +184,7 @@ def train_model(data, config, seed=42):
             n_batches += 1
         scheduler.step()
 
-        if (epoch + 1) % 20 == 0:
+        if (epoch + 1) % 10 == 0:
             avg_loss = epoch_loss / max(n_batches, 1)
             elapsed = time.time() - start_time
             print(f"  Epoch {epoch+1}/{config['n_epochs']}: loss={avg_loss:.6f}, time={elapsed:.1f}s")
@@ -196,7 +196,6 @@ def train_model(data, config, seed=42):
 
 
 def evaluate_model_fast(model, data, state_std, action_std, delta_std, horizons, n_segments=3, seed=42):
-    """Fast evaluation with fewer segments and shorter max horizon."""
     dt = 1.0 / 30.0
     episodes = data['episodes']
     test_eps = data['test_eps']
@@ -274,31 +273,24 @@ def evaluate_model_fast(model, data, state_std, action_std, delta_std, horizons,
 
 def main():
     print("=" * 60)
-    print("Optimize Coupling Network - Larger Capacity (Fast)")
+    print("Optimize Coupling Network - Larger Capacity (Minimal)")
     print("=" * 60)
-    print(f"Current best: Improved Coupling (256 dim) = Primary 0.4712")
-    print(f"Fast eval: 3 segments, horizons up to H=200")
+    print(f"Current best: Improved Coupling (256 dim, 200 ep) = Primary 0.4712")
+    print(f"Minimal: 3 configs, 40 epochs, 3 segments, H up to 200")
     print("=" * 60)
 
     configs = [
         {'name': 'baseline_256', 'coupling_dim': 256, 'hidden': 256,
-         'encoder_layers': 3, 'decoder_layers': 3, 'lr': 1e-3, 'n_epochs': 80, 'batch_size': 512},
+         'encoder_layers': 3, 'decoder_layers': 3, 'lr': 1e-3, 'n_epochs': 40, 'batch_size': 512},
         {'name': 'coupling_512', 'coupling_dim': 512, 'hidden': 512,
-         'encoder_layers': 3, 'decoder_layers': 3, 'lr': 1e-3, 'n_epochs': 80, 'batch_size': 512},
-        {'name': 'deep6_256', 'coupling_dim': 256, 'hidden': 256,
-         'encoder_layers': 6, 'decoder_layers': 3, 'lr': 1e-3, 'n_epochs': 80, 'batch_size': 512},
+         'encoder_layers': 3, 'decoder_layers': 3, 'lr': 1e-3, 'n_epochs': 40, 'batch_size': 512},
         {'name': 'deep6_512', 'coupling_dim': 512, 'hidden': 512,
-         'encoder_layers': 6, 'decoder_layers': 3, 'lr': 5e-4, 'n_epochs': 80, 'batch_size': 512},
-        {'name': 'deep8_512', 'coupling_dim': 512, 'hidden': 512,
-         'encoder_layers': 8, 'decoder_layers': 3, 'lr': 5e-4, 'n_epochs': 80, 'batch_size': 512},
-        {'name': 'wide_dec_512', 'coupling_dim': 512, 'hidden': 256,
-         'encoder_layers': 3, 'decoder_layers': 3, 'decoder_hidden': 512, 'lr': 1e-3, 'n_epochs': 80, 'batch_size': 512},
+         'encoder_layers': 6, 'decoder_layers': 3, 'lr': 5e-4, 'n_epochs': 40, 'batch_size': 512},
     ]
 
     print("\n1. Loading data...")
     data = load_data(seed=42)
 
-    # Use horizons up to 200 for speed
     horizons = [1, 10, 50, 100, 200]
     all_results = {}
 
@@ -306,15 +298,12 @@ def main():
         print(f"\n{'='*60}")
         print(f"[{i+1}/{len(configs)}] Config: {config['name']}")
         print(f"  Coupling: {config['coupling_dim']}, Hidden: {config['hidden']}")
-        print(f"  Encoder layers: {config['encoder_layers']}, Decoder layers: {config['decoder_layers']}")
-        decoder_hidden = config.get('decoder_hidden', config['hidden'])
-        if decoder_hidden != config['hidden']:
-            print(f"  Decoder hidden: {decoder_hidden}")
+        print(f"  Encoder layers: {config['encoder_layers']}")
         print(f"{'='*60}")
 
         model, state_std, action_std, delta_std, n_params = train_model(data, config, seed=42)
 
-        print(f"\nEvaluating (fast)...")
+        print(f"\nEvaluating...")
         results = evaluate_model_fast(model, data, state_std, action_std, delta_std, horizons)
 
         print(f"\nResults for {config['name']}:")
@@ -324,15 +313,11 @@ def main():
             r = results[h]
             print(f"H={h:<7} {r['nmae_mean']:<12.4f} {r['survival_rate']:<12.2%}")
 
-        # Primary score: mean of H=100 and H=200 (no H=500 in fast eval)
         primary = np.mean([results[100]['nmae_mean'], results[200]['nmae_mean']])
         print(f"\nPrimaryScore (avg H=100,200): {primary:.4f}")
 
         all_results[config['name']] = {
-            'config': config,
-            'results': results,
-            'primary': primary,
-            'n_params': n_params,
+            'config': config, 'results': results, 'primary': primary, 'n_params': n_params,
         }
 
         del model
@@ -360,9 +345,8 @@ def main():
         print(f"{name:<20} {n_params:<12,} {r[50]['nmae_mean']:<10.4f} {r[100]['nmae_mean']:<10.4f} "
               f"{r[200]['nmae_mean']:<10.4f} {primary:<10.4f}")
 
-    # Compare
-    print(f"\nComparison with baseline (256 dim):")
     baseline_primary = all_results['baseline_256']['primary']
+    print(f"\nComparison with baseline (256 dim):")
     print(f"{'Config':<20} {'Primary':<10} {'Delta':<12} {'Change%':<12}")
     print("-" * 54)
     for name, data_dict in all_results.items():
@@ -371,6 +355,14 @@ def main():
         change = (baseline_primary - primary) / baseline_primary * 100
         marker = " <== BEST" if name == best_name else ""
         print(f"{name:<20} {primary:<10.4f} {delta:<+12.4f} {change:>+10.2f}%{marker}")
+
+    # Training loss comparison
+    print(f"\nTraining loss at epoch 40 (final):")
+    print(f"  baseline_256: 181.97 (from previous run)")
+    for name, data_dict in all_results.items():
+        if name != 'baseline_256':
+            c = data_dict['config']
+            print(f"  {name}: see epoch 40 loss above")
 
     # Per-state analysis
     print(f"\nPer-state NMAE at H=200:")
@@ -385,32 +377,17 @@ def main():
             row += f"{val:<12.4f}"
         print(row)
 
-    # Analysis
-    print("\n" + "=" * 60)
-    print("ANALYSIS: Why Larger Capacity May Help")
-    print("=" * 60)
-    print("""
-Key findings from this experiment:
-1. Coupling dimension (256 vs 512): Tests if the bottleneck limits representation
-2. Encoder depth (3 vs 6 vs 8): Tests if deeper hierarchical features help
-3. Decoder width: Tests if wider decoders improve per-state predictions
-4. Combined depth + width: Tests if both improvements are complementary
-
-If larger capacity helps -> state interactions are more complex than 256 dims can capture
-If no improvement -> 256 was already sufficient, risk of overfitting increases
-If degradation -> larger models harder to optimize, need more data or regularization
-""")
-
     # Save results
     output = {
         'timestamp': datetime.now().isoformat(),
         'run_id': '20260628_175824_neural_ode_144h',
         'experiment': 'optimize_coupling_large',
-        'baseline': {
-            'name': 'improved_coupling_256',
-            'primary_ref': 0.4712,
+        'baseline_ref': {
+            'name': 'improved_coupling_256_200ep',
+            'primary': 0.4712,
+            'note': '256 dim, 200 epochs, 5 segments, H up to 1000'
         },
-        'eval_mode': 'fast (3 segments, H up to 200)',
+        'eval_mode': 'minimal (3 segments, 40 epochs, H up to 200)',
         'configs': [c['name'] for c in configs],
         'results': {
             k: {
