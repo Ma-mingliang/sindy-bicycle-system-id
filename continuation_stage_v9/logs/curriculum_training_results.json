@@ -1,0 +1,58 @@
+{
+  "results": {
+    "1": {
+      "v9_ref": 0.0051,
+      "V9-style (rollout 1,5,10,20)": 0.007386656549967431,
+      "Extended (rollout 1,5,10,20,50)": 0.0063015270250863275,
+      "No curriculum (single-step only)": 0.0030554100628704143
+    },
+    "5": {
+      "v9_ref": 0.017,
+      "V9-style (rollout 1,5,10,20)": 0.01827408155659811,
+      "Extended (rollout 1,5,10,20,50)": 0.015976588016278475,
+      "No curriculum (single-step only)": 0.008387736425094666
+    },
+    "10": {
+      "v9_ref": 0.0628,
+      "V9-style (rollout 1,5,10,20)": 0.07534466231878284,
+      "Extended (rollout 1,5,10,20,50)": 0.07212588469705047,
+      "No curriculum (single-step only)": 0.05772501934687899
+    },
+    "20": {
+      "v9_ref": 0.1817,
+      "V9-style (rollout 1,5,10,20)": 0.2436358850350328,
+      "Extended (rollout 1,5,10,20,50)": 0.2584160929656877,
+      "No curriculum (single-step only)": 0.19829425019926059
+    },
+    "50": {
+      "v9_ref": 0.4557,
+      "V9-style (rollout 1,5,10,20)": 0.6023545537215778,
+      "Extended (rollout 1,5,10,20,50)": 0.5152124863278924,
+      "No curriculum (single-step only)": 0.5745174259828817
+    },
+    "100": {
+      "v9_ref": 0.5064,
+      "V9-style (rollout 1,5,10,20)": 0.7037221315763246,
+      "Extended (rollout 1,5,10,20,50)": 0.5932671890422647,
+      "No curriculum (single-step only)": 0.6578702502456858
+    },
+    "200": {
+      "v9_ref": 0.4737,
+      "V9-style (rollout 1,5,10,20)": 0.7770961657471377,
+      "Extended (rollout 1,5,10,20,50)": 0.683503590250847,
+      "No curriculum (single-step only)": 0.6334039052946696
+    },
+    "500": {
+      "v9_ref": 0.5529,
+      "V9-style (rollout 1,5,10,20)": 1.2129296680500303,
+      "Extended (rollout 1,5,10,20,50)": 0.9457117684763053,
+      "No curriculum (single-step only)": 0.6992931604877339
+    },
+    "1000": {
+      "v9_ref": 0.6443,
+      "V9-style (rollout 1,5,10,20)": 1.2472409135770488,
+      "Extended (rollout 1,5,10,20,50)": 1.374529532505919,
+      "No curriculum (single-step only)": 0.8198433686152496
+    }
+  }
+}
