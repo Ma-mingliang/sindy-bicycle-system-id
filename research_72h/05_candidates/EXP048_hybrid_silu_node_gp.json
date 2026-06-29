@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-06-29T14:36:58.634336",
-  "run_id": "20260628_175824_neural_ode_144h",
+  "timestamp": "2026-06-29T14:40:42.495159",
   "experiment": "hybrid_silu_node_gp",
+  "description": "Hybrid: Wide SiLU NODE for e_y,e_psi,theta_dot,delta_dot + GP for v,theta,delta",
   "silu_dims": [
     "e_y",
     "e_psi",
@@ -13,36 +13,226 @@
     "theta",
     "delta"
   ],
+  "train_samples": 30000,
+  "silu_config": {
+    "hidden": 256,
+    "depth": 5,
+    "lr": 0.001,
+    "n_epochs": 200,
+    "batch_size": 256
+  },
+  "horizons": [
+    1,
+    10,
+    50,
+    100,
+    200,
+    500,
+    1000
+  ],
   "results": {
     "1": {
-      "nmae_mean": 0.017233058985688422,
-      "survival_rate": 1.0
+      "nmae_mean": 0.02457122468480824,
+      "nmae_std": 0.014045872082794722,
+      "survival_rate": 1.0,
+      "per_state_nmae": {
+        "e_y": {
+          "mean": 0.002800658233641578
+        },
+        "e_psi": {
+          "mean": 0.010322393906238077
+        },
+        "v": {
+          "mean": 7.261277414596111e-06
+        },
+        "theta": {
+          "mean": 0.0013177257594108097
+        },
+        "theta_dot": {
+          "mean": 0.004384290491513181
+        },
+        "delta": {
+          "mean": 0.009255515622302752
+        },
+        "delta_dot": {
+          "mean": 0.1439107275031367
+        }
+      }
     },
     "10": {
-      "nmae_mean": 0.07460168176131003,
-      "survival_rate": 1.0
+      "nmae_mean": 0.052493793976361156,
+      "nmae_std": 0.026442061335278412,
+      "survival_rate": 1.0,
+      "per_state_nmae": {
+        "e_y": {
+          "mean": 0.02666220698782319
+        },
+        "e_psi": {
+          "mean": 0.05637938263091598
+        },
+        "v": {
+          "mean": 7.028905242357941e-05
+        },
+        "theta": {
+          "mean": 0.00866926691029693
+        },
+        "theta_dot": {
+          "mean": 0.008229960645800954
+        },
+        "delta": {
+          "mean": 0.11199341138467205
+        },
+        "delta_dot": {
+          "mean": 0.15545204022259548
+        }
+      }
     },
     "50": {
-      "nmae_mean": 0.14070205311960662,
-      "survival_rate": 1.0
+      "nmae_mean": 0.20819070211309504,
+      "nmae_std": 0.12218447316718069,
+      "survival_rate": 1.0,
+      "per_state_nmae": {
+        "e_y": {
+          "mean": 0.3155293308623407
+        },
+        "e_psi": {
+          "mean": 0.30304030793971903
+        },
+        "v": {
+          "mean": 0.00021071441687733018
+        },
+        "theta": {
+          "mean": 0.1315805475859549
+        },
+        "theta_dot": {
+          "mean": 0.15645718912653792
+        },
+        "delta": {
+          "mean": 0.2825812895035482
+        },
+        "delta_dot": {
+          "mean": 0.2679355353566872
+        }
+      }
     },
     "100": {
-      "nmae_mean": 0.4087358179539928,
-      "survival_rate": 0.8
+      "nmae_mean": 0.48613326417660396,
+      "nmae_std": 0.1926654612309246,
+      "survival_rate": 1.0,
+      "per_state_nmae": {
+        "e_y": {
+          "mean": 0.667095993363317
+        },
+        "e_psi": {
+          "mean": 0.6846710787410355
+        },
+        "v": {
+          "mean": 0.00042505554749060323
+        },
+        "theta": {
+          "mean": 0.4000935340048466
+        },
+        "theta_dot": {
+          "mean": 0.4792576090340531
+        },
+        "delta": {
+          "mean": 0.5648545612633911
+        },
+        "delta_dot": {
+          "mean": 0.6065350172820932
+        }
+      }
     },
     "200": {
-      "nmae_mean": 0.8325826269273028,
-      "survival_rate": 0.8
+      "nmae_mean": 0.770256160960938,
+      "nmae_std": 0.45537854801391275,
+      "survival_rate": 1.0,
+      "per_state_nmae": {
+        "e_y": {
+          "mean": 1.006659332871048
+        },
+        "e_psi": {
+          "mean": 1.2199100228146253
+        },
+        "v": {
+          "mean": 0.0008849713517676931
+        },
+        "theta": {
+          "mean": 0.7054526600247683
+        },
+        "theta_dot": {
+          "mean": 0.8582434781197064
+        },
+        "delta": {
+          "mean": 0.8041552226909492
+        },
+        "delta_dot": {
+          "mean": 0.7964874388537008
+        }
+      }
     },
     "500": {
-      "nmae_mean": 1.0821614049022883,
-      "survival_rate": 0.2
+      "nmae_mean": 0.996948149355571,
+      "nmae_std": 0.6190121946329087,
+      "survival_rate": 0.8,
+      "per_state_nmae": {
+        "e_y": {
+          "mean": 1.1922168372844746
+        },
+        "e_psi": {
+          "mean": 1.806655208161655
+        },
+        "v": {
+          "mean": 0.0026672893699716755
+        },
+        "theta": {
+          "mean": 0.7628718501321343
+        },
+        "theta_dot": {
+          "mean": 1.4746474737294106
+        },
+        "delta": {
+          "mean": 0.9272068750053674
+        },
+        "delta_dot": {
+          "mean": 0.8123715118059828
+        }
+      }
     },
     "1000": {
-      "nmae_mean": 1.1669143815515965,
-      "survival_rate": 0.2
+      "nmae_mean": 1.1537549555683453,
+      "nmae_std": 0.547673013403734,
+      "survival_rate": 0.8,
+      "per_state_nmae": {
+        "e_y": {
+          "mean": 1.3107369480013464
+        },
+        "e_psi": {
+          "mean": 2.274649608114744
+        },
+        "v": {
+          "mean": 0.002899290364326855
+        },
+        "theta": {
+          "mean": 0.7227644516947819
+        },
+        "theta_dot": {
+          "mean": 2.0835954762919013
+        },
+        "delta": {
+          "mean": 0.9253288730087863
+        },
+        "delta_dot": {
+          "mean": 0.7563100415025301
+        }
+      }
     }
   },
-  "primary_score": 0.7744932832611946,
-  "improvement_vs_v9": -51.5642432996467
+  "primary_score": 0.7511125248310376,
+  "v9_primary": 0.511,
+  "wide_silu_primary": 0.393,
+  "per_state_residual_primary": 0.3986,
+  "improvement_vs_v9": -46.9887524131189,
+  "improvement_vs_wide_silu": -91.12277985522586,
+  "improvement_vs_per_state_residual": -88.43766302835866
 }
