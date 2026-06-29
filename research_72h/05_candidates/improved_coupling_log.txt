@@ -1,0 +1,81 @@
+============================================================
+Improved Coupling Network
+============================================================
+
+1. Loading data...
+
+============================================================
+Config: large_coupling
+============================================================
+Training Improved Coupling Network (seed=42)...
+  Coupling dim: 128
+  Hidden: 128
+  Epoch 50/200: loss=242.425222, time=284.5s
+  Epoch 100/200: loss=205.873167, time=662.0s
+  Epoch 150/200: loss=170.096709, time=1174.0s
+  Epoch 200/200: loss=145.544133, time=1656.8s
+Training completed in 1656.8s
+
+Evaluating...
+
+Results for large_coupling:
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0207       100.00%     
+H=10      0.0405       100.00%     
+H=50      0.1949       100.00%     
+H=100     0.3906       60.00%      
+H=200     0.6186       40.00%      
+H=500     0.9072       40.00%      
+H=1000    1.0288       20.00%      
+
+PrimaryLongHorizonScore: 0.6388
+
+============================================================
+Config: xlarge_coupling
+============================================================
+Training Improved Coupling Network (seed=42)...
+  Coupling dim: 256
+  Hidden: 256
+  Epoch 50/200: loss=241.043436, time=676.5s
+  Epoch 100/200: loss=195.941326, time=1375.5s
+  Epoch 150/200: loss=152.433519, time=2096.6s
+  Epoch 200/200: loss=127.249398, time=2803.6s
+Training completed in 2803.6s
+
+Evaluating...
+
+Results for xlarge_coupling:
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0089       100.00%     
+H=10      0.0136       100.00%     
+H=50      0.0360       100.00%     
+H=100     0.1905       100.00%     
+H=200     0.5547       60.00%      
+H=500     0.6684       40.00%      
+H=1000    0.6932       20.00%      
+
+PrimaryLongHorizonScore: 0.4712
+
+============================================================
+SUMMARY: Improved Coupling Network Results
+============================================================
+
+Config               H=50       H=100      H=200      H=500      Primary   
+----------------------------------------------------------------------
+large_coupling       0.1949     0.3906     0.6186     0.9072     0.6388    
+xlarge_coupling      0.0360     0.1905     0.5547     0.6684     0.4712    
+
+Comparison with baselines:
+Horizon    v9 NMAE      Wide SiLU    Best Improved
+----------------------------------------------
+H=1       0.0051       0.0155       0.0089      
+H=10      0.0628       0.0288       0.0136      
+H=50      0.4557       0.0708       0.0360      
+H=100     0.5064       0.3114       0.1905      
+H=200     0.4737       0.8716       0.5547      
+H=500     0.5529       1.2099       0.6684      
+H=1000    0.6443       1.3005       0.6932      
+
+Results saved to: D:/系统辨识作业/sindy_bicycle/research_72h/05_candidates/EXP051_improved_coupling.json
