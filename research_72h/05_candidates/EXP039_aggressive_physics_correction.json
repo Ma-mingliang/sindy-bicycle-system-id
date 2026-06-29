@@ -1,0 +1,85 @@
+{
+  "timestamp": "2026-06-29T10:23:34.035963",
+  "run_id": "20260628_175824_neural_ode_144h",
+  "experiment": "aggressive_physics_correction",
+  "target_improvement": 75,
+  "param_combinations": [
+    {
+      "correction_strength": 0.3,
+      "physics_weight": 0.9
+    },
+    {
+      "correction_strength": 0.3,
+      "physics_weight": 1.0
+    },
+    {
+      "correction_strength": 0.4,
+      "physics_weight": 0.9
+    },
+    {
+      "correction_strength": 0.4,
+      "physics_weight": 1.0
+    },
+    {
+      "correction_strength": 0.5,
+      "physics_weight": 0.9
+    },
+    {
+      "correction_strength": 0.5,
+      "physics_weight": 1.0
+    }
+  ],
+  "results": {
+    "cs0.3_pw0.9": {
+      "primary": 1.0243190284143848,
+      "improvement": -100.45382160751171,
+      "params": {
+        "correction_strength": 0.3,
+        "physics_weight": 0.9
+      }
+    },
+    "cs0.3_pw1.0": {
+      "primary": 0.9863644091430523,
+      "improvement": -93.02630315911004,
+      "params": {
+        "correction_strength": 0.3,
+        "physics_weight": 1.0
+      }
+    },
+    "cs0.4_pw0.9": {
+      "primary": 1.0667001221425767,
+      "improvement": -108.74757771870385,
+      "params": {
+        "correction_strength": 0.4,
+        "physics_weight": 0.9
+      }
+    },
+    "cs0.4_pw1.0": {
+      "primary": 0.8893053112582656,
+      "improvement": -74.03235053977801,
+      "params": {
+        "correction_strength": 0.4,
+        "physics_weight": 1.0
+      }
+    },
+    "cs0.5_pw0.9": {
+      "primary": 0.6285940433591694,
+      "improvement": -23.01253294699987,
+      "params": {
+        "correction_strength": 0.5,
+        "physics_weight": 0.9
+      }
+    },
+    "cs0.5_pw1.0": {
+      "primary": 0.5755001358221236,
+      "improvement": -12.62233577732359,
+      "params": {
+        "correction_strength": 0.5,
+        "physics_weight": 1.0
+      }
+    }
+  },
+  "best_config": "cs0.5_pw1.0",
+  "best_improvement": -12.62233577732359,
+  "target_achieved": "False"
+}
