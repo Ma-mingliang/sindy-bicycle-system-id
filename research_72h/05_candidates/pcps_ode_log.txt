@@ -1,0 +1,57 @@
+============================================================
+Physics-Constrained Per-State ODE (PCPS-ODE)
+============================================================
+
+1. Loading data...
+
+2. Training residual model...
+Training residual model (seed=42)...
+  Epoch 50/200: loss=384.828352, time=80.0s
+  Epoch 100/200: loss=193.353570, time=146.5s
+  Epoch 150/200: loss=132.420830, time=233.9s
+  Epoch 200/200: loss=123.113191, time=311.4s
+Training completed in 311.4s
+
+3. Creating PCPS-ODE model...
+
+4. Evaluating...
+
+============================================================
+RESULTS: PCPS-ODE
+============================================================
+
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0226       100.00%     
+H=10      0.8031       0.00%       
+H=50      0.8031       0.00%       
+H=100     0.8031       0.00%       
+H=200     0.8031       0.00%       
+H=500     0.8031       0.00%       
+H=1000    0.8031       0.00%       
+
+Comparison with baselines:
+Horizon    v9 NMAE      PCPS-ODE     Improvement 
+----------------------------------------------
+H=1       0.0051       0.0226       -343.9      %
+H=10      0.0628       0.8031       -1178.9     %
+H=50      0.4557       0.8031       -76.2       %
+H=100     0.5064       0.8031       -58.6       %
+H=200     0.4737       0.8031       -69.5       %
+H=500     0.5529       0.8031       -45.3       %
+H=1000    0.6443       0.8031       -24.7       %
+
+PrimaryLongHorizonScore: 0.8031
+Improvement vs v9: -57.2%
+
+Per-state NMAE (H=100):
+----------------------------------------
+  e_y         : 0.0011
+  e_psi       : 0.0263
+  v           : 0.0276
+  theta       : 0.0101
+  theta_dot   : 1.0690
+  delta       : 0.1091
+  delta_dot   : 4.3788
+
+Results saved to: D:/系统辨识作业/sindy_bicycle/research_72h/05_candidates/EXP049_pcps_ode.json

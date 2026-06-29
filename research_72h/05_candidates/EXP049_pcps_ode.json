@@ -1,0 +1,46 @@
+{
+  "timestamp": "2026-06-29T14:33:20.290515",
+  "run_id": "20260628_175824_neural_ode_144h",
+  "experiment": "pcps_ode",
+  "architecture": {
+    "e_y": "exact_kinematics",
+    "e_psi": "exact_kinematics",
+    "v": "constant",
+    "theta": "physics_plus_residual",
+    "delta": "physics_plus_residual",
+    "theta_dot": "derived_from_theta",
+    "delta_dot": "derived_from_delta"
+  },
+  "results": {
+    "1": {
+      "nmae_mean": 0.022639559163942197,
+      "survival_rate": 1.0
+    },
+    "10": {
+      "nmae_mean": 0.8031453797762602,
+      "survival_rate": 0.0
+    },
+    "50": {
+      "nmae_mean": 0.8031453797762602,
+      "survival_rate": 0.0
+    },
+    "100": {
+      "nmae_mean": 0.8031453797762602,
+      "survival_rate": 0.0
+    },
+    "200": {
+      "nmae_mean": 0.8031453797762602,
+      "survival_rate": 0.0
+    },
+    "500": {
+      "nmae_mean": 0.8031453797762602,
+      "survival_rate": 0.0
+    },
+    "1000": {
+      "nmae_mean": 0.8031453797762602,
+      "survival_rate": 0.0
+    }
+  },
+  "primary_score": 0.8031453797762603,
+  "improvement_vs_v9": -57.17130719691983
+}
