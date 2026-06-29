@@ -1,0 +1,109 @@
+{
+  "timestamp": "2026-06-29T10:18:30.001738",
+  "run_id": "20260628_175824_neural_ode_144h",
+  "experiment": "optimized_physics_correction",
+  "param_combinations": [
+    {
+      "correction_strength": 0.05,
+      "physics_weight": 0.5
+    },
+    {
+      "correction_strength": 0.05,
+      "physics_weight": 0.7
+    },
+    {
+      "correction_strength": 0.05,
+      "physics_weight": 0.9
+    },
+    {
+      "correction_strength": 0.1,
+      "physics_weight": 0.5
+    },
+    {
+      "correction_strength": 0.1,
+      "physics_weight": 0.7
+    },
+    {
+      "correction_strength": 0.1,
+      "physics_weight": 0.9
+    },
+    {
+      "correction_strength": 0.15,
+      "physics_weight": 0.5
+    },
+    {
+      "correction_strength": 0.15,
+      "physics_weight": 0.7
+    },
+    {
+      "correction_strength": 0.15,
+      "physics_weight": 0.9
+    }
+  ],
+  "results": {
+    "cs0.05_pw0.5": {
+      "primary": 0.5018504795912944,
+      "params": {
+        "correction_strength": 0.05,
+        "physics_weight": 0.5
+      }
+    },
+    "cs0.05_pw0.7": {
+      "primary": 0.3753144143896507,
+      "params": {
+        "correction_strength": 0.05,
+        "physics_weight": 0.7
+      }
+    },
+    "cs0.05_pw0.9": {
+      "primary": 0.5380815209762668,
+      "params": {
+        "correction_strength": 0.05,
+        "physics_weight": 0.9
+      }
+    },
+    "cs0.1_pw0.5": {
+      "primary": 0.38882636069959986,
+      "params": {
+        "correction_strength": 0.1,
+        "physics_weight": 0.5
+      }
+    },
+    "cs0.1_pw0.7": {
+      "primary": 0.522776658017348,
+      "params": {
+        "correction_strength": 0.1,
+        "physics_weight": 0.7
+      }
+    },
+    "cs0.1_pw0.9": {
+      "primary": 0.5556333525731342,
+      "params": {
+        "correction_strength": 0.1,
+        "physics_weight": 0.9
+      }
+    },
+    "cs0.15_pw0.5": {
+      "primary": 0.5628199581470551,
+      "params": {
+        "correction_strength": 0.15,
+        "physics_weight": 0.5
+      }
+    },
+    "cs0.15_pw0.7": {
+      "primary": 0.5440303272215407,
+      "params": {
+        "correction_strength": 0.15,
+        "physics_weight": 0.7
+      }
+    },
+    "cs0.15_pw0.9": {
+      "primary": 0.5563770306211717,
+      "params": {
+        "correction_strength": 0.15,
+        "physics_weight": 0.9
+      }
+    }
+  },
+  "best_config": "cs0.05_pw0.7"
+}
