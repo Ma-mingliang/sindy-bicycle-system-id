@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-06-29T13:47:53.869080",
+  "timestamp": "2026-06-29T14:22:50.116856",
   "run_id": "20260628_ude_model",
   "experiment": "ude_model",
   "description": "Universal Differential Equations: physics + NN residual",
@@ -31,8 +31,7 @@
     "rollout_curriculum": [
       1,
       5,
-      10,
-      20
+      10
     ],
     "lambda_multi": 0.3
   },
