@@ -1,0 +1,22 @@
+{
+  "timestamp": "2026-06-29T15:35:35.126692",
+  "run_id": "20260628_175824_neural_ode_144h",
+  "experiment": "coupling_network",
+  "configs": [
+    "small_coupling",
+    "medium_coupling",
+    "large_coupling"
+  ],
+  "results": {
+    "small_coupling": {
+      "primary": 0.7565846939881643
+    },
+    "medium_coupling": {
+      "primary": 0.8196545441945394
+    },
+    "large_coupling": {
+      "primary": 0.7976305385430654
+    }
+  },
+  "best_config": "small_coupling"
+}

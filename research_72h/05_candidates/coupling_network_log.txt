@@ -1,0 +1,109 @@
+============================================================
+Coupling Network for Per-State Prediction
+============================================================
+
+1. Loading data...
+
+============================================================
+Config: small_coupling
+============================================================
+Training Coupling Network (seed=42)...
+  Coupling dim: 16
+  Hidden: 32
+  Epoch 50/200: loss=304.689228, time=206.7s
+  Epoch 100/200: loss=258.532092, time=409.2s
+  Epoch 150/200: loss=225.122893, time=611.9s
+  Epoch 200/200: loss=212.528959, time=822.9s
+Training completed in 822.9s
+
+Evaluating...
+
+Results for small_coupling:
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0234       100.00%     
+H=10      0.0517       100.00%     
+H=50      0.0827       100.00%     
+H=100     0.2330       100.00%     
+H=200     0.7211       80.00%      
+H=500     1.3157       80.00%      
+H=1000    1.5146       60.00%      
+
+PrimaryLongHorizonScore: 0.7566
+
+============================================================
+Config: medium_coupling
+============================================================
+Training Coupling Network (seed=42)...
+  Coupling dim: 32
+  Hidden: 64
+  Epoch 50/200: loss=281.329865, time=285.3s
+  Epoch 100/200: loss=217.921340, time=581.0s
+  Epoch 150/200: loss=187.486351, time=885.0s
+  Epoch 200/200: loss=175.733360, time=1183.0s
+Training completed in 1183.0s
+
+Evaluating...
+
+Results for medium_coupling:
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0217       100.00%     
+H=10      0.0562       100.00%     
+H=50      0.2844       100.00%     
+H=100     0.5723       100.00%     
+H=200     0.8115       80.00%      
+H=500     1.0752       80.00%      
+H=1000    1.1846       40.00%      
+
+PrimaryLongHorizonScore: 0.8197
+
+============================================================
+Config: large_coupling
+============================================================
+Training Coupling Network (seed=42)...
+  Coupling dim: 64
+  Hidden: 128
+  Epoch 50/200: loss=250.573790, time=313.8s
+  Epoch 100/200: loss=206.672293, time=628.8s
+  Epoch 150/200: loss=173.377036, time=940.4s
+  Epoch 200/200: loss=153.725351, time=1281.8s
+Training completed in 1281.8s
+
+Evaluating...
+
+Results for large_coupling:
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0155       100.00%     
+H=10      0.0288       100.00%     
+H=50      0.0708       100.00%     
+H=100     0.3114       100.00%     
+H=200     0.8716       100.00%     
+H=500     1.2099       80.00%      
+H=1000    1.3005       40.00%      
+
+PrimaryLongHorizonScore: 0.7976
+
+============================================================
+SUMMARY: Coupling Network Results
+============================================================
+
+Config               H=50       H=100      H=200      H=500      Primary   
+----------------------------------------------------------------------
+small_coupling       0.0827     0.2330     0.7211     1.3157     0.7566    
+medium_coupling      0.2844     0.5723     0.8115     1.0752     0.8197    
+large_coupling       0.0708     0.3114     0.8716     1.2099     0.7976    
+
+Comparison with baselines:
+Horizon    v9 NMAE      Best Coupling Improvement 
+----------------------------------------------
+H=1       0.0051       0.0234       -357.9      %
+H=10      0.0628       0.0517       17.6        %
+H=50      0.4557       0.0827       81.8        %
+H=100     0.5064       0.2330       54.0        %
+H=200     0.4737       0.7211       -52.2       %
+H=500     0.5529       1.3157       -138.0      %
+H=1000    0.6443       1.5146       -135.1      %
+
+Results saved to: D:/系统辨识作业/sindy_bicycle/research_72h/05_candidates/EXP050_coupling_network.json
