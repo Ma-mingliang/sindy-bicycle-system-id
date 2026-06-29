@@ -1,0 +1,55 @@
+============================================================
+Kinematic-Constrained Neural ODE
+============================================================
+
+1. Loading data...
+
+2. Training Kinematic-Constrained NODE...
+Training Kinematic-Constrained NODE (seed=42)...
+  Epoch 50/200: loss=70.754617, time=221.1s
+  Epoch 100/200: loss=40.868419, time=463.7s
+  Epoch 150/200: loss=26.397067, time=718.3s
+  Epoch 200/200: loss=21.101699, time=972.8s
+Training completed in 972.8s
+
+3. Evaluating...
+
+============================================================
+RESULTS: Kinematic-Constrained NODE
+============================================================
+
+Horizon    NMAE         Survival    
+----------------------------------
+H=1       0.0010       100.00%     
+H=10      0.0096       100.00%     
+H=50      0.0500       100.00%     
+H=100     0.2458       100.00%     
+H=200     0.5457       60.00%      
+H=500     0.7844       20.00%      
+H=1000    0.9139       0.00%       
+
+Comparison with baselines:
+Horizon    v9 NMAE      Wide SiLU    Kinematic    Improvement 
+----------------------------------------------------------
+H=1       0.0051       0.0155       0.0010       81.1        %
+H=10      0.0628       0.0288       0.0096       84.8        %
+H=50      0.4557       0.0708       0.0500       89.0        %
+H=100     0.5064       0.3114       0.2458       51.5        %
+H=200     0.4737       0.8716       0.5457       -15.2       %
+H=500     0.5529       1.2099       0.7844       -41.9       %
+H=1000    0.6443       1.3005       0.9139       -41.8       %
+
+PrimaryLongHorizonScore: 0.5253
+Improvement vs v9: -2.8%
+
+Per-state NMAE (H=500):
+----------------------------------------
+  e_y         : 0.6780
+  e_psi       : 0.7756
+  v           : 0.2509
+  theta       : 0.9332
+  theta_dot   : 0.7174
+  delta       : 0.6709
+  delta_dot   : 1.4647
+
+Results saved to: D:/系统辨识作业/sindy_bicycle/research_72h/05_candidates/EXP053_kinematic_constrained.json

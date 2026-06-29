@@ -1,0 +1,46 @@
+{
+  "timestamp": "2026-06-29T16:10:26.874653",
+  "run_id": "20260628_175824_neural_ode_144h",
+  "experiment": "kinematic_constrained_node",
+  "architecture": {
+    "e_y": "kinematic_hardcoded",
+    "e_psi": "kinematic_hardcoded",
+    "v": "neural_ode",
+    "theta": "neural_ode",
+    "theta_dot": "neural_ode",
+    "delta": "neural_ode",
+    "delta_dot": "neural_ode"
+  },
+  "results": {
+    "1": {
+      "nmae_mean": 0.0009641384822316468,
+      "survival_rate": 1.0
+    },
+    "10": {
+      "nmae_mean": 0.009552471339702606,
+      "survival_rate": 1.0
+    },
+    "50": {
+      "nmae_mean": 0.049975115805864334,
+      "survival_rate": 1.0
+    },
+    "100": {
+      "nmae_mean": 0.24579021334648132,
+      "survival_rate": 1.0
+    },
+    "200": {
+      "nmae_mean": 0.5456797480583191,
+      "survival_rate": 0.6
+    },
+    "500": {
+      "nmae_mean": 0.7843866944313049,
+      "survival_rate": 0.2
+    },
+    "1000": {
+      "nmae_mean": 0.9139338731765747,
+      "survival_rate": 0.0
+    }
+  },
+  "primary_score": 0.5252855519453684,
+  "improvement_vs_v9": -2.7956070343186696
+}
