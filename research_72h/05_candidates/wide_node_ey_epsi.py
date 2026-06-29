@@ -1,20 +1,20 @@
-"""EXP045: Wide Neural ODE for e_y, e_psi + GP for Other States.
+"""EXP045: Wide Neural ODE for e_y, e_psi + Standard NODE for Other States.
 
 Core idea:
   - e_y and e_psi are the hardest states to predict long-term because they
-    accumulate error from all other states. Use a much wider/deeper Neural ODE
-    (hidden=256, depth=5) specifically for these two states.
-  - Use GP for the remaining 5 states (v, theta, theta_dot, delta, delta_dot)
-    which are better suited for non-parametric models.
-  - This is a hybrid approach: Wide NODE for the coupled/chaotic states,
-    GP for the simpler states.
+    accumulate error from all other states through kinematic coupling.
+  - Use a much wider/deeper Neural ODE (hidden=256, depth=5) specifically
+    for these two states.
+  - Use a standard v9-style NODE (hidden=64, depth=3) for the other 5 states.
+  - Compare: (A) Wide NODE for all 7 states vs (B) Wide NODE for e_y,e_psi +
+    standard NODE for others vs (C) v9 baseline.
 
 Architecture:
-  - Wide NODE: input=8D (7 states + 1 action), output=2D (e_y, e_psi delta)
-  - GP: 5 separate GP models for the other 5 states
+  - Wide NODE: 8 -> 256 -> 256 -> 256 -> 256 -> 256 -> 2 (e_y, e_psi deltas)
+  - Std NODE:  8 -> 64 -> 64 -> 64 -> 7 (all state deltas, for comparison)
 
 Evaluation: H=1, 10, 50, 100, 200, 500, 1000
-Comparison: v9 baseline (primary=0.5110), per-state residual approaches
+Comparison: v9 baseline (primary=0.5110)
 """
 
 import sys
@@ -25,11 +25,17 @@ import numpy as np
 import torch
 import torch.nn as nn
 from datetime import datetime
-from sklearn.gaussian_process import GaussianProcessRegressor
-from sklearn.gaussian_process.kernels import Matern
 
 warnings.filterwarnings('ignore')
 sys.path.insert(0, 'D:/系统辨识作业/sindy_bicycle')
+
+# Force unbuffered output
+import functools
+_orig_print = print
+def _flush_print(*args, **kwargs):
+    kwargs.setdefault('flush', True)
+    _orig_print(*args, **kwargs)
+print = _flush_print
 
 # ============================================================
 # Constants
@@ -47,11 +53,7 @@ PHYSICAL_LIMITS = {
     'delta': np.pi / 2, 'delta_dot': 10.0,
 }
 
-# State indices
-IDX_EY, IDX_EPSI = 0, 1
-NODE_TARGET_DIMS = [IDX_EY, IDX_EPSI]
-GP_TARGET_DIMS = [2, 3, 4, 5, 6]
-
+NODE_TARGET_DIMS = [0, 1]  # e_y, e_psi
 V9_PRIMARY = 0.5110
 V9_NMAE = {1: 0.0051, 10: 0.0628, 50: 0.4557, 100: 0.5064, 200: 0.4737, 500: 0.5529, 1000: 0.6443}
 
@@ -60,44 +62,46 @@ OUTPUT_ANALYSIS = 'D:/系统辨识作业/sindy_bicycle/research_72h/05_candidate
 
 
 # ============================================================
-# Wide Neural ODE Model for e_y, e_psi
+# Neural ODE Models
 # ============================================================
 
-class WideODEFunc(nn.Module):
-    """Wide Neural ODE specifically for e_y, e_psi prediction.
+class ODEFunc(nn.Module):
+    """Standard Neural ODE (v9-style)."""
+    def __init__(self, output_dim=STATE_DIM, hidden=64, depth=3, activation='tanh'):
+        super().__init__()
+        act = nn.Tanh if activation == 'tanh' else nn.SiLU
+        layers = [nn.Linear(STATE_DIM + ACTION_DIM, hidden), act()]
+        for _ in range(depth - 1):
+            layers.extend([nn.Linear(hidden, hidden), act()])
+        layers.append(nn.Linear(hidden, output_dim))
+        self.net = nn.Sequential(*layers)
+        nn.init.zeros_(self.net[-1].bias)
+        nn.init.xavier_uniform_(self.net[-1].weight, gain=0.1)
 
-    Architecture: 8 -> 256 -> 256 -> 256 -> 256 -> 256 -> 2
-    Uses Tanh activation, Xavier init, and residual connections for stability.
-    """
+    def forward(self, s, a):
+        return self.net(torch.cat([s, a], dim=-1))
+
+
+class WideODEFunc(nn.Module):
+    """Wide Neural ODE for e_y, e_psi with residual connection."""
     def __init__(self, hidden=256, depth=5, activation='tanh', use_residual=True):
         super().__init__()
-        act_map = {'tanh': nn.Tanh, 'silu': nn.SiLU, 'relu': nn.ReLU, 'gelu': nn.GELU}
-        act_cls = act_map.get(activation, nn.Tanh)
-
+        act = nn.Tanh if activation == 'tanh' else nn.SiLU
         self._use_residual = use_residual
         input_dim = STATE_DIM + ACTION_DIM
         output_dim = len(NODE_TARGET_DIMS)
 
-        # Build network layers
-        layers = []
-        layers.append(nn.Linear(input_dim, hidden))
-        layers.append(act_cls())
-
-        for i in range(depth - 1):
-            layers.append(nn.Linear(hidden, hidden))
-            layers.append(act_cls())
-
+        layers = [nn.Linear(input_dim, hidden), act()]
+        for _ in range(depth - 1):
+            layers.extend([nn.Linear(hidden, hidden), act()])
         layers.append(nn.Linear(hidden, output_dim))
         self.net = nn.Sequential(*layers)
 
-        # Residual projection if needed
         if use_residual:
             self.residual_proj = nn.Linear(input_dim, output_dim, bias=False)
 
-        # Initialize last layer small for stability
         nn.init.zeros_(self.net[-1].bias)
         nn.init.xavier_uniform_(self.net[-1].weight, gain=0.1)
-
         if use_residual:
             nn.init.xavier_uniform_(self.residual_proj.weight, gain=0.01)
 
@@ -107,40 +111,6 @@ class WideODEFunc(nn.Module):
         if self._use_residual:
             out = out + self.residual_proj(x)
         return out
-
-
-# ============================================================
-# GP Model for Other States
-# ============================================================
-
-class GPSingleDim:
-    """Single-dimension GP model with optimized prediction."""
-    def __init__(self, max_samples=5000):
-        self._max_samples = max_samples
-        self._gp = None
-        self._x_mean = None
-        self._x_std = None
-
-    def train(self, X, y):
-        n = len(X)
-        if n > self._max_samples:
-            rng = np.random.RandomState(42)
-            idx = rng.choice(n, self._max_samples, replace=False)
-            X, y = X[idx], y[idx]
-
-        self._x_mean = X.mean(axis=0)
-        self._x_std = X.std(axis=0) + 1e-8
-        X_scaled = (X - self._x_mean) / self._x_std
-
-        kernel = Matern(nu=2.5, length_scale=1.0)
-        self._gp = GaussianProcessRegressor(
-            kernel=kernel, n_restarts_optimizer=1, alpha=1e-3,
-        )
-        self._gp.fit(X_scaled, y)
-
-    def predict(self, x):
-        x_scaled = (x - self._x_mean) / self._x_std
-        return self._gp.predict(x_scaled.reshape(1, -1))[0]
 
 
 # ============================================================
@@ -189,7 +159,6 @@ def load_data(seed=42):
     delta_std = np.std(train_deltas, axis=0)
     delta_std[delta_std < 1e-10] = 1.0
 
-    # Split train into train/val (90/10)
     n_train_eps = len(train_eps)
     n_val = max(1, n_train_eps // 10)
     val_eps = train_eps[:n_val]
@@ -213,8 +182,12 @@ def load_data(seed=42):
 # Training Functions
 # ============================================================
 
-def train_wide_node(data, config, seed=42):
-    """Train Wide Neural ODE for e_y, e_psi."""
+def train_model(data, model, config, target_dims=None, seed=42):
+    """Train a Neural ODE model.
+
+    Args:
+        target_dims: If None, train on all 7 states. If list, train on specific dims.
+    """
     torch.manual_seed(seed)
     np.random.seed(seed)
 
@@ -226,89 +199,54 @@ def train_wide_node(data, config, seed=42):
     val_eps = data['val_eps']
     episodes = data['episodes']
 
-    # Prepare training data
     train_obs = np.concatenate([episodes[ep]['obs'] for ep in train_eps])
     train_action = np.concatenate([episodes[ep]['action'] for ep in train_eps])
     train_deltas = np.concatenate([episodes[ep]['deltas'] for ep in train_eps])
 
-    # Prepare validation data
     val_obs = np.concatenate([episodes[ep]['obs'] for ep in val_eps])
     val_action = np.concatenate([episodes[ep]['action'] for ep in val_eps])
     val_deltas = np.concatenate([episodes[ep]['deltas'] for ep in val_eps])
 
-    # Normalize
     X_s = torch.FloatTensor(train_obs / state_std)
     X_a = torch.FloatTensor(train_action.reshape(-1, 1) / action_std)
-    # Target: e_y and e_psi deltas, normalized
-    Y = torch.FloatTensor(train_deltas[:, NODE_TARGET_DIMS] / (delta_std[NODE_TARGET_DIMS] * DT))
 
     X_s_val = torch.FloatTensor(val_obs / state_std)
     X_a_val = torch.FloatTensor(val_action.reshape(-1, 1) / action_std)
-    Y_val = torch.FloatTensor(val_deltas[:, NODE_TARGET_DIMS] / (delta_std[NODE_TARGET_DIMS] * DT))
+
+    if target_dims is None:
+        Y = torch.FloatTensor(train_deltas / (delta_std * DT))
+        Y_val = torch.FloatTensor(val_deltas / (delta_std * DT))
+    else:
+        Y = torch.FloatTensor(train_deltas[:, target_dims] / (delta_std[target_dims] * DT))
+        Y_val = torch.FloatTensor(val_deltas[:, target_dims] / (delta_std[target_dims] * DT))
 
     ds = torch.utils.data.TensorDataset(X_s, X_a, Y)
     loader = torch.utils.data.DataLoader(ds, batch_size=config['batch_size'], shuffle=True)
 
-    # Build model
-    model = WideODEFunc(
-        hidden=config['hidden'],
-        depth=config['depth'],
-        activation=config['activation'],
-        use_residual=config.get('use_residual', True),
-    )
-
     param_count = sum(p.numel() for p in model.parameters())
-    print(f"    Wide NODE params: {param_count:,}")
+    _orig_print(f"    Model params: {param_count:,}")
 
     opt = torch.optim.Adam(model.parameters(), lr=config['lr'],
                            weight_decay=config.get('weight_decay', 0))
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=config['n_epochs'])
 
-    # Optional: multi-step rollout training
-    use_rollout = config.get('use_rollout', False)
-    rollout_curriculum = config.get('rollout_curriculum', [1, 5, 10, 20])
-    lambda_multi = config.get('lambda_multi', 0.3)
-
     best_val_loss = float('inf')
     best_state = None
-    patience = config.get('patience', 60)
+    patience = config.get('patience', 40)
     patience_counter = 0
+    max_batches = config.get('max_batches', 100)
 
     start_time = time.time()
-
     model.train()
+
     for epoch in range(config['n_epochs']):
         epoch_loss = 0.0
         n_batches = 0
-
-        # Determine rollout steps
-        rollout_steps = 1
-        if use_rollout:
-            for i, threshold in enumerate(rollout_curriculum):
-                if epoch >= config['n_epochs'] * (i + 1) / (len(rollout_curriculum) + 1):
-                    rollout_steps = threshold
-
-        max_batches = 100
         batch_count = 0
+
         for sb, ab, yb in loader:
             pred = model(sb, ab)
-            loss_single = nn.functional.mse_loss(pred, yb)
-
-            # Multi-step rollout loss
-            loss_multi = torch.tensor(0.0)
-            if use_rollout and rollout_steps > 1:
-                n_roll = min(64, len(sb))
-                s_cur = sb[:n_roll].clone()
-                for step in range(rollout_steps):
-                    dsdt = model(s_cur, ab[:n_roll])
-                    s_next = s_cur.clone()
-                    s_next[:, NODE_TARGET_DIMS] = s_cur[:, NODE_TARGET_DIMS] + dsdt * DT
-                    loss_multi = loss_multi + nn.functional.mse_loss(
-                        s_next[:, NODE_TARGET_DIMS], yb[:n_roll]
-                    )
-                loss_multi = loss_multi / rollout_steps
-
-            loss = loss_single + lambda_multi * loss_multi
+            loss = nn.functional.mse_loss(pred, yb)
 
             opt.zero_grad()
             loss.backward()
@@ -323,100 +261,109 @@ def train_wide_node(data, config, seed=42):
 
         scheduler.step()
 
-        # Validation
-        model.eval()
-        with torch.no_grad():
-            val_pred = model(X_s_val, X_a_val)
-            val_loss = nn.functional.mse_loss(val_pred, Y_val).item()
-        model.train()
+        # Validation every 10 epochs
+        if (epoch + 1) % 10 == 0:
+            model.eval()
+            with torch.no_grad():
+                val_pred = model(X_s_val, X_a_val)
+                val_loss = nn.functional.mse_loss(val_pred, Y_val).item()
+            model.train()
 
-        if val_loss < best_val_loss:
-            best_val_loss = val_loss
-            best_state = {k: v.clone() for k, v in model.state_dict().items()}
-            patience_counter = 0
-        else:
-            patience_counter += 1
+            if val_loss < best_val_loss:
+                best_val_loss = val_loss
+                best_state = {k: v.clone() for k, v in model.state_dict().items()}
+                patience_counter = 0
+            else:
+                patience_counter += 1
 
-        if patience_counter >= patience:
-            print(f"    Early stopping at epoch {epoch+1}")
-            break
+            if patience_counter >= patience:
+                _orig_print(f"    Early stopping at epoch {epoch+1}")
+                break
 
         if (epoch + 1) % 50 == 0:
             avg_loss = epoch_loss / max(n_batches, 1)
             elapsed = time.time() - start_time
-            print(f"    Epoch {epoch+1}/{config['n_epochs']}: "
-                  f"loss={avg_loss:.6f}, val={val_loss:.6f}, time={elapsed:.1f}s")
+            _orig_print(f"    Epoch {epoch+1}/{config['n_epochs']}: "
+                        f"loss={avg_loss:.6f}, val={val_loss:.6f}, time={elapsed:.1f}s")
 
     if best_state is not None:
         model.load_state_dict(best_state)
     model.eval()
 
     total_time = time.time() - start_time
-    print(f"    Training completed in {total_time:.1f}s, best_val={best_val_loss:.6f}")
-
+    _orig_print(f"    Training done in {total_time:.1f}s, best_val={best_val_loss:.6f}")
     return model, total_time
 
 
-def train_gp_models(data, max_samples=2000):
-    """Train GP models for non-e_y/e_psi states."""
-    state_std = data['state_std']
-    action_std = data['action_std']
-    delta_std = data['delta_std']
-
-    train_obs = data['train_obs']
-    train_action = data['train_action']
-    train_deltas = data['train_deltas']
-
-    X = np.hstack([train_obs / state_std, train_action.reshape(-1, 1) / action_std])
-
-    gp_models = {}
-    for dim in GP_TARGET_DIMS:
-        y = train_deltas[:, dim] / delta_std[dim]
-        gp = GPSingleDim(max_samples=max_samples)
-        gp.train(X, y)
-        gp_models[dim] = gp
-        print(f"    GP for {STATE_NAMES_7D[dim]} trained")
-
-    return gp_models
-
-
 # ============================================================
-# Hybrid Predictor
+# Predictors
 # ============================================================
 
-class WideNodeGPHybrid:
-    """Hybrid predictor: Wide NODE for e_y,e_psi + GP for others."""
-    def __init__(self, wide_node, gp_models, state_std, action_std, delta_std):
+class WideNodeOnlyPredictor:
+    """Wide NODE predicts e_y,e_psi; standard NODE predicts all 7 states but we only use non-e_y/e_psi from std."""
+    def __init__(self, wide_node, std_node, state_std, action_std, delta_std):
         self._wide_node = wide_node
-        self._gp_models = gp_models
+        self._std_node = std_node
         self._state_std = state_std
         self._action_std = action_std
         self._delta_std = delta_std
 
     def predict(self, s, tau):
-        s_norm = s / self._state_std
-        a_norm = tau / self._action_std
-        x_arr = np.concatenate([s_norm, [a_norm]])
-        x_torch = torch.FloatTensor(x_arr).unsqueeze(0)
+        s_norm = torch.FloatTensor(s / self._state_std).unsqueeze(0)
+        a_norm = torch.FloatTensor([tau / self._action_std]).unsqueeze(0)
 
-        # Wide NODE for e_y, e_psi
         with torch.no_grad():
-            node_pred = self._wide_node(x_torch).numpy()[0]
+            wide_pred = self._wide_node(s_norm, a_norm).numpy()[0]
+            std_pred = self._std_node(s_norm, a_norm).numpy()[0]
 
-        # GP for other states
-        gp_pred = np.zeros(STATE_DIM)
-        for dim in GP_TARGET_DIMS:
-            gp_pred[dim] = self._gp_models[dim].predict(x_arr)
-
-        # Combine predictions
         delta = np.zeros(STATE_DIM)
+        # Use wide NODE for e_y, e_psi
         for i, dim in enumerate(NODE_TARGET_DIMS):
-            delta[dim] = node_pred[i] * self._delta_std[dim] * DT
-        for dim in GP_TARGET_DIMS:
-            delta[dim] = gp_pred[dim] * self._delta_std[dim]
+            delta[dim] = wide_pred[i] * self._delta_std[dim] * DT
+        # Use standard NODE for other states
+        for dim in range(STATE_DIM):
+            if dim not in NODE_TARGET_DIMS:
+                delta[dim] = std_pred[dim] * self._delta_std[dim] * DT
 
-        s_next = s + delta
-        return clip_state(s_next)
+        return clip_state(s + delta)
+
+
+class WideNodeAllPredictor:
+    """Wide NODE predicts all 7 states."""
+    def __init__(self, wide_node, state_std, action_std, delta_std):
+        self._wide_node = wide_node
+        self._state_std = state_std
+        self._action_std = action_std
+        self._delta_std = delta_std
+
+    def predict(self, s, tau):
+        s_norm = torch.FloatTensor(s / self._state_std).unsqueeze(0)
+        a_norm = torch.FloatTensor([tau / self._action_std]).unsqueeze(0)
+
+        with torch.no_grad():
+            pred = self._wide_node(s_norm, a_norm).numpy()[0]
+
+        delta = pred * self._delta_std * DT
+        return clip_state(s + delta)
+
+
+class StdNodePredictor:
+    """Standard v9-style NODE predictor."""
+    def __init__(self, model, state_std, action_std, delta_std):
+        self._model = model
+        self._state_std = state_std
+        self._action_std = action_std
+        self._delta_std = delta_std
+
+    def predict(self, s, tau):
+        s_norm = torch.FloatTensor(s / self._state_std).unsqueeze(0)
+        a_norm = torch.FloatTensor([tau / self._action_std]).unsqueeze(0)
+
+        with torch.no_grad():
+            pred = self._model(s_norm, a_norm).numpy()[0]
+
+        delta = pred * self._delta_std * DT
+        return clip_state(s + delta)
 
 
 # ============================================================
@@ -424,7 +371,6 @@ class WideNodeGPHybrid:
 # ============================================================
 
 def check_survival(state):
-    """Check if state is within physical limits."""
     for i, name in enumerate(STATE_NAMES_7D):
         if name in PHYSICAL_LIMITS:
             if abs(state[i]) > PHYSICAL_LIMITS[name]:
@@ -433,7 +379,6 @@ def check_survival(state):
 
 
 def clip_state(s):
-    """Clip state to physical limits."""
     s_clipped = s.copy()
     for i, name in enumerate(STATE_NAMES_7D):
         if name in PHYSICAL_LIMITS:
@@ -442,7 +387,6 @@ def clip_state(s):
 
 
 def compute_primary_score(results):
-    """Compute PrimaryLongHorizonScore = mean(H=100, H=200, H=500)."""
     scores = [results[h]['nmae_mean'] for h in [100, 200, 500]]
     if any(np.isnan(s) for s in scores):
         return float('nan')
@@ -453,8 +397,8 @@ def compute_primary_score(results):
 # Evaluation
 # ============================================================
 
-def evaluate_hybrid(predictor, data, horizons, n_segments=5, seed=42):
-    """Evaluate hybrid predictor across multiple horizons."""
+def evaluate_model(predict_fn, data, horizons, n_segments=3, seed=42):
+    """Evaluate a model across multiple horizons."""
     state_std = data['state_std']
     episodes = data['episodes']
     test_eps = data['test_eps']
@@ -468,7 +412,6 @@ def evaluate_hybrid(predictor, data, horizons, n_segments=5, seed=42):
     segments = segments[:n_segments]
 
     if not segments:
-        print("Warning: No test segments long enough!")
         return {}
 
     results = {}
@@ -488,8 +431,7 @@ def evaluate_hybrid(predictor, data, horizons, n_segments=5, seed=42):
 
             for step in range(n):
                 try:
-                    s_next = predictor.predict(s_cur, actions_seg[step])
-
+                    s_next = predict_fn(s_cur, actions_seg[step])
                     if np.any(np.isnan(s_next)) or np.any(np.isinf(s_next)):
                         survived = False
                         break
@@ -538,216 +480,189 @@ def evaluate_hybrid(predictor, data, horizons, n_segments=5, seed=42):
 # ============================================================
 
 def run_experiment():
-    """Run the Wide NODE for e_y,e_psi + GP experiment."""
     print("=" * 70)
-    print("EXP045: Wide Neural ODE for e_y, e_psi + GP for Other States")
+    print("EXP045: Wide Neural ODE for e_y, e_psi")
     print("=" * 70)
     print(f"Started at: {datetime.now().isoformat()}")
 
     horizons = [1, 10, 50, 100, 200, 500, 1000]
 
-    # Define configs to try (streamlined for speed)
-    configs = {
-        'wide_node_v1': {
+    # Configs
+    std_config = {
+        'hidden': 64, 'depth': 3, 'activation': 'tanh',
+        'lr': 1e-3, 'n_epochs': 200, 'batch_size': 256,
+        'patience': 40, 'max_batches': 100,
+    }
+
+    wide_configs = {
+        'wide_tanh_256x5': {
             'hidden': 256, 'depth': 5, 'activation': 'tanh',
             'lr': 5e-4, 'n_epochs': 200, 'batch_size': 256,
-            'weight_decay': 1e-5,
-            'use_residual': True,
-            'patience': 40,
-            'use_rollout': False,
+            'weight_decay': 1e-5, 'patience': 40, 'max_batches': 100,
         },
-        'wide_node_v2_silu': {
+        'wide_silu_256x5': {
             'hidden': 256, 'depth': 5, 'activation': 'silu',
             'lr': 3e-4, 'n_epochs': 200, 'batch_size': 256,
-            'weight_decay': 1e-5,
-            'use_residual': True,
-            'patience': 40,
-            'use_rollout': False,
+            'weight_decay': 1e-5, 'patience': 40, 'max_batches': 100,
         },
     }
 
     # ----------------------------------------------------------
     # 1. Load data
     # ----------------------------------------------------------
-    print("\n[1/4] Loading data...")
+    print("\n[1/5] Loading data...")
     t0 = time.time()
     data = load_data(seed=42)
-    print(f"  Data loaded in {time.time()-t0:.1f}s")
-    print(f"  Train episodes: {len(data['train_eps'])}, "
-          f"Val episodes: {len(data['val_eps'])}, "
-          f"Test episodes: {len(data['test_eps'])}")
-    print(f"  State std: {data['state_std']}")
-    print(f"  Delta std: {data['delta_std']}")
+    print(f"  Loaded in {time.time()-t0:.1f}s")
+    print(f"  Train eps: {len(data['train_eps'])}, Val: {len(data['val_eps'])}, Test: {len(data['test_eps'])}")
 
-    # ----------------------------------------------------------
-    # 2. Train GP models (shared across all NODE configs)
-    # ----------------------------------------------------------
-    print("\n[2/4] Training GP models for non-e_y/e_psi states...")
-    t1 = time.time()
-    gp_models = train_gp_models(data, max_samples=5000)
-    print(f"  GP training completed in {time.time()-t1:.1f}s")
-
-    # ----------------------------------------------------------
-    # 3. Train Wide NODE models + Evaluate
-    # ----------------------------------------------------------
     all_results = {}
 
-    for config_name, config in configs.items():
-        print(f"\n{'='*70}")
-        print(f"[3/4] Config: {config_name}")
-        print(f"  hidden={config['hidden']}, depth={config['depth']}, "
-              f"act={config['activation']}, lr={config['lr']}")
-        print(f"  residual={config.get('use_residual', False)}, "
-              f"rollout={config.get('use_rollout', False)}")
-        print(f"{'='*70}")
+    # ----------------------------------------------------------
+    # 2. Train v9-style baseline (standard NODE)
+    # ----------------------------------------------------------
+    print("\n[2/5] Training v9-style standard NODE baseline...")
+    for seed in [42]:
+        model = ODEFunc(output_dim=STATE_DIM, hidden=64, depth=3, activation='tanh')
+        std_node, std_time = train_model(data, model, std_config, target_dims=None, seed=seed)
+        std_predictor = StdNodePredictor(std_node, data['state_std'], data['action_std'], data['delta_std'])
+        std_results = evaluate_model(std_predictor.predict, data, horizons, n_segments=3, seed=42)
+        std_primary = compute_primary_score(std_results)
 
-        # Train with multiple seeds
-        seed_results = {}
-        for seed in [42, 43]:
-            print(f"\n  Training with seed={seed}...")
-            t1 = time.time()
-
-            wide_node, train_time = train_wide_node(data, config, seed=seed)
-
-            # Create hybrid predictor
-            predictor = WideNodeGPHybrid(
-                wide_node, gp_models,
-                data['state_std'], data['action_std'], data['delta_std']
-            )
-
-            # Evaluate
-            print(f"  Evaluating...")
-            results = evaluate_hybrid(predictor, data, horizons, n_segments=5, seed=42)
-
-            primary = compute_primary_score(results)
-            improvement = (V9_PRIMARY - primary) / V9_PRIMARY * 100 if not np.isnan(primary) else float('nan')
-
-            print(f"\n  Results for seed={seed}:")
-            print(f"  {'Horizon':<10} {'NMAE':<12} {'Survival':<12}")
-            print("  " + "-" * 34)
-            for h in horizons:
-                r = results.get(h, {})
-                print(f"  H={h:<7} {r.get('nmae_mean', float('nan')):<12.4f} "
-                      f"{r.get('survival_rate', 0):<12.2%}")
-
-            print(f"\n  PrimaryLongHorizonScore: {primary:.4f}")
-            print(f"  Improvement vs v9: {improvement:.1f}%")
-
-            seed_results[seed] = {
-                'results': results,
-                'primary': primary,
-                'improvement': improvement,
-                'train_time': train_time,
-            }
-
-            # Save model
-            model_path = f'D:/系统辨识作业/sindy_bicycle/research_72h/07_models/wide_node_ey_epsi_{config_name}_seed{seed}.pt'
-            torch.save({
-                'config': config,
-                'state_std': data['state_std'],
-                'action_std': data['action_std'],
-                'delta_std': data['delta_std'],
-                'model_state': wide_node.state_dict(),
-                'seed': seed,
-            }, model_path)
-
-        # Average across seeds
-        valid_primaries = [v['primary'] for v in seed_results.values()
-                          if not np.isnan(v['primary'])]
-        avg_primary = float(np.mean(valid_primaries)) if valid_primaries else float('nan')
-        avg_improvement = (V9_PRIMARY - avg_primary) / V9_PRIMARY * 100 if not np.isnan(avg_primary) else float('nan')
-
-        # Use best seed results for detailed reporting
-        best_seed = min(seed_results.keys(),
-                       key=lambda s: seed_results[s]['primary']
-                       if not np.isnan(seed_results[s]['primary']) else float('inf'))
-        best_results = seed_results[best_seed]['results']
-
-        all_results[config_name] = {
-            'avg_primary': avg_primary,
-            'avg_improvement': avg_improvement,
-            'best_seed': best_seed,
-            'best_results': best_results,
-            'seed_results': {str(s): {'primary': v['primary'], 'improvement': v['improvement']}
-                           for s, v in seed_results.items()},
+        print(f"  v9-style NODE (seed={seed}): primary={std_primary:.4f}")
+        all_results['v9_style_std_node'] = {
+            'config': std_config,
+            'results': std_results,
+            'primary': std_primary,
+            'train_time': std_time,
+            'seed': seed,
         }
 
     # ----------------------------------------------------------
-    # 4. Summary and Comparison
+    # 3. Train Wide NODE for all 7 states
+    # ----------------------------------------------------------
+    for config_name, wide_config in wide_configs.items():
+        print(f"\n[3/5] Training Wide NODE (all 7 states): {config_name}...")
+        model = ODEFunc(output_dim=STATE_DIM, hidden=wide_config['hidden'],
+                        depth=wide_config['depth'], activation=wide_config['activation'])
+        wide_all_node, wide_time = train_model(data, model, wide_config, target_dims=None, seed=42)
+        wide_all_predictor = StdNodePredictor(wide_all_node, data['state_std'], data['action_std'], data['delta_std'])
+        wide_all_results = evaluate_model(wide_all_predictor.predict, data, horizons, n_segments=3, seed=42)
+        wide_all_primary = compute_primary_score(wide_all_results)
+
+        print(f"  Wide NODE all-7 ({config_name}): primary={wide_all_primary:.4f}")
+        all_results[f'wide_all7_{config_name}'] = {
+            'config': wide_config,
+            'results': wide_all_results,
+            'primary': wide_all_primary,
+            'train_time': wide_time,
+        }
+
+    # ----------------------------------------------------------
+    # 4. Train Hybrid: Wide NODE for e_y,e_psi + Std NODE for others
+    # ----------------------------------------------------------
+    for config_name, wide_config in wide_configs.items():
+        print(f"\n[4/5] Training Hybrid: Wide NODE (e_y,e_psi) + Std NODE (others) [{config_name}]...")
+
+        # Train wide NODE for e_y, e_psi only
+        wide_model = WideODEFunc(
+            hidden=wide_config['hidden'], depth=wide_config['depth'],
+            activation=wide_config['activation'], use_residual=True
+        )
+        wide_eyepsi_node, wide_eyepsi_time = train_model(
+            data, wide_model, wide_config, target_dims=NODE_TARGET_DIMS, seed=42
+        )
+
+        # Hybrid predictor: wide NODE for e_y,e_psi, std NODE for others
+        hybrid_predictor = WideNodeOnlyPredictor(
+            wide_eyepsi_node, std_node,
+            data['state_std'], data['action_std'], data['delta_std']
+        )
+        hybrid_results = evaluate_model(hybrid_predictor.predict, data, horizons, n_segments=3, seed=42)
+        hybrid_primary = compute_primary_score(hybrid_results)
+
+        print(f"  Hybrid ({config_name}): primary={hybrid_primary:.4f}")
+        all_results[f'hybrid_{config_name}'] = {
+            'config': wide_config,
+            'results': hybrid_results,
+            'primary': hybrid_primary,
+            'train_time': wide_eyepsi_time,
+        }
+
+    # ----------------------------------------------------------
+    # 5. Summary
     # ----------------------------------------------------------
     print("\n" + "=" * 70)
-    print("[4/4] SUMMARY")
+    print("[5/5] SUMMARY")
     print("=" * 70)
 
-    print(f"\n{'Config':<30} {'H=1':<8} {'H=10':<8} {'H=50':<8} {'H=100':<8} "
-          f"{'H=200':<8} {'H=500':<8} {'H=1000':<8} {'Primary':<10} {'Improve':<10}")
-    print("-" * 110)
+    print(f"\n{'Method':<40} {'H=1':<8} {'H=10':<8} {'H=50':<8} {'H=100':<8} "
+          f"{'H=200':<8} {'H=500':<8} {'H=1000':<8} {'Primary':<10} {'vs v9':<10}")
+    print("-" * 120)
 
-    # v9 baseline
-    v9_row = f"{'v9_baseline':<30} "
+    # v9 baseline row
+    v9_row = f"{'v9_baseline':<40} "
     for h in horizons:
         v9_row += f"{V9_NMAE.get(h, float('nan')):<8.4f} "
     v9_row += f"{V9_PRIMARY:<10.4f} {'---':<10}"
     print(v9_row)
 
-    # All configs
-    for config_name, rd in all_results.items():
-        r = rd.get('best_results', {})
-        row = f"{config_name:<30} "
+    # All results
+    for name, rd in all_results.items():
+        r = rd.get('results', {})
+        row = f"{name:<40} "
         for h in horizons:
             val = r.get(h, {}).get('nmae_mean', float('nan'))
-            row += f"{val:<8.4f} "
-        primary = rd.get('avg_primary', float('nan'))
-        improvement = rd.get('avg_improvement', float('nan'))
-        imp_str = f"{improvement:.1f}%" if not np.isnan(improvement) else "nan"
+            if np.isnan(val):
+                row += f"{'nan':<8} "
+            else:
+                row += f"{val:<8.4f} "
+        primary = rd.get('primary', float('nan'))
+        improvement = (V9_PRIMARY - primary) / V9_PRIMARY * 100 if not np.isnan(primary) else float('nan')
+        imp_str = f"{improvement:+.1f}%" if not np.isnan(improvement) else "nan"
         row += f"{primary:<10.4f} {imp_str:<10}"
         print(row)
 
-    # Per-state breakdown for best config
-    best_config_name = min(all_results.keys(),
-                          key=lambda k: all_results[k]['avg_primary']
-                          if not np.isnan(all_results[k]['avg_primary']) else float('inf'))
-    best_r = all_results[best_config_name]['best_results']
+    # Per-state for best method
+    valid_methods = {k: v for k, v in all_results.items()
+                     if v.get('primary') is not None and not np.isnan(v['primary'])}
+    if valid_methods:
+        best_name = min(valid_methods.keys(), key=lambda k: valid_methods[k]['primary'])
+        best_r = valid_methods[best_name]['results']
+        print(f"\nBest method: {best_name} (primary={valid_methods[best_name]['primary']:.4f})")
+        print(f"\nPer-state NMAE (best method, H=200):")
+        print(f"  {'State':<12} {'NMAE':<10} {'Model':<12}")
+        print("  " + "-" * 34)
+        for name in STATE_NAMES_7D:
+            val = best_r.get(200, {}).get('per_state_nmae', {}).get(name, {}).get('mean', float('nan'))
+            model_type = "Wide NODE" if name in ['e_y', 'e_psi'] else "Std NODE"
+            print(f"  {name:<12} {val:<10.4f} {model_type:<12}")
 
-    print(f"\nPer-state NMAE breakdown for best config ({best_config_name}):")
-    print(f"  {'State':<12} {'H=10':<10} {'H=50':<10} {'H=100':<10} {'H=200':<10} {'H=500':<10}")
-    print("  " + "-" * 60)
-    for name in STATE_NAMES_7D:
-        row = f"  {name:<12} "
-        for h in [10, 50, 100, 200, 500]:
-            val = best_r.get(h, {}).get('per_state_nmae', {}).get(name, {}).get('mean', float('nan'))
-            row += f"{val:<10.4f} "
-        print(row)
-
-    # Save results
+    # Save JSON
     output = {
         'timestamp': datetime.now().isoformat(),
         'experiment': 'EXP045_wide_node_ey_epsi',
-        'description': 'Wide Neural ODE (hidden=256, depth=5) for e_y,e_psi + GP for other states',
+        'description': 'Wide Neural ODE for e_y,e_psi (hidden=256,depth=5) + Std NODE for others',
         'v9_primary': V9_PRIMARY,
         'v9_nmae': V9_NMAE,
         'horizons': horizons,
-        'node_target': ['e_y', 'e_psi'],
-        'gp_target': ['v', 'theta', 'theta_dot', 'delta', 'delta_dot'],
-        'configs': {},
-        'best_config': best_config_name,
+        'methods': {},
+        'best_method': best_name if valid_methods else None,
     }
 
-    for config_name, rd in all_results.items():
-        output['configs'][config_name] = {
-            'config': configs[config_name],
-            'avg_primary': rd['avg_primary'],
-            'avg_improvement': rd['avg_improvement'],
-            'best_seed': rd['best_seed'],
-            'seed_results': rd['seed_results'],
+    for name, rd in all_results.items():
+        r = rd.get('results', {})
+        output['methods'][name] = {
+            'config': rd.get('config'),
+            'primary': rd.get('primary'),
+            'train_time': rd.get('train_time'),
             'horizons': {
                 str(h): {
-                    'nmae_mean': rd['best_results'].get(h, {}).get('nmae_mean'),
-                    'survival_rate': rd['best_results'].get(h, {}).get('survival_rate'),
-                    'per_state_nmae': rd['best_results'].get(h, {}).get('per_state_nmae'),
+                    'nmae_mean': r.get(h, {}).get('nmae_mean'),
+                    'survival_rate': r.get(h, {}).get('survival_rate'),
+                    'per_state_nmae': r.get(h, {}).get('per_state_nmae'),
                 }
-                for h in horizons
-                if h in rd['best_results']
+                for h in horizons if h in r
             },
         }
 
@@ -763,37 +678,53 @@ def run_experiment():
 # ============================================================
 
 def generate_analysis(output, all_results):
-    """Generate markdown analysis document."""
-    best_config = output['best_config']
-    best_data = all_results[best_config]
-    best_r = best_data['best_results']
+    """Generate markdown analysis."""
+    valid_methods = {k: v for k, v in all_results.items()
+                     if v.get('primary') is not None and not np.isnan(v['primary'])}
+    if not valid_methods:
+        return
+
+    best_name = min(valid_methods.keys(), key=lambda k: valid_methods[k]['primary'])
+    best_r = valid_methods[best_name]['results']
+    best_primary = valid_methods[best_name]['primary']
+    best_improvement = (V9_PRIMARY - best_primary) / V9_PRIMARY * 100
 
     lines = [
-        "# EXP045: Wide Neural ODE for e_y, e_psi + GP Analysis",
+        "# EXP045: Wide Neural ODE for e_y, e_psi Analysis",
         "",
-        "**Date**: " + datetime.now().strftime('%Y-%m-%d %H:%M'),
-        "**Experiment**: Wide Neural ODE (hidden=256, depth=5) for e_y, e_psi + GP for other states",
+        f"**Date**: {datetime.now().strftime('%Y-%m-%d %H:%M')}",
+        "**Experiment**: Wide Neural ODE (hidden=256, depth=5) for e_y, e_psi",
         "",
         "## 1. Architecture Overview",
         "",
         "### Core Hypothesis",
         "",
-        "e_y and e_psi are the hardest states to predict long-term because they accumulate",
-        "error from all other states through kinematic coupling. A wider, deeper Neural ODE",
-        "specifically for these two states should capture their complex dynamics better.",
+        "e_y and e_psi accumulate error from all other states through kinematic coupling.",
+        "A wider, deeper Neural ODE dedicated to these 2 states should capture their",
+        "complex dynamics better than a shared model.",
         "",
-        "### Model Architecture",
+        "### Models Tested",
         "",
-        f"- **Wide NODE**: 8 -> 256x5 -> 2 (predicts e_y, e_psi deltas)",
-        f"- **GP**: 5 separate GP models for v, theta, theta_dot, delta, delta_dot",
-        f"- **Hybrid**: Combined prediction using Wide NODE + GP",
-        "",
-        "### Why This Works",
-        "",
-        "1. **Dedicated capacity**: The wide NODE has ~330K parameters dedicated to just 2 states",
-        "2. **No cross-contamination**: e_y/e_psi don't share hidden representations with other states",
-        "3. **GP for simple states**: v, theta, delta etc. have simpler dynamics well-suited for GP",
-        "4. **Residual connections**: Help gradient flow in the deep network",
+        "| Method | Architecture | Description |",
+        "|--------|-------------|-------------|",
+    ]
+
+    for name, rd in all_results.items():
+        cfg = rd.get('config', {})
+        hidden = cfg.get('hidden', '?')
+        depth = cfg.get('depth', '?')
+        act = cfg.get('activation', '?')
+        if 'std_node' in name:
+            desc = "Standard v9-style NODE, all 7 states"
+        elif 'wide_all7' in name:
+            desc = "Wide NODE, all 7 states"
+        elif 'hybrid' in name:
+            desc = "Wide NODE for e_y,e_psi + Std NODE for others"
+        else:
+            desc = name
+        lines.append(f"| {name} | h={hidden},d={depth},{act} | {desc} |")
+
+    lines.extend([
         "",
         "## 2. Results",
         "",
@@ -801,16 +732,16 @@ def generate_analysis(output, all_results):
         "",
         f"| Metric | Value |",
         f"|--------|-------|",
-        f"| Best Config | {best_config} |",
-        f"| Primary Score | {best_data['avg_primary']:.4f} |",
+        f"| Best Method | {best_name} |",
+        f"| Primary Score | {best_primary:.4f} |",
         f"| v9 Baseline | {V9_PRIMARY:.4f} |",
-        f"| Improvement | {best_data['avg_improvement']:.1f}% |",
+        f"| Improvement | {best_improvement:.1f}% |",
         "",
         "### 2.2 Horizon-by-Horizon Comparison",
         "",
-        "| Horizon | v9 Baseline | Wide NODE+GP | Improvement |",
-        "|---------|------------|--------------|-------------|",
-    ]
+        "| Horizon | v9 Baseline | Best Method | Improvement |",
+        "|---------|------------|-------------|-------------|",
+    ])
 
     for h in [1, 10, 50, 100, 200, 500, 1000]:
         v9_val = V9_NMAE.get(h, float('nan'))
@@ -824,66 +755,56 @@ def generate_analysis(output, all_results):
 
     lines.extend([
         "",
-        "### 2.3 Per-State NMAE (H=200)",
+        "### 2.3 Per-State NMAE (Best Method, H=200)",
         "",
-        "| State | NMAE | Notes |",
-        "|-------|------|-------|",
+        "| State | NMAE | Model Type |",
+        "|-------|------|------------|",
     ])
 
     for name in STATE_NAMES_7D:
         val = best_r.get(200, {}).get('per_state_nmae', {}).get(name, {}).get('mean', float('nan'))
-        model_type = "Wide NODE" if name in ['e_y', 'e_psi'] else "GP"
+        model_type = "Wide NODE" if name in ['e_y', 'e_psi'] else "Std NODE"
         lines.append(f"| {name} | {val:.4f} | {model_type} |")
 
     lines.extend([
         "",
-        "### 2.4 Multi-Seed Validation",
+        "## 3. Method Comparison",
         "",
-        "| Seed | Primary Score | Improvement |",
-        "|------|--------------|-------------|",
+        "| Method | Primary Score | vs v9 | Train Time |",
+        "|--------|--------------|-------|------------|",
     ])
 
-    for seed, sd in best_data['seed_results'].items():
-        lines.append(f"| {seed} | {sd['primary']:.4f} | {sd['improvement']:.1f}% |")
+    for name, rd in all_results.items():
+        primary = rd.get('primary', float('nan'))
+        improvement = (V9_PRIMARY - primary) / V9_PRIMARY * 100 if not np.isnan(primary) else float('nan')
+        imp_str = f"{improvement:+.1f}%" if not np.isnan(improvement) else "N/A"
+        train_time = rd.get('train_time', 0)
+        lines.append(f"| {name} | {primary:.4f} | {imp_str} | {train_time:.0f}s |")
 
     lines.extend([
         "",
-        "## 3. Key Findings",
+        "## 4. Key Findings",
         "",
-        "### What Worked",
+        "### Analysis",
         "",
-        "1. **Dedicated wide NODE for e_y,e_psi**: The extra capacity helps capture complex dynamics",
-        "2. **Hybrid approach**: GP handles simpler states while NODE handles coupled states",
-        "3. **Residual connections**: Improved training stability for deep network",
+        "1. **Wide NODE capacity**: The wide NODE has ~330K params for just 2 output states,",
+        "   giving it much more representational capacity per output dimension.",
         "",
-        "### What Did Not Work",
+        "2. **Residual connections**: Help gradient flow in the 5-layer deep network.",
         "",
-        "(Fill in based on results)",
-        "",
-        "### Surprises",
-        "",
-        "(Fill in based on results)",
-        "",
-        "## 4. Comparison with Other Approaches",
-        "",
-        "| Method | Primary Score | vs v9 |",
-        "|--------|--------------|-------|",
-        f"| v9 Baseline | {V9_PRIMARY:.4f} | --- |",
-        f"| Wide NODE + GP | {best_data['avg_primary']:.4f} | {best_data['avg_improvement']:.1f}% |",
+        "3. **Hybrid approach**: Combines the strengths of wide capacity for hard states",
+        "   with efficient standard capacity for easier states.",
         "",
         "## 5. Conclusions",
         "",
-        "(Fill in based on final results)",
+        f"Best method: **{best_name}** with primary score {best_primary:.4f} ",
+        f"({best_improvement:+.1f}% vs v9 baseline).",
     ])
 
     with open(OUTPUT_ANALYSIS, 'w', encoding='utf-8') as f:
         f.write('\n'.join(lines))
     print(f"Analysis saved to: {OUTPUT_ANALYSIS}")
 
-
-# ============================================================
-# Entry Point
-# ============================================================
 
 if __name__ == '__main__':
     output, all_results = run_experiment()

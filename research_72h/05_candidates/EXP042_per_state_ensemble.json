@@ -1,0 +1,459 @@
+{
+  "timestamp": "2026-06-29T13:43:28.267659",
+  "run_id": "20260628_175824_neural_ode_144h",
+  "experiment": "per_state_ensemble",
+  "target_improvement": 75,
+  "v9_primary": 0.511,
+  "best_primary": 0.7065890726304603,
+  "best_method": "adaptive_ensemble",
+  "methods": {
+    "per_state_ensemble": {
+      "primary": null,
+      "improvement": null,
+      "horizons": {
+        "1": {
+          "nmae_mean": NaN,
+          "survival_rate": 0.0,
+          "per_state_nmae": {
+            "e_y": {
+              "mean": NaN
+            },
+            "e_psi": {
+              "mean": NaN
+            },
+            "v": {
+              "mean": NaN
+            },
+            "theta": {
+              "mean": NaN
+            },
+            "theta_dot": {
+              "mean": NaN
+            },
+            "delta": {
+              "mean": NaN
+            },
+            "delta_dot": {
+              "mean": NaN
+            }
+          }
+        },
+        "10": {
+          "nmae_mean": NaN,
+          "survival_rate": 0.0,
+          "per_state_nmae": {
+            "e_y": {
+              "mean": NaN
+            },
+            "e_psi": {
+              "mean": NaN
+            },
+            "v": {
+              "mean": NaN
+            },
+            "theta": {
+              "mean": NaN
+            },
+            "theta_dot": {
+              "mean": NaN
+            },
+            "delta": {
+              "mean": NaN
+            },
+            "delta_dot": {
+              "mean": NaN
+            }
+          }
+        },
+        "50": {
+          "nmae_mean": NaN,
+          "survival_rate": 0.0,
+          "per_state_nmae": {
+            "e_y": {
+              "mean": NaN
+            },
+            "e_psi": {
+              "mean": NaN
+            },
+            "v": {
+              "mean": NaN
+            },
+            "theta": {
+              "mean": NaN
+            },
+            "theta_dot": {
+              "mean": NaN
+            },
+            "delta": {
+              "mean": NaN
+            },
+            "delta_dot": {
+              "mean": NaN
+            }
+          }
+        },
+        "100": {
+          "nmae_mean": NaN,
+          "survival_rate": 0.0,
+          "per_state_nmae": {
+            "e_y": {
+              "mean": NaN
+            },
+            "e_psi": {
+              "mean": NaN
+            },
+            "v": {
+              "mean": NaN
+            },
+            "theta": {
+              "mean": NaN
+            },
+            "theta_dot": {
+              "mean": NaN
+            },
+            "delta": {
+              "mean": NaN
+            },
+            "delta_dot": {
+              "mean": NaN
+            }
+          }
+        },
+        "200": {
+          "nmae_mean": NaN,
+          "survival_rate": 0.0,
+          "per_state_nmae": {
+            "e_y": {
+              "mean": NaN
+            },
+            "e_psi": {
+              "mean": NaN
+            },
+            "v": {
+              "mean": NaN
+            },
+            "theta": {
+              "mean": NaN
+            },
+            "theta_dot": {
+              "mean": NaN
+            },
+            "delta": {
+              "mean": NaN
+            },
+            "delta_dot": {
+              "mean": NaN
+            }
+          }
+        },
+        "500": {
+          "nmae_mean": NaN,
+          "survival_rate": 0.0,
+          "per_state_nmae": {
+            "e_y": {
+              "mean": NaN
+            },
+            "e_psi": {
+              "mean": NaN
+            },
+            "v": {
+              "mean": NaN
+            },
+            "theta": {
+              "mean": NaN
+            },
+            "theta_dot": {
+              "mean": NaN
+            },
+            "delta": {
+              "mean": NaN
+            },
+            "delta_dot": {
+              "mean": NaN
+            }
+          }
+        },
+        "1000": {
+          "nmae_mean": NaN,
+          "survival_rate": 0.0,
+          "per_state_nmae": {
+            "e_y": {
+              "mean": NaN
+            },
+            "e_psi": {
+              "mean": NaN
+            },
+            "v": {
+              "mean": NaN
+            },
+            "theta": {
+              "mean": NaN
+            },
+            "theta_dot": {
+              "mean": NaN
+            },
+            "delta": {
+              "mean": NaN
+            },
+            "delta_dot": {
+              "mean": NaN
+            }
+          }
+        }
+      },
+      "weights": {
+        "0": [
+          0.0015911420033806881,
+          0.0015911420033806881,
+          0.0015911420033806881,
+          0.33200832703075955,
+          0.6632182469590984
+        ],
+        "1": [
+          0.0028260387508738495,
+          0.0028260387508738495,
+          0.0028260387508738495,
+          0.38211369077134777,
+          0.6094081929760307
+        ],
+        "2": [
+          9.783471351122195e-06,
+          9.783471351122195e-06,
+          9.783471351122195e-06,
+          0.9989962666882556,
+          0.0009743828976910145
+        ],
+        "3": [
+          0.0005423283260939491,
+          0.0005423283260939491,
+          0.0005423283260939491,
+          0.8339631961113969,
+          0.1644098189103213
+        ],
+        "4": [
+          0.0037054324713118496,
+          0.0037054324713118496,
+          0.0037054324713118496,
+          0.5005155355488471,
+          0.4883681670372175
+        ],
+        "5": [
+          0.002975392856405355,
+          0.002975392856405355,
+          0.002975392856405355,
+          0.8214844891016543,
+          0.1695893323291296
+        ],
+        "6": [
+          0.021991000456580923,
+          0.021991000456580923,
+          0.021991000456580923,
+          0.5449144297006068,
+          0.3891125689296505
+        ]
+      }
+    },
+    "adaptive_ensemble": {
+      "primary": 0.7065890726304603,
+      "improvement": -38.27574806858323,
+      "horizons": {
+        "1": {
+          "nmae_mean": 0.0168245579725075,
+          "survival_rate": 1.0,
+          "per_state_nmae": {
+            "e_y": {
+              "mean": 4.56102329264916e-05
+            },
+            "e_psi": {
+              "mean": 0.00011843297506434752
+            },
+            "v": {
+              "mean": 0.011400519509769932
+            },
+            "theta": {
+              "mean": 0.000125406260253824
+            },
+            "theta_dot": {
+              "mean": 0.0033577249605912
+            },
+            "delta": {
+              "mean": 0.0062639517660935855
+            },
+            "delta_dot": {
+              "mean": 0.09646026010285313
+            }
+          }
+        },
+        "10": {
+          "nmae_mean": 0.04300860896546053,
+          "survival_rate": 1.0,
+          "per_state_nmae": {
+            "e_y": {
+              "mean": 0.00698485357464379
+            },
+            "e_psi": {
+              "mean": 0.015200239227708462
+            },
+            "v": {
+              "mean": 0.06208510927527905
+            },
+            "theta": {
+              "mean": 0.0025075466335726473
+            },
+            "theta_dot": {
+              "mean": 0.015079985484061975
+            },
+            "delta": {
+              "mean": 0.07349077084015576
+            },
+            "delta_dot": {
+              "mean": 0.125711757722802
+            }
+          }
+        },
+        "50": {
+          "nmae_mean": 0.08410698829776365,
+          "survival_rate": 1.0,
+          "per_state_nmae": {
+            "e_y": {
+              "mean": 0.043903787756672
+            },
+            "e_psi": {
+              "mean": 0.043667879713574796
+            },
+            "v": {
+              "mean": 0.27554149463839583
+            },
+            "theta": {
+              "mean": 0.02914037111520056
+            },
+            "theta_dot": {
+              "mean": 0.026822884685536615
+            },
+            "delta": {
+              "mean": 0.0720737216378346
+            },
+            "delta_dot": {
+              "mean": 0.09759877853713123
+            }
+          }
+        },
+        "100": {
+          "nmae_mean": 0.2257844651435452,
+          "survival_rate": 1.0,
+          "per_state_nmae": {
+            "e_y": {
+              "mean": 0.19845115931962962
+            },
+            "e_psi": {
+              "mean": 0.2031001741758427
+            },
+            "v": {
+              "mean": 0.517373985661945
+            },
+            "theta": {
+              "mean": 0.15785711122030735
+            },
+            "theta_dot": {
+              "mean": 0.13271822801186814
+            },
+            "delta": {
+              "mean": 0.21203372097803128
+            },
+            "delta_dot": {
+              "mean": 0.15895687663719213
+            }
+          }
+        },
+        "200": {
+          "nmae_mean": 0.6363644233884158,
+          "survival_rate": 1.0,
+          "per_state_nmae": {
+            "e_y": {
+              "mean": 0.52552187276092
+            },
+            "e_psi": {
+              "mean": 0.565920127022636
+            },
+            "v": {
+              "mean": 0.9296372622157891
+            },
+            "theta": {
+              "mean": 0.6146533088095355
+            },
+            "theta_dot": {
+              "mean": 0.58143909944645
+            },
+            "delta": {
+              "mean": 0.6613833299611469
+            },
+            "delta_dot": {
+              "mean": 0.5759959635024329
+            }
+          }
+        },
+        "500": {
+          "nmae_mean": 1.2576183293594196,
+          "survival_rate": 1.0,
+          "per_state_nmae": {
+            "e_y": {
+              "mean": 0.9518110697992329
+            },
+            "e_psi": {
+              "mean": 0.9092282527797589
+            },
+            "v": {
+              "mean": 1.761470292327024
+            },
+            "theta": {
+              "mean": 1.2854542302201726
+            },
+            "theta_dot": {
+              "mean": 1.3069600243802935
+            },
+            "delta": {
+              "mean": 1.3071232290326702
+            },
+            "delta_dot": {
+              "mean": 1.281281206976784
+            }
+          }
+        },
+        "1000": {
+          "nmae_mean": 1.4677748159627735,
+          "survival_rate": 1.0,
+          "per_state_nmae": {
+            "e_y": {
+              "mean": 0.9688493511389487
+            },
+            "e_psi": {
+              "mean": 0.7797610908111222
+            },
+            "v": {
+              "mean": 2.436572244617458
+            },
+            "theta": {
+              "mean": 1.5095752956631834
+            },
+            "theta_dot": {
+              "mean": 1.5387342220013025
+            },
+            "delta": {
+              "mean": 1.5224084023984592
+            },
+            "delta_dot": {
+              "mean": 1.5185231051089392
+            }
+          }
+        }
+      },
+      "best_n_clusters": 3
+    },
+    "physics_informed_ensemble": {
+      "primary": Infinity,
+      "improvement": null,
+      "horizons": {},
+      "best_config": null
+    }
+  }
+}

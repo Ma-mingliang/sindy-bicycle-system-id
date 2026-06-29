@@ -271,41 +271,46 @@ def train_ude(data, config, seed=42):
             # Multi-step rollout loss (UDE prediction = physics + NN)
             loss_multi = torch.tensor(0.0)
             rollout_steps = 1
-            curriculum = config.get('rollout_curriculum', [1, 5, 10, 20])
+            curriculum = config.get('rollout_curriculum', [1, 5, 10])
             for i, threshold in enumerate(curriculum):
                 frac = (i + 1) / (len(curriculum) + 1)
                 if epoch >= config['n_epochs'] * frac:
                     rollout_steps = threshold
 
             if rollout_steps > 1 and len(sb) > rollout_steps + 1:
-                n_roll = min(len(sb) - rollout_steps, 64)
+                n_roll = min(len(sb) - rollout_steps, 32)
                 s_cur_norm = sb[:n_roll].clone()
-                # Convert to original space for physics
-                s_cur_orig = s_cur_norm.numpy() * state_std
+                # Pre-compute physics scale factor
+                phys_scale = torch.FloatTensor(delta_std * DT / state_std)
 
                 for step in range(rollout_steps):
                     a_cur_norm = ab[step:step + n_roll]
 
-                    # Physics prediction (in original space)
-                    phys_delta = physics_deltas_batch(s_cur_orig)
+                    # NN residual prediction (normalized)
+                    res_norm = model(s_cur_norm, a_cur_norm)
 
-                    # NN residual prediction (in normalized space)
-                    with torch.no_grad():
-                        res_norm = model(s_cur_norm, a_cur_norm).numpy()
+                    # Physics prediction in normalized space:
+                    # e_y_dot = v * sin(e_psi), e_psi_dot = -v * delta / L
+                    v_norm = s_cur_norm[:, 2]
+                    e_psi = s_cur_norm[:, 1] * state_std[1]  # de-normalize for sin
+                    delta_st = s_cur_norm[:, 5] * state_std[5]  # de-normalize
+                    theta_dot_norm = s_cur_norm[:, 4]
 
-                    # Combine: total delta = physics + NN residual * delta_std * dt
-                    total_delta = phys_delta + res_norm * (delta_std * DT)
-                    s_next_orig = s_cur_orig + total_delta
+                    phys_norm = torch.zeros_like(s_cur_norm)
+                    phys_norm[:, 0] = v_norm * torch.sin(torch.tensor(e_psi)) * (state_std[2] * DT / state_std[0])
+                    phys_norm[:, 1] = -v_norm * delta_st * (state_std[2] * DT / (WHEELBASE * state_std[1]))
+                    phys_norm[:, 3] = theta_dot_norm * (state_std[4] * DT / state_std[3])
+                    phys_norm[:, 5] = s_cur_norm[:, 6] * (state_std[6] * DT / state_std[5])
 
-                    # Update for next step
-                    s_cur_orig = s_next_orig
-                    s_cur_norm = torch.FloatTensor(s_next_orig / state_std)
+                    # Combine: total delta_norm = physics_norm + nn_residual
+                    s_next_norm = s_cur_norm + phys_norm + res_norm * (delta_std * DT / state_std)
 
                     # Target: next normalized state from data
                     target = sb[step + 1:step + 1 + n_roll]
                     loss_multi = loss_multi + nn.functional.mse_loss(
-                        s_cur_norm, target,
+                        s_next_norm, target,
                     )
+                    s_cur_norm = s_next_norm.detach()
 
                 loss_multi = loss_multi / rollout_steps
 
@@ -454,7 +459,7 @@ def main():
         'lr': 1e-3,
         'n_epochs': 200,
         'batch_size': 256,
-        'rollout_curriculum': [1, 5, 10, 20],
+        'rollout_curriculum': [1, 5, 10],
         'lambda_multi': 0.3,
     }
 

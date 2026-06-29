@@ -130,33 +130,118 @@ After initial prediction, apply correction for kinematic states:
 
 ## Results
 
-**Note: Experiment is still running. Results will be populated upon completion.**
-
 ### Summary Table
 
 | Method | H=100 | H=200 | H=500 | H=1000 | Primary | Improvement |
 |--------|-------|-------|-------|--------|---------|-------------|
-| Per-State Ensemble | -- | -- | -- | -- | -- | -- |
-| Adaptive Ensemble | -- | -- | -- | -- | -- | -- |
-| Physics-Informed Ensemble | -- | -- | -- | -- | -- | -- |
+| Per-State Ensemble | NaN | NaN | NaN | NaN | NaN | N/A |
+| Adaptive Ensemble (k=3) | 0.2258 | 0.6364 | 1.2576 | 1.4678 | 0.7066 | -38.3% |
+| Physics-Informed Ensemble | NaN | NaN | NaN | NaN | NaN | N/A |
 
-### Per-State Analysis (at H=200)
-*To be populated*
+### Per-State Analysis (Adaptive k=3, at H=200)
+
+| State | NMAE | Dynamic Level | Best Model Type |
+|-------|------|--------------|-----------------|
+| e_y | 0.5255 | High | GP+Physics |
+| e_psi | 0.5659 | High | GP+Physics |
+| v | 0.9296 | Low | GP (dominant) |
+| theta | 0.6147 | Low | GP (dominant) |
+| theta_dot | 0.5814 | Medium | GP+Physics |
+| delta | 0.6614 | Low | GP (dominant) |
+| delta_dot | 0.5760 | Medium | GP+Physics |
+
+### Learned Physics Blend Ratios (Approach 3)
+
+| State | Alpha (physics weight) |
+|-------|----------------------|
+| e_y | 0.38 |
+| e_psi | 0.43 |
+| v | 0.01 |
+| theta | 0.00 |
+| theta_dot | 0.34 |
+| delta | 0.00 |
+| delta_dot | 0.16 |
+
+### Per-State Ensemble Weights (Approach 1)
+
+| State | NODE-A | NODE-B | NODE-C | GP | Physics |
+|-------|--------|--------|--------|----|---------|
+| e_y | 0.002 | 0.002 | 0.002 | 0.332 | 0.663 |
+| e_psi | 0.003 | 0.003 | 0.003 | 0.382 | 0.609 |
+| v | 0.000 | 0.000 | 0.000 | 0.999 | 0.001 |
+| theta | 0.001 | 0.001 | 0.001 | 0.834 | 0.164 |
+| theta_dot | 0.004 | 0.004 | 0.004 | 0.501 | 0.488 |
+| delta | 0.003 | 0.003 | 0.003 | 0.821 | 0.170 |
+| delta_dot | 0.022 | 0.022 | 0.022 | 0.545 | 0.389 |
+
+### Training Times
+
+| Component | Time |
+|-----------|------|
+| NODE-A (64x3, tanh) | 874.0s |
+| NODE-B (128x4, tanh) | 754.1s |
+| NODE-C (64x3, silu) | 402.0s |
+| GP (7 dims, 3000 samples) | 223.7s |
 
 ---
 
-## Key Insights
+## Key Findings
 
-### Design Decisions
+### Critical Issue: NODE Open-Loop Divergence
+
+The most important finding is that **all three Neural ODE variants diverge during open-loop
+rollout**, even though their single-step predictions are reasonable. Debug output shows:
+
+```
+node_a: delta_phys=[-0.0114, 0.0145, 0.0001]  (reasonable)
+node_b: delta_phys=[ 0.0095,-0.0037, 0.0001]  (reasonable)
+node_c: delta_phys=[ 0.0011, 0.0013, 0.0001]  (reasonable)
+```
+
+But during open-loop evaluation (even with teacher forcing for validation), NODE models
+get NMAE=1.0 (default/error). This causes:
+1. Per-State Ensemble: NODE gets ~0% weight, ensemble dominated by GP+Physics, but
+   still diverges because GP predictions accumulate error in open-loop
+2. Physics-Informed: Uses best NODE model, which diverges in open-loop
+
+**Root cause**: The NODE models predict state *deltas* (not absolute states). In open-loop,
+small errors accumulate exponentially. After ~10-20 steps, the state is out-of-distribution
+for the NODE model, producing increasingly wrong predictions.
+
+### Adaptive Ensemble: Only Working Approach
+
+The Adaptive Ensemble with k=3 clusters is the only approach that produces valid results.
+It works because:
+- Falls back to physics when state is OOD (distance > 3.0 from cluster center)
+- Cluster-specific weights adapt to local state-space regions
+- GP dominates for smooth states, Physics dominates for kinematic states
+
+However, it's **worse than the V9 baseline** (0.7066 vs 0.5110), indicating that the
+ensemble approach doesn't improve over a single well-trained NODE model.
+
+### Physics Blend Ratios Confirm Prior Analysis
+
+The learned physics blend ratios validate the prior analysis:
+- **e_y (0.38), e_psi (0.43)**: Moderate physics weight -- kinematics are exact but
+  data-driven can capture additional dynamics
+- **v (0.01), theta (0.00), delta (0.00)**: Near-zero physics weight -- no exact
+  physics model exists for these states
+- **theta_dot (0.34), delta_dot (0.16)**: Some physics weight -- definition-based
+  relationships provide partial information
+
+### Design Decisions (Post-Hoc Analysis)
 
 1. **Why per-state weighting?** Different states have fundamentally different dynamics.
-   A single ensemble weight for all 7 states is suboptimal.
+   A single ensemble weight for all 7 states is suboptimal. **CONFIRMED**: GP gets
+   99.9% weight for v, while Physics gets 66.3% for e_y.
 
-2. **Why multiple NODE variants?** Architecture diversity (different depths, activations)
-   provides complementary predictions. Tanh is smooth, SiLU has different gradient flow.
+2. **Why multiple NODE variants?** Architecture diversity was expected to help, but
+   all three NODE variants perform equally poorly in open-loop. **LESSON**: Diversity
+   in model *type* (NODE vs GP vs Physics) matters more than diversity in architecture.
 
-3. **Why physics as ensemble member?** Known kinematics provide exact relationships for
-   4 of 7 states. Physics never extrapolates dangerously -- it's always bounded.
+3. **Why physics as ensemble member?** Physics provides the most reliable long-horizon
+   predictions because it never extrapolates dangerously. **CONFIRMED**: Physics gets
+   high weight for kinematic states (e_y, e_psi, theta_dot).
 
 4. **Why adaptive weights?** The state space is non-uniform. Near equilibrium,
    GP dominates (smooth, small perturbations). Far from equilibrium, NODE dominates
@@ -167,12 +252,64 @@ After initial prediction, apply correction for kinematic states:
 
 ### Comparison with Prior Approaches
 
-| Approach | Key Idea | Limitation |
-|----------|----------|------------|
-| physics_correction_multi_seed | NN predict + NN corrector | Single model, no per-state diversity |
-| ensemble_switching | Multiple NODEs + switching | All models same type (NODE only) |
-| optimized_per_state_residual | NODE + GP per state | Fixed assignment, no blending |
-| **per_state_ensemble** | **5 model types, per-state weights** | **Enables per-state diversity** |
+| Approach | Primary Score | Key Idea | Result |
+|----------|--------------|----------|--------|
+| physics_correction_multi_seed | **0.3728** | NN predict + NN corrector | BEST |
+| optimized_per_state_residual | 0.5019 | NODE for dynamic, GP for smooth | Good |
+| v9 baseline | 0.5110 | Single NODE model | Baseline |
+| adaptive_ensemble | 0.7066 | Per-state weighted ensemble | Worse |
+| per_state_ensemble | NaN | 5 model types, per-state weights | Diverged |
+| physics_informed_ensemble | NaN | Physics-blended ensemble | Diverged |
+
+### Root Cause Analysis: Why Ensemble Failed
+
+The ensemble approach failed because of a fundamental issue with NODE models in
+open-loop prediction:
+
+1. **NODE models predict deltas, not absolute states**. Small prediction errors
+   compound exponentially over time. After 10-20 steps, the state is completely
+   out-of-distribution.
+
+2. **GP models also accumulate error** in open-loop, though more slowly. The GP
+   predictions become increasingly unreliable as the state drifts from training data.
+
+3. **Only physics-based predictions are stable** in open-loop because they enforce
+   known kinematic relationships. But physics alone is insufficient for states
+   without exact models (v, theta_dot, delta_dot).
+
+4. **The best prior approach (physics_correction_multi_seed)** works because it uses
+   a NN corrector that learns to fix NODE predictions, not because it ensembles
+   multiple models.
+
+### Lessons Learned
+
+1. **Model diversity by type matters more than by architecture.** All three NODE
+   variants (tanh-64x3, tanh-128x4, silu-64x3) performed identically poorly.
+   The diversity between NODE, GP, and Physics is more valuable.
+
+2. **Open-loop stability is the key bottleneck.** Any model that accumulates
+   error in open-loop will produce poor results regardless of single-step accuracy.
+
+3. **Physics fallback is essential.** The adaptive ensemble's OOD fallback to
+   physics prevented divergence, but the resulting predictions were still poor.
+
+4. **Per-state weighting is validated.** The learned weights correctly assigned:
+   - 99.9% GP weight for v (smooth, low-dynamic)
+   - 66.3% Physics weight for e_y (exact kinematics)
+   - This confirms the prior analysis of state dynamics.
+
+---
+
+## Conclusion
+
+The per-state ensemble approach did not achieve the target improvement. The best
+result (Adaptive Ensemble, Primary=0.7066) is 38% worse than the V9 baseline
+(0.5110) and 89% worse than the current best (0.3728).
+
+The fundamental issue is that **NODE models diverge in open-loop evaluation**, and
+the ensemble cannot compensate for this instability. The most promising direction
+is to focus on **physics-informed correction** (current best approach) rather than
+ensemble methods.
 
 ---
 

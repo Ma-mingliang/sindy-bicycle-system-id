@@ -21,13 +21,14 @@ import torch.nn as nn
 from datetime import datetime
 
 # Log to file for real-time monitoring
+_original_print = print
 LOG_FILE = 'D:/系统辨识作业/sindy_bicycle/research_72h/05_candidates/physics_informed_node_log.txt'
 _log_f = open(LOG_FILE, 'w', buffering=1)  # line-buffered
 
 def log_print(*args, **kwargs):
     """Print to both stdout and log file."""
     msg = ' '.join(str(a) for a in args)
-    print(msg, flush=True)
+    _original_print(msg, flush=True)
     _log_f.write(msg + '\n')
 
 print = log_print
@@ -121,39 +122,37 @@ class PhysicsInformedODEFunc(nn.Module):
         nn.init.zeros_(self.net[-1].bias)
         nn.init.xavier_uniform_(self.net[-1].weight, gain=0.1)
 
-    def forward(self, s_norm, a_norm, state_std, delta_std, dt):
-        """Forward pass with embedded physics.
+        # Pre-computed physics scaling factors (set via set_physics_params)
+        self.register_buffer('ey_factor', torch.tensor(1.0))
+        self.register_buffer('epsi_factor', torch.tensor(1.0))
+        self.register_buffer('_state_std_buf', torch.ones(STATE_DIM))
+        self.register_buffer('_psi_std', torch.tensor(1.0))
 
-        Args:
-            s_norm: (batch, 7) normalized state
-            a_norm: (batch, 1) normalized action
-            state_std: (7,) state standard deviations
-            delta_std: (7,) delta standard deviations
-            dt: time step
+    def set_physics_params(self, state_std, delta_std, dt, L=1.0):
+        """Pre-compute physics scaling factors for efficient forward pass.
 
-        Returns:
-            dsdt_norm: (batch, 7) normalized continuous-time derivative
+        ey_dot_norm = (state_std[2] / (delta_std[0] * dt)) * s_norm[:,2] * sin(state_std[1] * s_norm[:,1])
+        epsi_dot_norm = -(state_std[2] * state_std[5] / (delta_std[1] * dt * L)) * s_norm[:,2] * s_norm[:,5]
         """
-        # NN prediction (raw output)
+        ss = state_std
+        ds = delta_std
+        self.ey_factor = torch.tensor(float(ss[2] / (ds[0] * dt)))
+        self.epsi_factor = torch.tensor(float(ss[2] * ss[5] / (ds[1] * dt * L)))
+        self._state_std_buf = state_std.clone()
+        self._psi_std = torch.tensor(float(ss[1]))
+
+    def forward(self, s_norm, a_norm):
+        """Forward pass with embedded physics (efficient, no per-call tensor creation)."""
+        # NN prediction
         nn_out = self.net(torch.cat([s_norm, a_norm], dim=-1))
 
-        # Convert normalized state back to physical space for physics terms
-        # s_phys = s_norm * state_std
-        v_phys = s_norm[:, 2] * state_std[2]
-        e_psi_phys = s_norm[:, 1] * state_std[1]
-        delta_phys = s_norm[:, 5] * state_std[5]
-
-        # Compute physics terms in physical space
-        ey_dot_phys = physics_e_y_dot_torch(v_phys, e_psi_phys)
-        epsi_dot_phys = physics_e_psi_dot_torch(v_phys, delta_phys)
-
-        # Convert physics terms to normalized derivative space
-        # dsdt_norm = dsdt_phys / (delta_std * dt)
-        ey_dot_norm = ey_dot_phys / (delta_std[0] * dt)
-        epsi_dot_norm = epsi_dot_phys / (delta_std[1] * dt)
+        # Physics terms (pre-scaled, only sin() and multiplications)
+        v_norm = s_norm[:, 2]
+        ey_dot_norm = self.ey_factor * v_norm * torch.sin(self._psi_std * s_norm[:, 1])
+        epsi_dot_norm = -self.epsi_factor * v_norm * s_norm[:, 5]
 
         # Combine: physics + NN residual
-        dsdt_norm = torch.zeros_like(nn_out)
+        dsdt_norm = torch.empty_like(nn_out)
         dsdt_norm[:, 0] = ey_dot_norm + self.residual_scale * nn_out[:, 0]
         dsdt_norm[:, 1] = epsi_dot_norm + self.residual_scale * nn_out[:, 1]
         dsdt_norm[:, 2:] = nn_out[:, 2:]
@@ -212,14 +211,15 @@ class PhysicsInformedNeuralODE:
             residual_scale=self.residual_scale,
         )
 
+        # Set physics parameters (pre-compute scaling factors)
+        state_std_t = torch.FloatTensor(self._state_std)
+        delta_std_t = torch.FloatTensor(self._delta_std)
+        self._model.set_physics_params(state_std_t, delta_std_t, self.dt, L=WHEELBASE)
+
         # Prepare data
         train_s = torch.FloatTensor(states / self._state_std)
         train_a = torch.FloatTensor(actions.reshape(-1, 1) / self._action_std)
         train_dsdot = torch.FloatTensor(deltas / (self._delta_std * self.dt))
-
-        # Convert stds to tensors for physics computation
-        state_std_t = torch.FloatTensor(self._state_std)
-        delta_std_t = torch.FloatTensor(self._delta_std)
 
         ds = torch.utils.data.TensorDataset(train_s, train_a, train_dsdot)
         loader = torch.utils.data.DataLoader(
@@ -253,32 +253,8 @@ class PhysicsInformedNeuralODE:
 
             for sb, ab, yb in loader:
                 # --- Single-step loss ---
-                pred = self._model(sb, ab, state_std_t, delta_std_t, self.dt)
+                pred = self._model(sb, ab)
                 loss_single = nn.functional.mse_loss(pred, yb)
-
-                # --- Physics consistency loss ---
-                # The physics terms in pred should match the target for e_y and e_psi
-                loss_physics = torch.tensor(0.0)
-                if self.lambda_physics > 0:
-                    # Reconstruct physical derivatives from normalized target
-                    # target_phys = yb * delta_std * dt
-                    # For e_y: physics_pred = v * sin(e_psi), should match target_phys[:, 0]
-                    v_phys = sb[:, 2] * self._state_std[2]
-                    e_psi_phys = sb[:, 1] * self._state_std[1]
-                    delta_phys = sb[:, 5] * self._state_std[5]
-
-                    ey_dot_phys = physics_e_y_dot_torch(v_phys, e_psi_phys)
-                    epsi_dot_phys = physics_e_psi_dot_torch(v_phys, delta_phys)
-
-                    # Target in physical space
-                    target_ey_dot = yb[:, 0] * self._delta_std[0] * self.dt
-                    target_epsi_dot = yb[:, 1] * self._delta_std[1] * self.dt
-
-                    # Physics should explain most of the target
-                    loss_physics = (
-                        nn.functional.mse_loss(ey_dot_phys, target_ey_dot)
-                        + nn.functional.mse_loss(epsi_dot_phys, target_epsi_dot)
-                    )
 
                 # --- Multi-step rollout loss ---
                 loss_multi = torch.tensor(0.0)
@@ -287,9 +263,7 @@ class PhysicsInformedNeuralODE:
                     s_cur = sb[:n_roll].clone()
                     for step in range(rollout_steps):
                         a_cur = ab[step:step + n_roll]
-                        dsdt = self._model(
-                            s_cur, a_cur, state_std_t, delta_std_t, self.dt
-                        )
+                        dsdt = self._model(s_cur, a_cur)
                         s_cur = s_cur + dsdt * self.dt
                         target = sb[step + 1:step + 1 + n_roll]
                         loss_multi = loss_multi + nn.functional.mse_loss(
@@ -306,30 +280,11 @@ class PhysicsInformedNeuralODE:
                     theta_gt = sb[:, 3] + theta_dot * self.dt
                     loss_consistency = nn.functional.mse_loss(theta_pred, theta_gt)
 
-                # --- Jacobian regularization (only every 4th batch for speed) ---
-                loss_jacobian = torch.tensor(0.0)
-                if self.lambda_jacobian > 0 and n_batches % 4 == 0:
-                    n_jac = min(16, len(sb))
-                    s_req = sb[:n_jac].requires_grad_(True)
-                    a_req = ab[:n_jac].requires_grad_(True)
-                    dsdt = self._model(
-                        s_req, a_req, state_std_t, delta_std_t, self.dt
-                    )
-                    jac_norm = 0.0
-                    for i in range(STATE_DIM):
-                        grad = torch.autograd.grad(
-                            dsdt[:, i].sum(), s_req, create_graph=True
-                        )[0]
-                        jac_norm = jac_norm + grad.pow(2).sum()
-                    loss_jacobian = jac_norm / (STATE_DIM * n_jac)
-
                 # --- Total loss ---
                 loss = (
                     loss_single
-                    + self.lambda_physics * loss_physics
                     + self.lambda_multi * loss_multi
                     + self.lambda_consistency * loss_consistency
-                    + self.lambda_jacobian * loss_jacobian
                 )
 
                 opt.zero_grad()
@@ -350,7 +305,7 @@ class PhysicsInformedNeuralODE:
                 'lr': scheduler.get_last_lr()[0],
             })
 
-            if (epoch + 1) % 50 == 0:
+            if (epoch + 1) % 10 == 0:
                 elapsed = time.time() - start_time
                 print(f"  Epoch {epoch+1}/{self.n_epochs}: loss={avg_loss:.6f}, "
                       f"rollout={rollout_steps}, time={elapsed:.1f}s")
@@ -363,13 +318,9 @@ class PhysicsInformedNeuralODE:
         """Predict next state given current state and action."""
         s_norm = torch.FloatTensor(s / self._state_std).unsqueeze(0)
         a_norm = torch.FloatTensor([tau / self._action_std]).unsqueeze(0)
-        state_std_t = torch.FloatTensor(self._state_std)
-        delta_std_t = torch.FloatTensor(self._delta_std)
 
         with torch.no_grad():
-            dsdt_norm = self._model(
-                s_norm, a_norm, state_std_t, delta_std_t, self.dt
-            ).numpy()[0]
+            dsdt_norm = self._model(s_norm, a_norm).numpy()[0]
 
         dsdt = dsdt_norm * self._delta_std * self.dt
         return s + dsdt
@@ -378,13 +329,9 @@ class PhysicsInformedNeuralODE:
         """Batch prediction for efficiency."""
         s_norm = torch.FloatTensor(states / self._state_std)
         a_norm = torch.FloatTensor(actions.reshape(-1, 1) / self._action_std)
-        state_std_t = torch.FloatTensor(self._state_std)
-        delta_std_t = torch.FloatTensor(self._delta_std)
 
         with torch.no_grad():
-            dsdt_norm = self._model(
-                s_norm, a_norm, state_std_t, delta_std_t, self.dt
-            ).numpy()
+            dsdt_norm = self._model(s_norm, a_norm).numpy()
 
         return states + dsdt_norm * self._delta_std * self.dt
 

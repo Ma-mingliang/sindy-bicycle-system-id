@@ -1,0 +1,38 @@
+======================================================================
+EXP044: Physics-Informed Neural ODE
+Embedding exact kinematics: e_y_dot=v*sin(e_psi), e_psi_dot=-v*delta/L
+======================================================================
+
+1. Loading data...
+   State std: [0.24183091 0.53697425 0.01317691 0.57323849 0.19395858 0.57547542
+ 0.56955229]
+   Action std: 0.057628
+   Delta std: [8.26096930e-02 1.92405081e-01 4.38499033e-05 5.11349739e-03
+ 3.40557263e-03 5.88400777e-03 1.35004641e-02]
+   Train samples: 101404
+   Test samples: 45684
+
+2. Getting test segments...
+   Number of segments: 5
+
+======================================================================
+Training Physics-Informed Neural ODE (seed=42)
+======================================================================
+  Epoch 10/200: loss=3189.127313, rollout=1, time=49.4s
+  Epoch 20/200: loss=2812.200077, rollout=1, time=84.4s
+  Epoch 30/200: loss=2447.932028, rollout=1, time=128.2s
+  Epoch 40/200: loss=2083.587062, rollout=1, time=175.2s
+  Epoch 50/200: loss=1799.251572, rollout=1, time=219.9s
+  Epoch 60/200: loss=1538.466324, rollout=1, time=264.0s
+  Epoch 70/200: loss=1307.128252, rollout=1, time=311.8s
+  Epoch 80/200: loss=1119.984891, rollout=1, time=357.7s
+  Epoch 90/200: loss=977.841552, rollout=5, time=459.6s
+  Epoch 100/200: loss=861.812146, rollout=5, time=553.7s
+  Epoch 110/200: loss=774.468332, rollout=5, time=615.1s
+  Epoch 120/200: loss=708.914517, rollout=5, time=676.6s
+  Epoch 130/200: loss=709.526653, rollout=10, time=773.1s
+  Epoch 140/200: loss=669.890801, rollout=10, time=871.7s
+  Epoch 150/200: loss=648.471961, rollout=10, time=970.7s
+  Epoch 160/200: loss=632.316971, rollout=10, time=1100.7s
+  Epoch 170/200: loss=1141.294490, rollout=20, time=1319.3s
+  Epoch 180/200: loss=1029.256751, rollout=20, time=1480.3s
