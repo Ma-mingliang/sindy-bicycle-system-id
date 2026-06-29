@@ -279,43 +279,38 @@ def train_ude(data, config, seed=42):
 
             if rollout_steps > 1 and len(sb) > rollout_steps + 1:
                 n_roll = min(len(sb) - rollout_steps, 32)
-                s_cur_norm = sb[:n_roll].clone()
-                # Pre-compute scale factors as tensors
-                scale_res = torch.FloatTensor(delta_std * DT / state_std)
-                s_std_t = torch.FloatTensor(state_std)
-                c0 = float(state_std[2] * DT / state_std[0])
-                c1 = float(state_std[2] * DT / (WHEELBASE * state_std[1]))
-                c3 = float(state_std[4] * DT / state_std[3])
-                c5 = float(state_std[6] * DT / state_std[5])
+                s_cur = sb[:n_roll].clone().numpy()
+                s_std_np = state_std
+                d_std_np = delta_std
 
-                for step in range(rollout_steps):
-                    a_cur_norm = ab[step:step + n_roll]
+                with torch.no_grad():
+                    for step in range(rollout_steps):
+                        a_cur_norm = ab[step:step + n_roll]
 
-                    # NN residual prediction (normalized)
-                    res_norm = model(s_cur_norm, a_cur_norm)
+                        # NN residual prediction (normalized)
+                        s_cur_t = torch.FloatTensor(s_cur)
+                        res_norm = model(s_cur_t, a_cur_norm).numpy()
 
-                    # Physics prediction in normalized space
-                    v_norm = s_cur_norm[:, 2]
-                    e_psi_orig = s_cur_norm[:, 1] * s_std_t[1]
-                    delta_orig = s_cur_norm[:, 5] * s_std_t[5]
+                        # Physics prediction (original space)
+                        s_orig = s_cur * s_std_np
+                        phys = np.zeros_like(s_orig)
+                        phys[:, 0] = s_orig[:, 2] * np.sin(s_orig[:, 1]) * DT
+                        phys[:, 1] = -s_orig[:, 2] * s_orig[:, 5] / WHEELBASE * DT
+                        phys[:, 3] = s_orig[:, 4] * DT
+                        phys[:, 5] = s_orig[:, 6] * DT
 
-                    phys_norm = torch.zeros_like(s_cur_norm)
-                    phys_norm[:, 0] = v_norm * torch.sin(e_psi_orig) * c0
-                    phys_norm[:, 1] = -v_norm * delta_orig * c1
-                    phys_norm[:, 3] = s_cur_norm[:, 4] * c3
-                    phys_norm[:, 5] = s_cur_norm[:, 6] * c5
+                        # Combine in normalized space
+                        total_delta_norm = (phys / s_std_np) + res_norm * (d_std_np * DT / s_std_np)
+                        s_next = s_cur + total_delta_norm
 
-                    # Combine
-                    s_next_norm = s_cur_norm + phys_norm + res_norm * scale_res
+                        # Target
+                        target = sb[step + 1:step + 1 + n_roll].numpy()
+                        loss_multi = loss_multi + float(
+                            np.mean((s_next - target) ** 2)
+                        )
+                        s_cur = s_next
 
-                    # Target
-                    target = sb[step + 1:step + 1 + n_roll]
-                    loss_multi = loss_multi + nn.functional.mse_loss(
-                        s_next_norm, target,
-                    )
-                    s_cur_norm = s_next_norm.detach()
-
-                loss_multi = loss_multi / rollout_steps
+                loss_multi = torch.tensor(loss_multi / rollout_steps)
 
             lambda_multi = config.get('lambda_multi', 0.3)
             loss = loss_single + lambda_multi * loss_multi

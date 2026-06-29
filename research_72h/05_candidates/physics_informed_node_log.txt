@@ -66,3 +66,10 @@ Training Physics-Informed Neural ODE (seed=43)
   Epoch 80/200: loss=1184.865842, rollout=1, time=175.1s
   Epoch 90/200: loss=1047.884726, rollout=5, time=220.9s
   Epoch 100/200: loss=929.212916, rollout=5, time=266.8s
+  Epoch 110/200: loss=834.600503, rollout=5, time=312.5s
+  Epoch 120/200: loss=763.825263, rollout=5, time=357.1s
+  Epoch 130/200: loss=748.758603, rollout=10, time=427.5s
+  Epoch 140/200: loss=712.955850, rollout=10, time=502.9s
+  Epoch 150/200: loss=691.295728, rollout=10, time=583.7s
+  Epoch 160/200: loss=676.370695, rollout=10, time=655.7s
+  Epoch 170/200: loss=878.497123, rollout=20, time=780.6s
