@@ -52,3 +52,125 @@ Training shared v9 baseline (once for all experiments)...
     Completed in 103.5s
 
   [2/4] Training NODE (wide) for e_psi...
+    Completed in 198.1s
+
+  [3/4] Training Direct Delta for e_psi...
+    Completed in 103.9s
+
+  [4/4] Training Linear (Ridge) for e_psi...
+    Completed in 0.8s
+
+  --- e_psi Summary ---
+  Architecture    Primary    Target@H100  vs v9      Time(s) 
+  -------------------------------------------------------
+  v9_baseline     0.8885     0.6348       ---        ---     
+  node            1.3612     0.9924         -53.2%  103.5   
+  node_wide       1.0421     1.1858         -17.3%  198.1   
+  direct_delta    1.2361     1.0191         -39.1%  103.9   
+  linear          0.8710     0.7495          +2.0%  0.8     
+
+  Best architecture for e_psi: linear (Primary=0.8710)
+
+============================================================
+  Experiment: v (index 2)
+============================================================
+  Using pre-trained v9 baseline.
+  Evaluating v9 baseline...
+
+  [1/4] Training NODE (standard) for v...
+    Completed in 70.4s
+
+  [2/4] Training NODE (wide) for v...
+    Completed in 123.2s
+
+  [3/4] Training Direct Delta for v...
+    Completed in 64.5s
+
+  [4/4] Training Linear (Ridge) for v...
+    Completed in 0.7s
+
+  --- v Summary ---
+  Architecture    Primary    Target@H100  vs v9      Time(s) 
+  -------------------------------------------------------
+  v9_baseline     0.8885     0.4510       ---        ---     
+  node            0.8925     0.5713          -0.5%  70.4    
+  node_wide       0.8818     0.5620          +0.8%  123.2   
+  direct_delta    0.7733     0.0078         +13.0%  64.5    
+  linear          0.7575     0.0000         +14.7%  0.7     
+
+  Best architecture for v: linear (Primary=0.7575)
+
+============================================================
+  Experiment: theta (index 3)
+============================================================
+  Using pre-trained v9 baseline.
+  Evaluating v9 baseline...
+
+  [1/4] Training NODE (standard) for theta...
+    Completed in 65.6s
+
+  [2/4] Training NODE (wide) for theta...
+    Completed in 119.3s
+
+  [3/4] Training Direct Delta for theta...
+    Completed in 64.8s
+
+  [4/4] Training Linear (Ridge) for theta...
+    Completed in 0.6s
+
+  --- theta Summary ---
+  Architecture    Primary    Target@H100  vs v9      Time(s) 
+  -------------------------------------------------------
+  v9_baseline     0.8885     0.5759       ---        ---     
+  node            1.3791     0.9035         -55.2%  65.6    
+  node_wide       1.3187     0.7958         -48.4%  119.3   
+  direct_delta    1.3146     0.8049         -48.0%  64.8    
+  linear          0.8378     0.2017          +5.7%  0.6     
+
+  Best architecture for theta: linear (Primary=0.8378)
+
+============================================================
+  Experiment 5: Best Composite Model
+============================================================
+  Using pre-trained v9 baseline.
+  Training node_wide for e_y...
+  Training linear for e_psi...
+  Training linear for v...
+  Training linear for theta...
+
+  Evaluating composite model...
+  Evaluating v9 baseline...
+
+  --- Composite vs v9 ---
+  Horizon    v9 NMAE      Composite    Improvement 
+  ----------------------------------------------
+  H=1       0.0344       0.0178           +48.3%
+  H=10      0.0852       0.0470           +44.8%
+  H=50      0.2429       0.2243            +7.7%
+  H=100     0.5863       0.4028           +31.3%
+  H=200     0.8386       0.6110           +27.1%
+  H=500     1.2404       0.7517           +39.4%
+
+  v9 Primary:        0.8885
+  Composite Primary: 0.5885
+  Overall Improvement: +33.8%
+
+======================================================================
+  FINAL SUMMARY
+======================================================================
+
+  Per-State Best Architectures:
+  State        Best Arch       Primary    v9 Primary   Improvement 
+  -------------------------------------------------------------
+  e_y          node_wide       0.7769     0.8885           +12.6%
+  e_psi        linear          0.8710     0.8885            +2.0%
+  v            linear          0.7575     0.8885           +14.7%
+  theta        linear          0.8378     0.8885            +5.7%
+
+  Composite Model:
+  v9 Primary:        0.8885
+  Composite Primary: 0.5885
+  Improvement:       +33.8%
+
+Results saved to: D:/系统辨识作业/sindy_bicycle/research_72h/05_candidates/EXP041_state_specific_experiments.json
+Analysis saved to: D:/系统辨识作业/sindy_bicycle/research_72h/05_candidates/STATE_SPECIFIC_ANALYSIS.md

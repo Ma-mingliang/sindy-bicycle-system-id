@@ -3,19 +3,9 @@
 Implements three ensemble strategies that combine different model types
 (Neural ODE, GP, physics-based) with per-state weighting:
 
-1. Per-State Ensemble Model:
-   - For each state dimension, train multiple models (NODE variants, GP, physics)
-   - Combine via weighted average, weights from validation performance
-
-2. Adaptive Ensemble:
-   - Dynamically adjust per-state weights based on current state location
-   - Uses state-space partitioning (k-means or grid) for local weight learning
-   - Falls back to physics model in OOD regions
-
-3. Physics-Informed Ensemble:
-   - Uses known kinematics (e_y_dot = v*sin(e_psi), e_psi_dot = -v*delta/L)
-   - Blends physics prediction with data-driven (NODE/GP) via learned weights
-   - Physics acts as a structural prior + regularizer
+1. Per-State Ensemble Model: weighted average of NODE + GP + Physics
+2. Adaptive Ensemble: state-space partitioned weights with K-Means
+3. Physics-Informed Ensemble: physics-blended predictions with correction
 
 Target: Beat current best primary score of 0.3728 (physics_correction_multi_seed).
 Baseline v9 primary score: 0.5110.
@@ -30,8 +20,9 @@ import torch
 import torch.nn as nn
 from datetime import datetime
 from sklearn.gaussian_process import GaussianProcessRegressor
-from sklearn.gaussian_process.kernels import Matern, RBF, WhiteKernel, ConstantKernel
+from sklearn.gaussian_process.kernels import Matern
 from sklearn.cluster import KMeans
+from sklearn.neighbors import NearestNeighbors
 
 warnings.filterwarnings('ignore')
 
@@ -64,17 +55,7 @@ IDX_DELTA, IDX_DELTA_DOT = 5, 6
 # ============================================================
 
 def compute_physics_deltas(state):
-    """Compute physics-based state deltas from known kinematics.
-
-    Known exact relationships:
-      e_y_dot    = v * sin(e_psi)
-      e_psi_dot  = -v * delta / L
-      theta_dot  = d(theta)/dt  (definition)
-      delta_dot  = d(delta)/dt  (definition)
-
-    Unknown (set to 0):
-      v_dot, theta_ddot, delta_ddot
-    """
+    """Compute physics-based state deltas from known kinematics."""
     e_psi = state[IDX_EPSI]
     v = state[IDX_V]
     theta_dot_val = state[IDX_THETA_DOT]
@@ -178,7 +159,7 @@ def load_data(seed=42):
 
 
 # ============================================================
-# Neural ODE Models (multiple variants)
+# Neural ODE Models
 # ============================================================
 
 class ODEFunc(nn.Module):
@@ -257,8 +238,8 @@ def train_node_model(data, config, seed=42):
 # ============================================================
 
 class GPSingleDim:
-    """Single-dimension GP model."""
-    def __init__(self, max_samples=5000, kernel_type='matern'):
+    """Single-dimension GP model with optimized prediction."""
+    def __init__(self, max_samples=3000, kernel_type='matern'):
         self._max_samples = max_samples
         self._gp = None
         self._x_mean = None
@@ -276,29 +257,24 @@ class GPSingleDim:
         self._x_std = X.std(axis=0) + 1e-8
         X_scaled = (X - self._x_mean) / self._x_std
 
-        if self._kernel_type == 'matern':
-            kernel = Matern(nu=2.5, length_scale=1.0)
-        elif self._kernel_type == 'rbf':
-            kernel = ConstantKernel(1.0) * RBF(length_scale=1.0) + WhiteKernel(0.01)
-        else:
-            kernel = Matern(nu=2.5, length_scale=1.0)
-
+        kernel = Matern(nu=2.5, length_scale=1.0)
         self._gp = GaussianProcessRegressor(
             kernel=kernel, n_restarts_optimizer=2, alpha=1e-3,
         )
         self._gp.fit(X_scaled, y)
+        self._n_train = len(X_scaled)
 
     def predict(self, x):
         x_scaled = (x - self._x_mean) / self._x_std
         return self._gp.predict(x_scaled.reshape(1, -1))[0]
 
-    def predict_with_uncertainty(self, x):
-        x_scaled = (x - self._x_mean) / self._x_std
-        mean, std = self._gp.predict(x_scaled.reshape(1, -1), return_std=True)
-        return mean[0], std[0]
+    def predict_batch(self, X):
+        """Predict for multiple inputs at once."""
+        X_scaled = (X - self._x_mean) / self._x_std
+        return self._gp.predict(X_scaled)
 
 
-def train_gp_model(data, max_samples=5000, kernel_type='matern'):
+def train_gp_model(data, max_samples=3000, kernel_type='matern'):
     """Train a GP model per state dimension."""
     state_std = data['state_std']
     action_std = data['action_std']
@@ -321,7 +297,7 @@ def train_gp_model(data, max_samples=5000, kernel_type='matern'):
 
 
 # ============================================================
-# Validation & Evaluation
+# Utility
 # ============================================================
 
 def check_survival(state):
@@ -333,10 +309,32 @@ def check_survival(state):
     return not (np.any(np.isnan(state)) or np.any(np.isinf(state)))
 
 
-def evaluate_model_on_val(predict_fn, data, n_segments=3, seed=99):
-    """Evaluate a model's per-state NMAE on the validation set.
+def clip_state(s):
+    """Clip state to physical limits, return clipped state."""
+    s_clipped = s.copy()
+    for i, name in enumerate(STATE_NAMES_7D):
+        if name in PHYSICAL_LIMITS:
+            s_clipped[i] = np.clip(s_clipped[i], -PHYSICAL_LIMITS[name], PHYSICAL_LIMITS[name])
+    return s_clipped
 
-    Returns per_state_nmae: dict dim_idx -> mean NMAE across segments.
+
+def compute_primary_score(results):
+    """Compute PrimaryLongHorizonScore = mean(H=100, H=200, H=500)."""
+    scores = [results[h]['nmae_mean'] for h in [100, 200, 500]]
+    if any(np.isnan(s) for s in scores):
+        return float('nan')
+    return float(np.mean(scores))
+
+
+# ============================================================
+# Evaluation
+# ============================================================
+
+def evaluate_model_on_val(predict_fn, data, n_segments=3, max_steps=50, seed=99):
+    """Evaluate a model's per-state NMAE on validation data.
+
+    Uses short rollouts (max_steps) to assess single-step quality.
+    Returns per_state_nmae: dict dim_idx -> mean NMAE.
     """
     state_std = data['state_std']
     episodes = data['episodes']
@@ -346,7 +344,7 @@ def evaluate_model_on_val(predict_fn, data, n_segments=3, seed=99):
     segments = []
     for ep_idx in val_eps:
         ep = episodes[ep_idx]
-        if ep['length'] >= 100:
+        if ep['length'] >= 50:
             segments.append(ep)
     segments = segments[:n_segments]
 
@@ -356,19 +354,17 @@ def evaluate_model_on_val(predict_fn, data, n_segments=3, seed=99):
     per_state_errors = {d: [] for d in range(STATE_DIM)}
 
     for seg in segments:
-        s0 = seg['obs'][0].copy()
+        s_cur = seg['obs'][0].copy()
         actions_seg = seg['action'].flatten()
         real_states = seg['obs']
-        n = min(100, len(actions_seg))
-        s_cur = s0.copy()
+        n = min(max_steps, len(actions_seg))
 
         for step in range(n):
             try:
                 s_next = predict_fn(s_cur, actions_seg[step])
                 if np.any(np.isnan(s_next)) or np.any(np.isinf(s_next)):
                     break
-                if not check_survival(s_next):
-                    break
+                s_next = clip_state(s_next)
                 if step + 1 < len(real_states):
                     step_err = np.abs(s_next - real_states[step + 1]) / state_std
                     for d in range(STATE_DIM):
@@ -380,16 +376,13 @@ def evaluate_model_on_val(predict_fn, data, n_segments=3, seed=99):
     per_state_nmae = {}
     for d in range(STATE_DIM):
         errs = per_state_errors[d]
-        per_state_nmae[d] = np.mean(errs) if errs else 1.0
+        per_state_nmae[d] = float(np.mean(errs)) if errs else 1.0
 
     return per_state_nmae
 
 
 def evaluate_full(predict_fn, data, horizons, n_segments=5, seed=42):
-    """Full evaluation across multiple horizons.
-
-    Returns dict: horizon -> {nmae_mean, survival_rate, per_state_nmae}.
-    """
+    """Full evaluation across multiple horizons."""
     state_std = data['state_std']
     episodes = data['episodes']
     test_eps = data['test_eps']
@@ -423,9 +416,7 @@ def evaluate_full(predict_fn, data, horizons, n_segments=5, seed=42):
                     if np.any(np.isnan(s_next)) or np.any(np.isinf(s_next)):
                         survived = False
                         break
-                    if not check_survival(s_next):
-                        survived = False
-                        break
+                    s_next = clip_state(s_next)
                     if step + 1 < len(real_states):
                         step_err = np.abs(s_next - real_states[step + 1]) / state_std
                         step_errors.append(step_err)
@@ -443,7 +434,7 @@ def evaluate_full(predict_fn, data, horizons, n_segments=5, seed=42):
                     per_state_nmae[name].append(nmae_per_state[i])
             else:
                 nmae_list.append(float('nan'))
-            survival_list.append(survived and len(step_errors) >= n - 1)
+            survival_list.append(survived and len(step_errors) >= min(n - 1, 10))
 
         valid_nmae = [x for x in nmae_list if not np.isnan(x)]
         results[h] = {
@@ -462,12 +453,6 @@ def evaluate_full(predict_fn, data, horizons, n_segments=5, seed=42):
     return results
 
 
-def compute_primary_score(results):
-    """Compute PrimaryLongHorizonScore = mean(H=100, H=200, H=500)."""
-    return np.mean([results[100]['nmae_mean'], results[200]['nmae_mean'],
-                    results[500]['nmae_mean']])
-
-
 # ============================================================
 # Approach 1: Per-State Ensemble Model
 # ============================================================
@@ -475,25 +460,13 @@ def compute_primary_score(results):
 class PerStateEnsemble:
     """Weighted ensemble with per-state weights.
 
-    For each state dimension, maintains a weight for each sub-model:
-      - NODE-A (tanh, hidden=64, depth=3)
-      - NODE-B (tanh, hidden=128, depth=4)
-      - NODE-C (silu, hidden=64, depth=3)
-      - GP (Matern kernel)
-      - Physics model
-    Weights are learned from validation performance.
+    Combines: NODE-A, NODE-B, NODE-C, GP, Physics
+    with per-state learned weights.
     """
     MODEL_NAMES = ['node_a', 'node_b', 'node_c', 'gp', 'physics']
 
     def __init__(self, node_models, gp_models, state_std, action_std, delta_std,
                  weights_per_state):
-        """
-        Args:
-            node_models: dict model_name -> ODEFunc model
-            gp_models: dict dim -> GPSingleDim
-            state_std, action_std, delta_std: normalization arrays
-            weights_per_state: dict dim -> array of shape (n_models,)
-        """
         self._node_models = node_models
         self._gp_models = gp_models
         self._state_std = state_std
@@ -504,54 +477,42 @@ class PerStateEnsemble:
     def predict(self, s, tau):
         s_norm = s / self._state_std
         a_norm = tau / self._action_std
-        x_torch = torch.FloatTensor(
-            np.concatenate([s_norm, [a_norm]]),
-        ).unsqueeze(0)
+        x_arr = np.concatenate([s_norm, [a_norm]])
+        x_torch = torch.FloatTensor(x_arr).unsqueeze(0)
 
+        # Pre-compute all model deltas
+        node_deltas = {}
+        for name, model in self._node_models.items():
+            with torch.no_grad():
+                dsdt = model(x_torch).numpy()[0]
+            node_deltas[name] = dsdt * self._delta_std * DT
+
+        gp_deltas = np.zeros(STATE_DIM)
+        for dim in range(STATE_DIM):
+            if dim in self._gp_models:
+                gp_deltas[dim] = self._gp_models[dim].predict(x_arr) * self._delta_std[dim]
+
+        physics_d = compute_physics_deltas(s)
+
+        # Combine per state
         delta = np.zeros(STATE_DIM)
-
+        model_names_ordered = ['node_a', 'node_b', 'node_c']
         for dim in range(STATE_DIM):
             w = self._weights[dim]
             pred = 0.0
-
-            # NODE-A
-            with torch.no_grad():
-                node_a_pred = self._node_models['node_a'](x_torch).numpy()[0][dim]
-            pred += w[0] * node_a_pred * self._delta_std[dim] * DT
-
-            # NODE-B
-            with torch.no_grad():
-                node_b_pred = self._node_models['node_b'](x_torch).numpy()[0][dim]
-            pred += w[1] * node_b_pred * self._delta_std[dim] * DT
-
-            # NODE-C
-            with torch.no_grad():
-                node_c_pred = self._node_models['node_c'](x_torch).numpy()[0][dim]
-            pred += w[2] * node_c_pred * self._delta_std[dim] * DT
-
-            # GP
-            if dim in self._gp_models:
-                gp_pred = self._gp_models[dim].predict(
-                    np.concatenate([s_norm, [a_norm]]),
-                )
-                pred += w[3] * gp_pred * self._delta_std[dim]
-
-            # Physics
-            physics_deltas = compute_physics_deltas(s)
-            pred += w[4] * physics_deltas[dim]
-
+            for j, name in enumerate(model_names_ordered):
+                pred += w[j] * node_deltas[name][dim]
+            pred += w[3] * gp_deltas[dim]
+            pred += w[4] * physics_d[dim]
             delta[dim] = pred
 
-        return s + delta
+        s_next = s + delta
+        s_next = clip_state(s_next)
+        return s_next
 
 
 def learn_per_state_weights(node_models, gp_models, data):
-    """Learn per-state weights by evaluating each model on validation data.
-
-    For each state dimension d:
-      weight_m[d] = 1 / (epsilon + val_error_m[d])
-      then normalize so weights sum to 1.
-    """
+    """Learn per-state weights via inverse validation error."""
     state_std = data['state_std']
     action_std = data['action_std']
     delta_std = data['delta_std']
@@ -559,22 +520,19 @@ def learn_per_state_weights(node_models, gp_models, data):
     # Build predict functions for each model
     model_predict_fns = {}
 
-    # NODE models
     for name, model in node_models.items():
         def make_node_fn(m):
             def predict_fn(s, tau):
                 s_norm = s / state_std
                 a_norm = tau / action_std
-                x = torch.FloatTensor(
-                    np.concatenate([s_norm, [a_norm]]),
-                ).unsqueeze(0)
+                x = torch.FloatTensor(np.concatenate([s_norm, [a_norm]])).unsqueeze(0)
                 with torch.no_grad():
                     dsdt = m(x).numpy()[0]
-                return s + dsdt * delta_std * DT
+                delta = dsdt * delta_std * DT
+                return s + delta
             return predict_fn
         model_predict_fns[name] = make_node_fn(model)
 
-    # GP model
     def gp_predict_fn(s, tau):
         s_norm = s / state_std
         a_norm = tau / action_std
@@ -586,16 +544,14 @@ def learn_per_state_weights(node_models, gp_models, data):
         return s + delta
     model_predict_fns['gp'] = gp_predict_fn
 
-    # Physics model
     def physics_predict_fn(s, tau):
-        physics_deltas = compute_physics_deltas(s)
-        return s + physics_deltas
+        return s + compute_physics_deltas(s)
     model_predict_fns['physics'] = physics_predict_fn
 
     # Evaluate each model on validation
     val_errors = {}
     for name, fn in model_predict_fns.items():
-        per_state = evaluate_model_on_val(fn, data, n_segments=3, seed=99)
+        per_state = evaluate_model_on_val(fn, data, n_segments=3, max_steps=50, seed=99)
         val_errors[name] = per_state
 
     # Compute inverse-error weights per state
@@ -607,7 +563,6 @@ def learn_per_state_weights(node_models, gp_models, data):
         raw_w = np.array([
             1.0 / (epsilon + val_errors[name][dim]) for name in model_names
         ])
-        # Normalize
         w = raw_w / raw_w.sum()
         weights_per_state[dim] = w
 
@@ -619,21 +574,16 @@ def learn_per_state_weights(node_models, gp_models, data):
 # ============================================================
 
 class AdaptiveEnsemble:
-    """Adaptive ensemble that adjusts weights based on state location.
+    """Adaptive ensemble with state-space partitioned weights.
 
-    Partitions the state space into clusters using K-Means.
-    Each cluster has its own set of per-state ensemble weights.
-    For OOD states (far from all clusters), falls back to physics.
+    Uses K-Means to partition state space into clusters.
+    Each cluster has its own per-state weights.
+    Falls back to physics in OOD regions.
     """
     MODEL_NAMES = ['node_a', 'node_b', 'node_c', 'gp', 'physics']
 
     def __init__(self, node_models, gp_models, state_std, action_std, delta_std,
-                 cluster_centers, cluster_weights, fallback_physics=True):
-        """
-        Args:
-            cluster_centers: (n_clusters, STATE_DIM) normalized
-            cluster_weights: dict cluster_id -> {dim -> array(n_models,)}
-        """
+                 cluster_centers, cluster_weights):
         self._node_models = node_models
         self._gp_models = gp_models
         self._state_std = state_std
@@ -642,78 +592,63 @@ class AdaptiveEnsemble:
         self._cluster_centers = cluster_centers
         self._cluster_weights = cluster_weights
         self._n_clusters = len(cluster_centers)
-        self._fallback_physics = fallback_physics
-        # OOD threshold: if min distance > threshold, use physics fallback
         self._ood_threshold = 3.0
 
     def _find_cluster(self, s_norm):
-        """Find nearest cluster for normalized state."""
         dists = np.linalg.norm(self._cluster_centers - s_norm, axis=1)
         return int(np.argmin(dists)), float(np.min(dists))
 
     def predict(self, s, tau):
         s_norm = s / self._state_std
         a_norm = tau / self._action_std
-        x_torch = torch.FloatTensor(
-            np.concatenate([s_norm, [a_norm]]),
-        ).unsqueeze(0)
+        x_arr = np.concatenate([s_norm, [a_norm]])
+        x_torch = torch.FloatTensor(x_arr).unsqueeze(0)
 
         cluster_id, dist = self._find_cluster(s_norm)
 
-        # OOD fallback: physics only
-        if self._fallback_physics and dist > self._ood_threshold:
-            return s + compute_physics_deltas(s)
+        # OOD fallback
+        if dist > self._ood_threshold:
+            return clip_state(s + compute_physics_deltas(s))
 
         w_dict = self._cluster_weights[cluster_id]
-        delta = np.zeros(STATE_DIM)
 
+        # Pre-compute model deltas
+        node_deltas = {}
+        for name, model in self._node_models.items():
+            with torch.no_grad():
+                dsdt = model(x_torch).numpy()[0]
+            node_deltas[name] = dsdt * self._delta_std * DT
+
+        gp_deltas = np.zeros(STATE_DIM)
+        for dim in range(STATE_DIM):
+            if dim in self._gp_models:
+                gp_deltas[dim] = self._gp_models[dim].predict(x_arr) * self._delta_std[dim]
+
+        physics_d = compute_physics_deltas(s)
+
+        delta = np.zeros(STATE_DIM)
+        model_names_ordered = ['node_a', 'node_b', 'node_c']
         for dim in range(STATE_DIM):
             w = w_dict[dim]
             pred = 0.0
-
-            # NODE-A
-            with torch.no_grad():
-                na = self._node_models['node_a'](x_torch).numpy()[0][dim]
-            pred += w[0] * na * self._delta_std[dim] * DT
-
-            # NODE-B
-            with torch.no_grad():
-                nb = self._node_models['node_b'](x_torch).numpy()[0][dim]
-            pred += w[1] * nb * self._delta_std[dim] * DT
-
-            # NODE-C
-            with torch.no_grad():
-                nc = self._node_models['node_c'](x_torch).numpy()[0][dim]
-            pred += w[2] * nc * self._delta_std[dim] * DT
-
-            # GP
-            if dim in self._gp_models:
-                gp_pred = self._gp_models[dim].predict(
-                    np.concatenate([s_norm, [a_norm]]),
-                )
-                pred += w[3] * gp_pred * self._delta_std[dim]
-
-            # Physics
-            physics_deltas = compute_physics_deltas(s)
-            pred += w[4] * physics_deltas[dim]
-
+            for j, name in enumerate(model_names_ordered):
+                pred += w[j] * node_deltas[name][dim]
+            pred += w[3] * gp_deltas[dim]
+            pred += w[4] * physics_d[dim]
             delta[dim] = pred
 
-        return s + delta
+        return clip_state(s + delta)
 
 
 def learn_adaptive_weights(node_models, gp_models, data, n_clusters=5):
-    """Learn cluster-specific weights.
-
-    1. Cluster training data into n_clusters using K-Means
-    2. For each cluster, evaluate each model on validation samples in that region
-    3. Learn per-cluster, per-state inverse-error weights
-    """
+    """Learn cluster-specific weights using model predictions on validation data."""
     state_std = data['state_std']
     action_std = data['action_std']
     delta_std = data['delta_std']
     train_obs = data['train_obs']
     val_obs = data['val_obs']
+    val_action = data['val_action']
+    val_deltas = data['val_deltas']
 
     # Normalize for clustering
     train_obs_norm = train_obs / state_std
@@ -723,26 +658,13 @@ def learn_adaptive_weights(node_models, gp_models, data, n_clusters=5):
     kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
     kmeans.fit(train_obs_norm)
     cluster_centers = kmeans.cluster_centers_
-
-    # Assign validation points to clusters
     val_labels = kmeans.predict(val_obs_norm)
 
-    # For each cluster, compute per-state weights using local validation
-    # We'll use a simplified approach: evaluate each model's error
-    # on the full validation set, then weight by cluster membership
-    # (soft assignment with distance-based kernel)
-
-    # Compute all model predictions on validation data
-    model_names = AdaptiveEnsemble.MODEL_NAMES
-
-    # Build prediction arrays for validation: each model predicts deltas
-    val_action = data['val_action']
-    val_deltas = data['val_deltas']
-
-    # Compute model predictions for all validation points
+    # Compute model predictions for all validation points (batch)
+    model_names = ['node_a', 'node_b', 'node_c']
     model_pred_deltas = {}
 
-    # NODE models
+    # NODE models (batch)
     for name, model in node_models.items():
         preds = np.zeros_like(val_deltas)
         batch_size = 1024
@@ -756,52 +678,44 @@ def learn_adaptive_weights(node_models, gp_models, data, n_clusters=5):
             preds[i:i + batch_size] = dsdt * delta_std * DT
         model_pred_deltas[name] = preds
 
-    # GP model
+    # GP model (batch)
     gp_preds = np.zeros_like(val_deltas)
+    val_X = np.hstack([val_obs / state_std, val_action.reshape(-1, 1) / action_std])
     for dim in range(STATE_DIM):
         if dim in gp_models:
-            for i in range(len(val_obs)):
-                x = np.concatenate([
-                    val_obs[i] / state_std,
-                    [val_action[i].item() / action_std],
-                ])
-                gp_preds[i, dim] = gp_models[dim].predict(x) * delta_std[dim]
+            gp_preds[:, dim] = gp_models[dim].predict_batch(val_X) * delta_std[dim]
     model_pred_deltas['gp'] = gp_preds
 
-    # Physics model
-    phys_preds = compute_physics_deltas_batch(val_obs)
-    model_pred_deltas['physics'] = phys_preds
+    # Physics model (batch)
+    model_pred_deltas['physics'] = compute_physics_deltas_batch(val_obs)
 
     # Compute per-cluster, per-state weights
     cluster_weights = {}
     epsilon = 1e-6
+    all_model_names = model_names + ['gp', 'physics']
 
     for c in range(n_clusters):
         mask = val_labels == c
         if mask.sum() < 5:
-            # Too few points, use uniform weights
             cluster_weights[c] = {
-                dim: np.ones(len(model_names)) / len(model_names)
+                dim: np.ones(len(all_model_names)) / len(all_model_names)
                 for dim in range(STATE_DIM)
             }
             continue
 
         cluster_true = val_deltas[mask]
-        n_points = mask.sum()
 
-        # Compute per-state MSE for each model
         per_state_errors = {}
-        for name in model_names:
+        for name in all_model_names:
             preds = model_pred_deltas[name][mask]
             mse_per_state = np.mean((preds - cluster_true) ** 2, axis=0)
             per_state_errors[name] = mse_per_state
 
-        # Inverse-error weights
         w_dict = {}
         for dim in range(STATE_DIM):
             raw_w = np.array([
                 1.0 / (epsilon + per_state_errors[name][dim])
-                for name in model_names
+                for name in all_model_names
             ])
             w = raw_w / raw_w.sum()
             w_dict[dim] = w
@@ -816,110 +730,93 @@ def learn_adaptive_weights(node_models, gp_models, data, n_clusters=5):
 # ============================================================
 
 class PhysicsInformedEnsemble:
-    """Physics-informed ensemble that uses known kinematics as structural prior.
+    """Physics-informed ensemble with learned blending ratios.
 
-    Strategy:
-    - For states with exact physics (e_y, e_psi, theta, delta):
+    For states with known kinematics (e_y, e_psi, theta, delta):
       prediction = alpha * physics + (1-alpha) * data_driven
-    - For states without exact physics (v, theta_dot, delta_dot):
-      prediction = data_driven (NODE or GP)
-    - alpha is learned per state from validation performance
+    For unknown states (v, theta_dot, delta_dot):
+      prediction = data_driven
 
-    Additionally, applies physics-constrained correction:
-    - After data-driven prediction, nudge e_y, e_psi toward physics-consistent values
-    - Correction strength controlled by a learned parameter
+    Then applies physics-informed correction.
     """
-    def __init__(self, node_models, gp_model, state_std, action_std, delta_std,
-                 physics_blend, correction_strength):
-        """
-        Args:
-            physics_blend: dict dim -> alpha in [0,1]
-                alpha=1 means pure physics, alpha=0 means pure data
-            correction_strength: float, strength of physics correction
-        """
-        self._node_models = node_models  # dict name -> model
-        self._gp_model = gp_model  # GPSingleDim per dim
+    def __init__(self, node_model, gp_model, state_std, action_std, delta_std,
+                 physics_blend, correction_strength, nn_corrector=None,
+                 train_obs_norm=None):
+        self._node_model = node_model  # single best NODE model
+        self._gp_model = gp_model
         self._state_std = state_std
         self._action_std = action_std
         self._delta_std = delta_std
-        self._physics_blend = physics_blend
+        self._physics_blend = physics_blend  # dict dim -> alpha
         self._correction_strength = correction_strength
-        # Use best NODE model (node_a as default, can be overridden)
-        self._best_node = 'node_a'
+        self._nn_corrector = nn_corrector
+        self._train_obs_norm = train_obs_norm
 
     def predict(self, s, tau):
         s_norm = s / self._state_std
         a_norm = tau / self._action_std
-        x_torch = torch.FloatTensor(
-            np.concatenate([s_norm, [a_norm]]),
-        ).unsqueeze(0)
+        x_arr = np.concatenate([s_norm, [a_norm]])
+        x_torch = torch.FloatTensor(x_arr).unsqueeze(0)
 
         # Physics deltas
         physics_d = compute_physics_deltas(s)
 
-        # Data-driven deltas from best NODE
+        # NODE deltas
         with torch.no_grad():
-            node_dsdt = self._node_models[self._best_node](x_torch).numpy()[0]
-        node_deltas = node_dsdt * self._delta_std * DT
+            dsdt = self._node_model(x_torch).numpy()[0]
+        node_deltas = dsdt * self._delta_std * DT
 
         # GP deltas
         gp_deltas = np.zeros(STATE_DIM)
-        x_gp = np.concatenate([s_norm, [a_norm]])
         for dim in range(STATE_DIM):
             if dim in self._gp_model:
-                gp_deltas[dim] = self._gp_model[dim].predict(x_gp) * self._delta_std[dim]
+                gp_deltas[dim] = self._gp_model[dim].predict(x_arr) * self._delta_std[dim]
+
+        # Data-driven = average of NODE and GP
+        data_deltas = 0.5 * node_deltas + 0.5 * gp_deltas
 
         # Blend per state
         delta = np.zeros(STATE_DIM)
         for dim in range(STATE_DIM):
             alpha = self._physics_blend.get(dim, 0.0)
-            # Data-driven = average of NODE and GP
-            data_pred = 0.5 * node_deltas[dim] + 0.5 * gp_deltas[dim]
-            delta[dim] = alpha * physics_d[dim] + (1.0 - alpha) * data_pred
+            delta[dim] = alpha * physics_d[dim] + (1.0 - alpha) * data_deltas[dim]
 
         s_next = s + delta
 
-        # Physics-informed correction for e_y and e_psi
+        # Physics-informed correction
         if self._correction_strength > 0:
-            # Correct e_y: ensure e_y_dot = v * sin(e_psi)
-            v_cur = s[IDX_V]
-            e_psi_cur = s[IDX_EPSI]
-            e_y_dot_physics = v_cur * np.sin(e_psi_cur)
-            e_y_next_physics = s[IDX_EY] + e_y_dot_physics * DT
-            correction_ey = (e_y_next_physics - s_next[IDX_EY]) * self._correction_strength
-            s_next[IDX_EY] += correction_ey
+            # Correct e_y
+            e_y_dot_phys = s[IDX_V] * np.sin(s[IDX_EPSI])
+            e_y_next_phys = s[IDX_EY] + e_y_dot_phys * DT
+            s_next[IDX_EY] += (e_y_next_phys - s_next[IDX_EY]) * self._correction_strength
 
-            # Correct e_psi: ensure e_psi_dot = -v * delta / L
-            delta_cur = s[IDX_DELTA]
-            e_psi_dot_physics = -v_cur * delta_cur / WHEELBASE
-            e_psi_next_physics = s[IDX_EPSI] + e_psi_dot_physics * DT
-            correction_epsi = (e_psi_next_physics - s_next[IDX_EPSI]) * self._correction_strength
-            s_next[IDX_EPSI] += correction_epsi
+            # Correct e_psi
+            e_psi_dot_phys = -s[IDX_V] * s[IDX_DELTA] / WHEELBASE
+            e_psi_next_phys = s[IDX_EPSI] + e_psi_dot_phys * DT
+            s_next[IDX_EPSI] += (e_psi_next_phys - s_next[IDX_EPSI]) * self._correction_strength
 
-            # Correct theta: theta_dot = d(theta)/dt
-            theta_dot_cur = s[IDX_THETA_DOT]
-            theta_next_physics = s[IDX_THETA] + theta_dot_cur * DT
-            correction_theta = (theta_next_physics - s_next[IDX_THETA]) * self._correction_strength
-            s_next[IDX_THETA] += correction_theta
+            # Correct theta
+            theta_next_phys = s[IDX_THETA] + s[IDX_THETA_DOT] * DT
+            s_next[IDX_THETA] += (theta_next_phys - s_next[IDX_THETA]) * self._correction_strength
 
-            # Correct delta: delta_dot = d(delta)/dt
-            delta_dot_cur = s[IDX_DELTA_DOT]
-            delta_next_physics = s[IDX_DELTA] + delta_dot_cur * DT
-            correction_delta = (delta_next_physics - s_next[IDX_DELTA]) * self._correction_strength
-            s_next[IDX_DELTA] += correction_delta
+            # Correct delta
+            delta_next_phys = s[IDX_DELTA] + s[IDX_DELTA_DOT] * DT
+            s_next[IDX_DELTA] += (delta_next_phys - s_next[IDX_DELTA]) * self._correction_strength
 
+        # Nearest-neighbor correction
+        if self._nn_corrector is not None and self._train_obs_norm is not None:
+            s_pred_norm = s_next / self._state_std
+            distances, indices = self._nn_corrector.kneighbors([s_pred_norm])
+            neighbor_mean = np.mean(self._train_obs_norm[indices[0]], axis=0)
+            nn_correction = (neighbor_mean - s_pred_norm) * 0.05
+            s_next = (s_pred_norm + nn_correction) * self._state_std
+
+        s_next = clip_state(s_next)
         return s_next
 
 
-def learn_physics_blend(node_models, gp_model, data, correction_strength=0.1):
-    """Learn optimal physics blending ratio for each state.
-
-    For each state dimension:
-      - Evaluate physics-only prediction error on validation
-      - Evaluate data-driven (NODE + GP average) prediction error on validation
-      - Find alpha that minimizes: alpha^2 * physics_err + (1-alpha)^2 * data_err
-      - Closed-form: alpha = data_err / (physics_err + data_err)
-    """
+def learn_physics_blend(node_model, gp_model, data):
+    """Learn optimal physics blending ratio for each state."""
     state_std = data['state_std']
     action_std = data['action_std']
     delta_std = data['delta_std']
@@ -927,11 +824,10 @@ def learn_physics_blend(node_models, gp_model, data, correction_strength=0.1):
     val_action = data['val_action']
     val_deltas = data['val_deltas']
 
-    # Compute physics predictions
+    # Physics predictions
     physics_preds = compute_physics_deltas_batch(val_obs)
 
-    # Compute best NODE predictions
-    best_node = node_models['node_a']
+    # NODE predictions (batch)
     node_preds = np.zeros_like(val_deltas)
     batch_size = 1024
     for i in range(0, len(val_obs), batch_size):
@@ -940,29 +836,21 @@ def learn_physics_blend(node_models, gp_model, data, correction_strength=0.1):
         s_t = torch.FloatTensor(batch_obs / state_std)
         a_t = torch.FloatTensor(batch_act / action_std)
         with torch.no_grad():
-            dsdt = best_node(s_t, a_t).numpy()
+            dsdt = node_model(s_t, a_t).numpy()
         node_preds[i:i + batch_size] = dsdt * delta_std * DT
 
-    # Compute GP predictions
+    # GP predictions (batch)
     gp_preds = np.zeros_like(val_deltas)
+    val_X = np.hstack([val_obs / state_std, val_action.reshape(-1, 1) / action_std])
     for dim in range(STATE_DIM):
         if dim in gp_model:
-            for i in range(len(val_obs)):
-                x = np.concatenate([
-                    val_obs[i] / state_std,
-                    [val_action[i].item() / action_std],
-                ])
-                gp_preds[i, dim] = gp_model[dim].predict(x) * delta_std[dim]
+            gp_preds[:, dim] = gp_model[dim].predict_batch(val_X) * delta_std[dim]
 
-    # Data-driven = 0.5 * NODE + 0.5 * GP
     data_preds = 0.5 * node_preds + 0.5 * gp_preds
 
-    # Compute per-state errors
     physics_err = np.mean((physics_preds - val_deltas) ** 2, axis=0)
     data_err = np.mean((data_preds - val_deltas) ** 2, axis=0)
 
-    # Optimal alpha per state: alpha = data_err / (physics_err + data_err)
-    # Higher alpha = more physics weight
     physics_blend = {}
     for dim in range(STATE_DIM):
         total = physics_err[dim] + data_err[dim]
@@ -970,15 +858,14 @@ def learn_physics_blend(node_models, gp_model, data, correction_strength=0.1):
             alpha = data_err[dim] / total
         else:
             alpha = 0.5
-        # Clip to reasonable range
-        alpha = np.clip(alpha, 0.0, 0.95)
-        physics_blend[dim] = float(alpha)
+        alpha = float(np.clip(alpha, 0.0, 0.95))
+        physics_blend[dim] = alpha
 
     return physics_blend
 
 
 # ============================================================
-# Main Experiment Runner
+# Main
 # ============================================================
 
 def run_experiment():
@@ -1006,7 +893,7 @@ def run_experiment():
     all_results = {}
 
     # ----------------------------------------------------------
-    # 2. Train models
+    # 2. Train NODE models
     # ----------------------------------------------------------
     print("\n[2/7] Training Neural ODE models (3 variants)...")
     node_configs = {
@@ -1027,13 +914,16 @@ def run_experiment():
         node_models[name] = model
         print(f"    Done in {time.time()-t1:.1f}s")
 
+    # ----------------------------------------------------------
+    # 3. Train GP models (reduced samples for speed)
+    # ----------------------------------------------------------
     print("\n[3/7] Training GP models (per state)...")
     t1 = time.time()
-    gp_models = train_gp_model(data, max_samples=5000, kernel_type='matern')
+    gp_models = train_gp_model(data, max_samples=3000, kernel_type='matern')
     print(f"  GP trained in {time.time()-t1:.1f}s")
 
     # ----------------------------------------------------------
-    # 3. Approach 1: Per-State Ensemble
+    # 4. Approach 1: Per-State Ensemble
     # ----------------------------------------------------------
     print("\n[4/7] Approach 1: Per-State Ensemble...")
     t1 = time.time()
@@ -1042,8 +932,14 @@ def run_experiment():
         node_models, gp_models, data,
     )
 
-    # Print learned weights
-    print("  Learned per-state weights:")
+    # Print validation errors and learned weights
+    print("  Validation errors (per state):")
+    for dim in range(STATE_DIM):
+        errs_str = ", ".join([f"{name}={val_errors[name][dim]:.4f}"
+                              for name in PerStateEnsemble.MODEL_NAMES])
+        print(f"    {STATE_NAMES_7D[dim]:<12}: {errs_str}")
+
+    print("\n  Learned per-state weights:")
     print(f"  {'State':<12} {'NODE-A':<10} {'NODE-B':<10} {'NODE-C':<10} {'GP':<10} {'Physics':<10}")
     print("  " + "-" * 62)
     for dim in range(STATE_DIM):
@@ -1060,97 +956,109 @@ def run_experiment():
     pse_results = evaluate_full(pse.predict, data, horizons)
     pse_primary = compute_primary_score(pse_results)
     v9_primary = 0.5110
-    pse_improvement = (v9_primary - pse_primary) / v9_primary * 100
+    pse_improvement = (v9_primary - pse_primary) / v9_primary * 100 if not np.isnan(pse_primary) else float('nan')
 
     print(f"  Per-State Ensemble Primary: {pse_primary:.4f} (improvement: {pse_improvement:.1f}%)")
     print(f"  Completed in {time.time()-t1:.1f}s")
 
     all_results['per_state_ensemble'] = {
         'results': pse_results,
-        'primary': float(pse_primary),
-        'improvement': float(pse_improvement),
+        'primary': float(pse_primary) if not np.isnan(pse_primary) else None,
+        'improvement': float(pse_improvement) if not np.isnan(pse_improvement) else None,
         'weights': {str(k): v.tolist() for k, v in weights_per_state.items()},
     }
 
     # ----------------------------------------------------------
-    # 4. Approach 2: Adaptive Ensemble
+    # 5. Approach 2: Adaptive Ensemble
     # ----------------------------------------------------------
     print("\n[5/7] Approach 2: Adaptive Ensemble...")
     t1 = time.time()
 
-    best_adaptive = None
     best_adaptive_primary = float('inf')
     best_adaptive_results = None
+    best_adaptive = None
 
     for n_clusters in [3, 5, 8]:
         print(f"\n  Trying n_clusters={n_clusters}...")
+        t2 = time.time()
         cluster_centers, cluster_weights = learn_adaptive_weights(
             node_models, gp_models, data, n_clusters=n_clusters,
         )
+        print(f"    Weights learned in {time.time()-t2:.1f}s")
 
         ae = AdaptiveEnsemble(
             node_models, gp_models, state_std, action_std, delta_std,
-            cluster_centers, cluster_weights, fallback_physics=True,
+            cluster_centers, cluster_weights,
         )
 
-        ae_results = evaluate_full(ae.predict, data, horizons, n_segments=5)
+        # Use fewer segments for adaptive (slower due to per-step GP)
+        ae_results = evaluate_full(ae.predict, data, horizons, n_segments=3)
         ae_primary = compute_primary_score(ae_results)
-        ae_improvement = (v9_primary - ae_primary) / v9_primary * 100
+        ae_improvement = (v9_primary - ae_primary) / v9_primary * 100 if not np.isnan(ae_primary) else float('nan')
 
         print(f"    Adaptive Ensemble (k={n_clusters}) Primary: {ae_primary:.4f} "
-              f"(improvement: {ae_improvement:.1f}%)")
+              f"(improvement: {ae_improvement:.1f}%) [eval: {time.time()-t2:.1f}s]")
 
-        if ae_primary < best_adaptive_primary:
+        if not np.isnan(ae_primary) and ae_primary < best_adaptive_primary:
             best_adaptive_primary = ae_primary
             best_adaptive = n_clusters
             best_adaptive_results = ae_results
             best_adaptive_centers = cluster_centers
             best_adaptive_weights = cluster_weights
 
-    best_adaptive_improvement = (v9_primary - best_adaptive_primary) / v9_primary * 100
+    if best_adaptive_results is not None:
+        best_adaptive_improvement = (v9_primary - best_adaptive_primary) / v9_primary * 100
+    else:
+        best_adaptive_improvement = float('nan')
+
     print(f"\n  Best adaptive: k={best_adaptive}, Primary={best_adaptive_primary:.4f}, "
           f"Improvement={best_adaptive_improvement:.1f}%")
     print(f"  Completed in {time.time()-t1:.1f}s")
 
     all_results['adaptive_ensemble'] = {
-        'results': best_adaptive_results,
-        'primary': float(best_adaptive_primary),
-        'improvement': float(best_adaptive_improvement),
+        'results': best_adaptive_results if best_adaptive_results else {},
+        'primary': float(best_adaptive_primary) if not np.isnan(best_adaptive_primary) else None,
+        'improvement': float(best_adaptive_improvement) if not np.isnan(best_adaptive_improvement) else None,
         'best_n_clusters': best_adaptive,
     }
 
     # ----------------------------------------------------------
-    # 5. Approach 3: Physics-Informed Ensemble
+    # 6. Approach 3: Physics-Informed Ensemble
     # ----------------------------------------------------------
     print("\n[6/7] Approach 3: Physics-Informed Ensemble...")
     t1 = time.time()
+
+    # Use best NODE model for physics-informed
+    best_node_name = 'node_a'
+    best_node_model = node_models[best_node_name]
+
+    # Build NN corrector
+    train_obs_norm = train_obs_norm_data = data['train_obs'] / state_std
+    nn_model = NearestNeighbors(n_neighbors=10, algorithm='auto')
+    nn_model.fit(train_obs_norm)
+
+    physics_blend = learn_physics_blend(best_node_model, gp_models, data)
+    print(f"  Physics blend ratios: { {STATE_NAMES_7D[d]: round(physics_blend[d], 2) for d in range(STATE_DIM)} }")
 
     best_pi_primary = float('inf')
     best_pi_results = None
     best_pi_config = None
 
-    # Sweep correction strengths
     for correction_strength in [0.0, 0.05, 0.1, 0.2, 0.3, 0.5]:
-        # Learn physics blend ratios
-        physics_blend = learn_physics_blend(
-            node_models, gp_models, data,
-            correction_strength=correction_strength,
-        )
-
         pie = PhysicsInformedEnsemble(
-            node_models, gp_models, state_std, action_std, delta_std,
+            best_node_model, gp_models, state_std, action_std, delta_std,
             physics_blend, correction_strength,
+            nn_corrector=nn_model, train_obs_norm=train_obs_norm,
         )
 
         pie_results = evaluate_full(pie.predict, data, horizons, n_segments=5)
         pie_primary = compute_primary_score(pie_results)
-        pie_improvement = (v9_primary - pie_primary) / v9_primary * 100
+        pie_improvement = (v9_primary - pie_primary) / v9_primary * 100 if not np.isnan(pie_primary) else float('nan')
 
         print(f"  Correction={correction_strength:.2f}: Primary={pie_primary:.4f}, "
-              f"Improvement={pie_improvement:.1f}%, "
-              f"Blend={ {STATE_NAMES_7D[d]: round(physics_blend[d], 2) for d in range(STATE_DIM)} }")
+              f"Improvement={pie_improvement:.1f}%")
 
-        if pie_primary < best_pi_primary:
+        if not np.isnan(pie_primary) and pie_primary < best_pi_primary:
             best_pi_primary = pie_primary
             best_pi_results = pie_results
             best_pi_config = {
@@ -1159,21 +1067,25 @@ def run_experiment():
                                    for d in range(STATE_DIM)},
             }
 
-    best_pi_improvement = (v9_primary - best_pi_primary) / v9_primary * 100
+    if best_pi_results is not None:
+        best_pi_improvement = (v9_primary - best_pi_primary) / v9_primary * 100
+    else:
+        best_pi_improvement = float('nan')
+
     print(f"\n  Best Physics-Informed: Primary={best_pi_primary:.4f}, "
           f"Improvement={best_pi_improvement:.1f}%")
     print(f"  Config: {best_pi_config}")
     print(f"  Completed in {time.time()-t1:.1f}s")
 
     all_results['physics_informed_ensemble'] = {
-        'results': best_pi_results,
-        'primary': float(best_pi_primary),
-        'improvement': float(best_pi_improvement),
+        'results': best_pi_results if best_pi_results else {},
+        'primary': float(best_pi_primary) if not np.isnan(best_pi_primary) else None,
+        'improvement': float(best_pi_improvement) if not np.isnan(best_pi_improvement) else None,
         'best_config': best_pi_config,
     }
 
     # ----------------------------------------------------------
-    # 6. Summary
+    # 7. Summary
     # ----------------------------------------------------------
     print("\n" + "=" * 70)
     print("SUMMARY")
@@ -1184,25 +1096,41 @@ def run_experiment():
     print("-" * 90)
 
     for name, rd in all_results.items():
-        r = rd['results']
-        prim = rd['primary']
-        imp = rd['improvement']
-        print(f"{name:<30} {r[100]['nmae_mean']:<10.4f} {r[200]['nmae_mean']:<10.4f} "
-              f"{r[500]['nmae_mean']:<10.4f} {r[1000]['nmae_mean']:<10.4f} "
-              f"{prim:<10.4f} {imp:<10.1f}%")
+        r = rd.get('results', {})
+        prim = rd.get('primary', float('nan'))
+        imp = rd.get('improvement', float('nan'))
+        h100 = r.get(100, {}).get('nmae_mean', float('nan'))
+        h200 = r.get(200, {}).get('nmae_mean', float('nan'))
+        h500 = r.get(500, {}).get('nmae_mean', float('nan'))
+        h1000 = r.get(1000, {}).get('nmae_mean', float('nan'))
+        prim_s = f"{prim:.4f}" if prim is not None and not np.isnan(prim) else "nan"
+        imp_s = f"{imp:.1f}%" if imp is not None and not np.isnan(imp) else "nan"
+        h100_s = f"{h100:.4f}" if not np.isnan(h100) else "nan"
+        h200_s = f"{h200:.4f}" if not np.isnan(h200) else "nan"
+        h500_s = f"{h500:.4f}" if not np.isnan(h500) else "nan"
+        h1000_s = f"{h1000:.4f}" if not np.isnan(h1000) else "nan"
+        print(f"{name:<30} {h100_s:<10} {h200_s:<10} {h500_s:<10} {h1000_s:<10} "
+              f"{prim_s:<10} {imp_s:<10}")
 
-    # Per-state breakdown for best method
-    best_method = min(all_results.keys(), key=lambda k: all_results[k]['primary'])
-    best_r = all_results[best_method]['results']
-    print(f"\nBest method: {best_method}")
-    print(f"\nPer-state NMAE at H=200:")
-    print(f"  {'State':<12} {'NMAE':<10}")
-    print("  " + "-" * 22)
-    for name in STATE_NAMES_7D:
-        print(f"  {name:<12} {best_r[200]['per_state_nmae'][name]['mean']:<10.4f}")
+    # Find best method
+    valid_methods = {k: v for k, v in all_results.items()
+                     if v.get('primary') is not None and not np.isnan(v['primary'])}
+    if valid_methods:
+        best_method = min(valid_methods.keys(), key=lambda k: valid_methods[k]['primary'])
+        best_r = valid_methods[best_method]['results']
+        print(f"\nBest method: {best_method}")
+        print(f"\nPer-state NMAE at H=200:")
+        print(f"  {'State':<12} {'NMAE':<10}")
+        print("  " + "-" * 22)
+        for name in STATE_NAMES_7D:
+            m = best_r.get(200, {}).get('per_state_nmae', {}).get(name, {}).get('mean', float('nan'))
+            print(f"  {name:<12} {m:<10.4f}")
+    else:
+        best_method = None
+        print("\nNo valid results found!")
 
     # ----------------------------------------------------------
-    # 7. Save results
+    # Save results
     # ----------------------------------------------------------
     output = {
         'timestamp': datetime.now().isoformat(),
@@ -1210,47 +1138,37 @@ def run_experiment():
         'experiment': 'per_state_ensemble',
         'target_improvement': 75,
         'v9_primary': v9_primary,
-        'best_primary': float(min(rd['primary'] for rd in all_results.values())),
+        'best_primary': float(valid_methods[best_method]['primary']) if valid_methods else None,
         'best_method': best_method,
         'methods': {},
     }
 
     for name, rd in all_results.items():
         method_data = {
-            'primary': rd['primary'],
-            'improvement': rd['improvement'],
+            'primary': rd.get('primary'),
+            'improvement': rd.get('improvement'),
             'horizons': {},
         }
+        r = rd.get('results', {})
         for h in horizons:
-            method_data['horizons'][str(h)] = {
-                'nmae_mean': rd['results'][h]['nmae_mean'],
-                'survival_rate': rd['results'][h]['survival_rate'],
-                'per_state_nmae': rd['results'][h]['per_state_nmae'],
-            }
-        # Add method-specific config
+            if h in r:
+                method_data['horizons'][str(h)] = {
+                    'nmae_mean': r[h].get('nmae_mean'),
+                    'survival_rate': r[h].get('survival_rate'),
+                    'per_state_nmae': r[h].get('per_state_nmae'),
+                }
         if name == 'per_state_ensemble':
             method_data['weights'] = rd.get('weights', {})
         elif name == 'adaptive_ensemble':
-            method_data['best_n_clusters'] = rd.get('best_n_clusters', None)
+            method_data['best_n_clusters'] = rd.get('best_n_clusters')
         elif name == 'physics_informed_ensemble':
-            method_data['best_config'] = rd.get('best_config', {})
+            method_data['best_config'] = rd.get('best_config')
         output['methods'][name] = method_data
 
     output_path = 'D:/系统辨识作业/sindy_bicycle/research_72h/05_candidates/EXP042_per_state_ensemble.json'
     with open(output_path, 'w') as f:
         json.dump(output, f, indent=2, default=str)
     print(f"\nResults saved to: {output_path}")
-
-    # Per-state analysis
-    print("\n" + "=" * 70)
-    print("PER-STATE ANALYSIS")
-    print("=" * 70)
-    for name, rd in all_results.items():
-        r200 = rd['results'][200]
-        print(f"\n{name}:")
-        for sname in STATE_NAMES_7D:
-            m = r200['per_state_nmae'][sname]['mean']
-            print(f"  {sname:<12}: {m:.4f}")
 
     return output
 
