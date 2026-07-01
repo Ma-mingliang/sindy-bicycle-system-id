@@ -1,0 +1,76 @@
+{
+  "results": {
+    "1": {
+      "v9_ref": 0.0051,
+      "V0: Original (32D bottleneck)": 0.0027758419948542474,
+      "V1: Large coupling (128D)": 0.001766925170048294,
+      "V2: Cross-state decoders": 0.0019872389106314415,
+      "V3: Residual connection": 0.002521694240345426,
+      "V4: V1+V2+V3 combined": 0.0016637114085440643
+    },
+    "5": {
+      "v9_ref": 0.017,
+      "V0: Original (32D bottleneck)": 0.006950308940686238,
+      "V1: Large coupling (128D)": 0.004140765609725716,
+      "V2: Cross-state decoders": 0.004075713107626276,
+      "V3: Residual connection": 0.005120178903027245,
+      "V4: V1+V2+V3 combined": 0.003777727441103773
+    },
+    "10": {
+      "v9_ref": 0.0628,
+      "V0: Original (32D bottleneck)": 0.04928170204084935,
+      "V1: Large coupling (128D)": 0.012907037367047727,
+      "V2: Cross-state decoders": 0.04458576823410536,
+      "V3: Residual connection": 0.029313623612600714,
+      "V4: V1+V2+V3 combined": 0.01749040161150473
+    },
+    "20": {
+      "v9_ref": 0.1817,
+      "V0: Original (32D bottleneck)": 0.10410579444440873,
+      "V1: Large coupling (128D)": 0.10516530424474099,
+      "V2: Cross-state decoders": 0.1333648397658126,
+      "V3: Residual connection": 0.10843650993931339,
+      "V4: V1+V2+V3 combined": 0.1030711815070996
+    },
+    "50": {
+      "v9_ref": 0.4557,
+      "V0: Original (32D bottleneck)": 0.4014336376290711,
+      "V1: Large coupling (128D)": 0.37102618565926904,
+      "V2: Cross-state decoders": 0.39058647708946187,
+      "V3: Residual connection": 0.4537292108046028,
+      "V4: V1+V2+V3 combined": 0.38035411976993505
+    },
+    "100": {
+      "v9_ref": 0.5064,
+      "V0: Original (32D bottleneck)": 0.541781053118896,
+      "V1: Large coupling (128D)": 0.5176375023399444,
+      "V2: Cross-state decoders": 0.5247142309469733,
+      "V3: Residual connection": 0.5498591500352845,
+      "V4: V1+V2+V3 combined": 0.4672859461323151
+    },
+    "200": {
+      "v9_ref": 0.4737,
+      "V0: Original (32D bottleneck)": 0.5484369763229088,
+      "V1: Large coupling (128D)": 0.560821839707049,
+      "V2: Cross-state decoders": 0.8522145486512349,
+      "V3: Residual connection": 0.5622603239946086,
+      "V4: V1+V2+V3 combined": 0.4826705304633666
+    },
+    "500": {
+      "v9_ref": 0.5529,
+      "V0: Original (32D bottleneck)": 0.6150720104649373,
+      "V1: Large coupling (128D)": 0.5308395625286921,
+      "V2: Cross-state decoders": 1.2905012175114887,
+      "V3: Residual connection": 0.5622603239946086,
+      "V4: V1+V2+V3 combined": 0.5784602663168843
+    },
+    "1000": {
+      "v9_ref": 0.6443,
+      "V0: Original (32D bottleneck)": 0.6292078131871485,
+      "V1: Large coupling (128D)": 0.5295364711615407,
+      "V2: Cross-state decoders": 1.512291842921208,
+      "V3: Residual connection": 0.5622603239946086,
+      "V4: V1+V2+V3 combined": 0.582837987711138
+    }
+  }
+}

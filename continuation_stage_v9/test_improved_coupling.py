@@ -293,7 +293,8 @@ def main():
         ('V2: Cross-state decoders', CouplingNetworkV2(), False),
         ('V3: Residual connection', CouplingNetworkV3(), False),
         ('V4: V1+V2+V3 combined', CouplingNetworkV4(), False),
-        ('V5: V4 + multi-step', CouplingNetworkV5(), True),
+        # V5 disabled: multi-step training causes gradient explosion
+        # ('V5: V4 + multi-step', CouplingNetworkV5(), True),
     ]
 
     # ============================================================
